@@ -245,6 +245,18 @@ uv run docinsights-ocr cloud-merge artifacts/ocr/validation-manifest.jsonl artif
 - DocSem 최종 제출 마감은 **2026-09-10**입니다.
 - DocSem 또는 Dr.DocBench 시스템 논문 제출 마감은 **2026-09-15 23:59 UTC**이며, archival/non-archival 제출을 모두 받습니다.
 
+제출 전에 JSONL의 스키마, ID 중복·누락, 대상 split과의 일치 여부를 검사합니다.
+
+```bash
+uv run docinsights validate-submission artifacts/submissions/validation.jsonl
+```
+
+다른 split이나 경로를 검증할 때는 기준 `tasks.jsonl`을 직접 지정합니다.
+
+```bash
+uv run docinsights validate-submission artifacts/submissions/test.jsonl --tasks data/raw/docsem/test/tasks.jsonl
+```
+
 공식 페이지에는 2026-09-10의 구체적인 마감 시각과 시간대가 기재되어 있지 않습니다. 최종 제출 직전에 [공식 포털](https://amitbcp-docsem-docinsights.hf.space/)의 최신 공지를 다시 확인합니다.
 
 ## 라이선스와 인용
