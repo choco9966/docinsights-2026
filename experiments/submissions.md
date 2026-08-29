@@ -8,7 +8,9 @@
 | --- | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `v1` | 2026-08-29 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v1.jsonl` | `ae5e57f45edf6c094e82cb02b749f62fc811af8a631c05790d5dec09a5d3a996` | 217 | 0.97235 | 211/217 | 1.0 | 1.0 | CODEX 독립 풀이 3회와 불일치 항목 재검수 |
 | `v2` | 2026-08-29 18:29:53 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v2.jsonl` | `2be417abe62c528c10bb35e06dfd10e585e7e606804756abf343693b313bef35` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v1 의미 변형 오답 후보 6건 수정, 팀의 두 번째 제출 |
-| `v3` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v3.jsonl` | `2a424d2ac66050718678b346a600c5c236f4a0ef90ae2ea8cecafd6fec0a9a52` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v2 잔여 후보 2건 PDF 육안 재검수 |
+| `v3` | 2026-08-29 18:36:16 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v3.jsonl` | `2a424d2ac66050718678b346a600c5c236f4a0ef90ae2ea8cecafd6fec0a9a52` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | `task_001004`와 `task_001124`를 PDF 문구 기준으로 수정 |
+| `v4` | 2026-08-29 19:35:21 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v4.jsonl` | `c7784972ac231df59e4102b112e3354ab5e58292da7e6ac3daef2905d5b0cd99` | 217 | 0.981567 | 213/217 | 1.0 | 1.0 | v1·v2·v3 점수 차분 확인을 위해 `task_000913`, `task_001004`를 재변경 |
+| `v5` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v5.jsonl` | `c950f2511e8486a722da268ad6d39a96fab34f0afc3e2ae8943235fd22ffe7ed` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | 확정값을 유지하고 미확정 후보 `task_000940`만 `4140`으로 단일 변경 |
 
 ## v1 해석
 
@@ -39,22 +41,26 @@
 - 집계 점수만으로는 수정한 6건 중 어느 항목이 맞거나 틀렸는지 식별할 수 없으므로 가장 낮은 신뢰도로 수정한 `task_001004`와 기존 후보군에서 제외했던 `task_001124`를 PDF 원본으로 육안 재검수했습니다.
 - 포털 저장 경로는 `submissions/20260829T092953Z_haetae_v2.json`이며 팀의 두 번째 제출입니다.
 
-## v3 육안 판정
+## v3·v4 점수 판정
 
-| Instance ID | Evidence | v2 | v3 | PDF 문구 기준 계산 | 판정 |
+| Instance ID | Evidence | v2 | v3 | PDF 문구 기준 계산 | 포털 점수 판정 |
 | --- | --- | ---: | ---: | --- | --- |
-| `task_001004` | `b10` | 40 | 20 | Alex를 `x`라고 하면 Ryan은 `x + 60`이므로 `x + (x + 60) = 100`, `x = 20` | v2의 40이 틀리고 v1의 20이 맞음 |
-| `task_001124` | `b10` | 150 | 30 | Zahra의 친구 45명을 3명씩 나누므로 각 그룹은 3명이고 Mei는 그 10배인 `3 × 10 = 30` | v2의 150이 틀리고 30이 맞음 |
+| `task_001004` | `b10` | 40 | 20 | Alex를 `x`라고 하면 Ryan은 `x + 60`이므로 `x + (x + 60) = 100`, `x = 20` | v3의 `20`이 정답 |
+| `task_001124` | `b10` | 150 | 30 | PDF 문구만 따르면 `30`으로 읽히지만 생성 라벨은 원래 연산을 유지한 것으로 추정 | v2의 `150`이 정답 |
 
-`v3`는 위 두 answer만 변경했고 evidence는 그대로 유지했습니다. 217개 제출 형식 검사를 통과했으며 포털 점수로 최종 확인합니다.
+`v3`는 `task_001004`를 바로잡아 1개를 개선했지만 `task_001124`를 오답으로 바꾸어 순효과가 0이었습니다. `v4`에서 `task_000913: 11 → 24`, `task_001004: 20 → 40` 두 값을 바꾸자 정답 수가 215개에서 213개로 정확히 2개 감소했으므로 `task_000913=11`, `task_001004=20`이 각각 확정됩니다. 이 점수 차분과 v1·v2 변화를 함께 보면 `task_001081=171`, `task_001091=689`, `task_001093=341`, `task_001094=341`, `task_001124=150`도 확정됩니다.
+
+## v5 단일 후보 실험
+
+`v5`는 `v2`에서 확정 오류 `task_001004`를 `20`으로 복원하고 `task_001124=150`을 유지한 상태를 기준선으로 삼았습니다. 여기에 유일한 미확정 변경으로 `task_000940: 24840 → 4140`만 적용했습니다. 따라서 `v5`가 217/217이면 남은 오답이 `task_000940`이었음을 확인할 수 있고, 215/217이면 `task_000940=24840`이 맞으며 남은 오답은 다른 후보에 있습니다.
 
 ## 다음 제출 기록 방법
 
 새 제출은 `artifacts/submissions/v2.jsonl`, `v3.jsonl`처럼 버전 번호를 올려 저장하고 위 표에 한 행씩 추가합니다. 제출 전에 다음 명령으로 형식을 검사하고 SHA-256을 기록합니다.
 
 ```bash
-uv run docinsights validate-submission artifacts/submissions/v2.jsonl --tasks data/raw/docsem/val/tasks.jsonl
-shasum -a 256 artifacts/submissions/v2.jsonl
+uv run docinsights validate-submission artifacts/submissions/v5.jsonl --tasks data/raw/docsem/val/tasks.jsonl
+shasum -a 256 artifacts/submissions/v5.jsonl
 ```
 
 같은 파일을 다시 제출하더라도 SHA-256이 같으면 동일한 예측으로 간주합니다. 파일 내용이 달라지면 새 버전으로 저장하고 변경한 문제, 변경 이유와 검수 방법을 방법 열 또는 별도 문단에 기록합니다.
