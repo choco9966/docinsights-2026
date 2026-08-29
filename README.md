@@ -1,0 +1,148 @@
+# DocInsights 2026 · DocSem
+
+이 저장소는 [DocInsights 2026 Shared Task](https://docinsights-workshop.github.io/docinsights-2026/shared-task/)의 **DocSem** 과제를 수행하고 실험 결과를 관리하기 위한 작업 공간입니다.
+
+> 기준일: 2026-08-29. 일정과 제출 규정은 바뀔 수 있으므로 제출 전에는 공식 워크숍 페이지와 제출 포털을 다시 확인하세요. 제출과 최종 규정의 기준은 공식 포털입니다.
+
+## 과제 개요
+
+DocSem은 **근거 귀속(evidence attribution)을 포함한 문서 기반 정량 추론** 과제입니다. 각 인스턴스에는 PDF 문서와 그 문서에 근거한 패러프레이즈 질의 `user_query`가 주어집니다. 시스템은 다음을 수행해야 합니다.
+
+1. PDF에서 질의와 관련된 정량적 구절을 찾습니다.
+2. 해당 구절만을 근거로 요청된 수치 답을 계산합니다.
+3. 최종 답과 이를 직접 뒷받침하는 PDF 블록 ID를 반환합니다.
+
+파일명, 문서 메타데이터 또는 외부 원문 질의 검색으로 답을 추론해서는 안 됩니다. 목표 시나리오가 명시적으로 요구하지 않는 한 서로 다른 구절의 사실도 임의로 결합하지 않습니다. PDF의 각 콘텐츠 블록 앞에는 `b01`과 같은 식별자가 표시되며, 제출 시 이 식별자를 근거로 사용합니다.
+
+## 공식 자료
+
+| 자료 | 용도 |
+| --- | --- |
+| [워크숍 Shared Task 페이지](https://docinsights-workshop.github.io/docinsights-2026/shared-task/) | 과제 개요, 전체 일정, 최신 공지 |
+| [Dataset and guide](https://huggingface.co/datasets/amitbcp/docinsights-2026-shared-task-data) | 공개 데이터 미러, 파일 구성, 로딩 예시 |
+| [Submission portal](https://amitbcp-docsem-docinsights.hf.space/) | validation/test 예측 제출 및 리더보드 |
+| [Canonical source](https://github.com/oracle-samples/gsm-sem/tree/main/docsem) | 원본 participant release |
+| [Participant instructions](https://github.com/oracle-samples/gsm-sem/blob/main/docsem/PARTICIPANT_INSTRUCTIONS.md) | 입출력 형식과 평가 규칙의 원문 |
+
+Hugging Face 데이터셋은 canonical source의 participant release를 미러링합니다. 원본 규칙을 판단할 때는 canonical source와 participant instructions를 우선하고, 편리한 다운로드와 Python 로딩에는 Hugging Face 미러를 사용할 수 있습니다.
+
+재현 가능한 실험의 기준 버전은 다음과 같습니다.
+
+- Canonical release: [`oracle-samples/gsm-sem@332158b`](https://github.com/oracle-samples/gsm-sem/tree/332158b2549e7e8a1186e2ae3a922669e9018808/docsem)
+- Hugging Face mirror: [`amitbcp/docinsights-2026-shared-task-data@b171c5a`](https://huggingface.co/datasets/amitbcp/docinsights-2026-shared-task-data/tree/b171c5ad488f0c8c50df05951a5b288ea50e9501)
+
+데이터 카드에 따르면 미러의 1,125개 PDF는 canonical release와 byte-identical입니다. 실험 기록에는 사용한 두 revision SHA를 함께 남깁니다.
+
+## 데이터 구성
+
+| Split | 인스턴스 수 | 공개 라벨 | 용도 |
+| --- | ---: | --- | --- |
+| `train` | 908 | 있음 | 로컬 개발과 평가 |
+| `validation` / `val` | 217 | 없음 | 공식 validation 리더보드 제출 |
+
+공개 패키지에는 총 1,125개 PDF가 포함됩니다. Hugging Face의 `tasks` config는 train/validation 입력을, `labels` config는 train 라벨을 제공합니다. Validation 라벨은 주최 측이 비공개로 보관합니다.
+
+Canonical source의 주요 파일은 다음과 같습니다.
+
+```text
+docsem/
+├── PARTICIPANT_INSTRUCTIONS.md
+├── README.md
+├── train/
+│   ├── tasks.jsonl
+│   ├── labels.jsonl
+│   └── documents/*.pdf
+└── val/
+    ├── tasks.jsonl
+    └── documents/*.pdf
+```
+
+Hugging Face 미러에서는 `document_pdf`가 저장소 루트에서 바로 해석되도록 `train/` 또는 `val/` 접두사가 붙습니다.
+
+## 입출력 형식
+
+입력 `tasks.jsonl`의 각 줄은 하나의 JSON 객체입니다.
+
+```json
+{
+  "instance_id": "task_000001",
+  "user_query": "Use the relevant quantitative passage in this document to determine the requested result.",
+  "document_pdf": "documents/task_000001.pdf"
+}
+```
+
+Train 라벨과 제출 예측은 다음 형태를 사용합니다.
+
+```json
+{
+  "instance_id": "task_000001",
+  "answer": "140",
+  "evidence": ["b14"]
+}
+```
+
+제출 파일은 인스턴스당 JSON 객체 하나를 갖는 JSONL이어야 합니다.
+
+- `instance_id`는 입력의 값과 정확히 일치해야 합니다.
+- `answer`에는 설명을 붙이지 말고 최종 답만 넣습니다. 답 자체에 단위가 필요한 경우가 아니라면 단위도 제외합니다.
+- `evidence`는 비어 있지 않은 블록 ID 목록이어야 합니다.
+- 목표 질문과 계산 입력을 직접 제시하는 데 필요한 블록을 모두 포함합니다.
+- 제출 대상 split의 모든 인스턴스를 정확히 한 번씩 포함합니다.
+
+시스템 논문과 실험 기록에는 사용한 모델, 외부 학습 데이터, 검색 리소스, 도구, 프롬프트 전략을 문서화합니다.
+
+## 평가
+
+주 평가지표는 정규화된 `answer` exact-match accuracy입니다. 정규화 과정은 앞뒤 공백과 대소문자를 무시하고, 선행 final-answer 표식을 제거하며, 적용 가능한 경우 수치적으로 같은 소수 표현을 동일하게 취급합니다.
+
+근거는 별도로 평가합니다.
+
+- **Evidence exact block-set match:** 예측한 블록 집합이 정답 집합과 정확히 같은지 평가
+- **Evidence F1:** 근거 품질을 확인하기 위한 진단 지표
+
+## 데이터 로드 예시
+
+```python
+from datasets import load_dataset
+from huggingface_hub import hf_hub_download
+
+repo_id = "amitbcp/docinsights-2026-shared-task-data"
+
+tasks = load_dataset(repo_id, "tasks")
+train_tasks = tasks["train"]
+validation_tasks = tasks["validation"]
+train_labels = load_dataset(repo_id, "labels")["train"]
+
+first_pdf = hf_hub_download(
+    repo_id=repo_id,
+    repo_type="dataset",
+    filename=train_tasks[0]["document_pdf"],
+)
+```
+
+## 제출과 주요 일정
+
+- 개발 데이터는 **2026-08-05 릴리스**로 동결되었습니다. 그 전에 내려받았다면 최신 버전으로 갱신해야 합니다.
+- 현재는 217개 validation 인스턴스 전체를 포함한 JSONL을 [공식 제출 포털](https://amitbcp-docsem-docinsights.hf.space/)에 제출합니다.
+- 포털이 다른 JSON 형식을 일부 처리하더라도 canonical participant instructions가 요구하는 표준 형식은 JSONL이므로, 이 저장소에서는 JSONL만 제출 형식으로 사용합니다.
+- 최종 순위는 별도의 held-out test set으로 결정됩니다. 주최 측은 **2026-09-10 최종 제출 마감 5일 전**에 test set을 공개하고 별도 제출을 안내할 예정입니다.
+- DocSem 최종 제출 마감은 **2026-09-10**입니다.
+- DocSem 또는 Dr.DocBench 시스템 논문 제출 마감은 **2026-09-15 23:59 UTC**이며, archival/non-archival 제출을 모두 받습니다.
+
+공식 페이지에는 2026-09-10의 구체적인 마감 시각과 시간대가 기재되어 있지 않습니다. 최종 제출 직전에 [공식 포털](https://amitbcp-docsem-docinsights.hf.space/)의 최신 공지를 다시 확인합니다.
+
+## 라이선스와 인용
+
+공개 participant release와 Hugging Face 미러는 [Universal Permissive License v1.0](https://github.com/oracle-samples/gsm-sem/blob/main/LICENSE.txt)에 따라 제공됩니다. 데이터 또는 과제를 사용한 결과물에는 canonical source가 안내하는 GSM-SEM 논문을 인용하세요.
+
+```bibtex
+@article{singh2026gsmsem,
+  title={GSM-SEM: Benchmark and Framework for Generating Semantically Variant Augmentations},
+  author={Jyotika Singh and Fang Tu and Aziza Mirsaidova and Amit Agarwal and Hitesh Laxmichand Patel and Sandip Ghoshal and Miguel Ballesteros and Karan Dua and Yassine Benajiba and Weiyi Sun and Tao Sheng and Graham Horwood and Sujith Ravi and Dan Roth},
+  year={2026},
+  eprint={2605.07053},
+  archivePrefix={arXiv},
+  primaryClass={cs.CL},
+  url={https://arxiv.org/abs/2605.07053}
+}
+```
