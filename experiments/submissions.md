@@ -16,6 +16,7 @@
 | `v8` | 2026-08-29 20:48:24 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
 | `v9` | 2026-08-29 20:52:18 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001058` 하나만 `19`로 변경 |
 | `v10` | 2026-08-29 20:53:55 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v10.jsonl` | `34f7f14808d80071c1238721b74ca60268b24376b2c96d51139c4b4b16d84ed3` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001043` 하나만 `558`로 변경 |
+| `v11` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v11.jsonl` | `3b31480cce4dd29303d43447211ff8a96589c9edf035e487fb8f7ac5e6addab3` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v7에서 `task_001006` 하나만 `925`로 변경 |
 
 ## v1 해석
 
@@ -77,15 +78,19 @@
 
 ## v10 이후 전수 재검수
 
-v7의 217개 PDF를 다시 대조한 결과, 점수 차분으로 확정된 항목을 제외하면 산술식·숫자·통화 기호·단위가 명확하게 잘못된 answer는 발견되지 않았습니다. 가장 높은 단일 실험 후보는 `task_001006: 1145 → 925`입니다. PDF에는 토요일 재고가 200권이고 일요일에 145권을 추가한 뒤 월요일에 "토요일에 추가된 수"의 4배를 더한다고 적혀 있어, 명시된 추가량 145를 기준으로 해석하면 `200 + 145 + 4 × 145 = 925`가 됩니다. 다만 형제 문항은 토요일 수량 200을 기준으로 계산한 `1145`를 지지하므로 신뢰도는 낮습니다. v10을 마지막 제출로 정한 현재 방침에 따라 추가 제출 파일은 만들지 않았으며, 최고 점수 기준선은 v7의 216/217입니다.
+v7의 217개 PDF를 다시 대조한 결과, 점수 차분으로 확정된 항목을 제외하면 산술식·숫자·통화 기호·단위가 명확하게 잘못된 answer는 발견되지 않았습니다. 가장 높은 단일 실험 후보는 `task_001006: 1145 → 925`입니다. PDF에는 토요일 재고가 200권이고 일요일에 145권을 추가한 뒤 월요일에 "토요일에 추가된 수"의 4배를 더한다고 적혀 있어, 명시된 추가량 145를 기준으로 해석하면 `200 + 145 + 4 × 145 = 925`가 됩니다. 다만 형제 문항은 토요일 수량 200을 기준으로 계산한 `1145`를 지지하므로 신뢰도는 낮습니다. 최고 점수 기준선은 v7의 216/217입니다.
+
+## v11 단일 후보 실험
+
+`v11`은 확정 기준선 v7에서 `task_001006: 1145 → 925` 하나만 변경했습니다. evidence를 포함한 나머지 216개 행은 v7과 동일하며 로컬 형식 검사에서 217개 전체가 통과했습니다. 따라서 v11이 217/217이면 `task_001006=925`가 남은 정답이고, 215/217이면 기존 `1145`가 정답입니다.
 
 ## 다음 제출 기록 방법
 
 새 제출은 `artifacts/submissions/v2.jsonl`, `v3.jsonl`처럼 버전 번호를 올려 저장하고 위 표에 한 행씩 추가합니다. 제출 전에 다음 명령으로 형식을 검사하고 SHA-256을 기록합니다.
 
 ```bash
-uv run docinsights validate-submission artifacts/submissions/v10.jsonl --tasks data/raw/docsem/val/tasks.jsonl
-shasum -a 256 artifacts/submissions/v10.jsonl
+uv run docinsights validate-submission artifacts/submissions/v11.jsonl --tasks data/raw/docsem/val/tasks.jsonl
+shasum -a 256 artifacts/submissions/v11.jsonl
 ```
 
 같은 파일을 다시 제출하더라도 SHA-256이 같으면 동일한 예측으로 간주합니다. 파일 내용이 달라지면 새 버전으로 저장하고 변경한 문제, 변경 이유와 검수 방법을 방법 열 또는 별도 문단에 기록합니다.
