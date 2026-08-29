@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from docinsights_analysis import cli
+from docinsights_analysis.consensus import ConsensusSummary
 from docinsights_analysis.submission import SubmissionSummary
 
 
@@ -41,3 +42,31 @@ def test_validate_submission_command_reports_success(
 
     assert exit_code == 0
     assert "217개 인스턴스" in capsys.readouterr().out
+
+
+def test_compare_reviews_command_reports_consensus(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    pass_paths = [tmp_path / f"pass{number}.jsonl" for number in range(1, 4)]
+    tasks_path = tmp_path / "tasks.jsonl"
+
+    def fake_compare(passes, tasks, *, consensus_path, disagreements_path):
+        assert passes == pass_paths
+        assert tasks == tasks_path
+        return ConsensusSummary(total=217, unanimous=200, disagreements=17)
+
+    monkeypatch.setattr(cli, "compare_review_passes", fake_compare)
+
+    exit_code = cli.main(
+        [
+            "compare-reviews",
+            *(str(path) for path in pass_paths),
+            "--tasks",
+            str(tasks_path),
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "전원 일치 200개" in output
+    assert "재검토 17개" in output

@@ -2,6 +2,7 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
+from docinsights_analysis.consensus import ReviewValidationError, compare_review_passes
 from docinsights_analysis.constants import DATASET_REVISION, DEFAULT_DATA_DIR
 from docinsights_analysis.download import download_dataset
 from docinsights_analysis.submission import (
@@ -38,6 +39,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="제출 대상 tasks.jsonl",
     )
 
+    consensus_parser = subparsers.add_parser(
+        "compare-reviews", help="독립 검수 결과의 전원 일치 여부 비교"
+    )
+    consensus_parser.add_argument(
+        "passes", nargs="+", type=Path, help="독립 검수 JSONL 3개 이상"
+    )
+    consensus_parser.add_argument(
+        "--tasks",
+        type=Path,
+        default=DEFAULT_DATA_DIR / "val" / "tasks.jsonl",
+        help="검수 대상 tasks.jsonl",
+    )
+    consensus_parser.add_argument(
+        "--consensus",
+        type=Path,
+        default=Path("artifacts/docsem_validation/consensus.jsonl"),
+        help="전원 일치 제출 후보 JSONL",
+    )
+    consensus_parser.add_argument(
+        "--disagreements",
+        type=Path,
+        default=Path("artifacts/docsem_validation/disagreements.jsonl"),
+        help="불일치 검수 기록 JSONL",
+    )
+
     return parser
 
 
@@ -58,6 +84,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"제출 파일 검증 실패:\n{error}")
             return 2
         print(f"제출 파일 검증 완료: {summary.total}개 인스턴스")
+        return 0
+
+    if args.command == "compare-reviews":
+        try:
+            summary = compare_review_passes(
+                args.passes,
+                args.tasks,
+                consensus_path=args.consensus,
+                disagreements_path=args.disagreements,
+            )
+        except ReviewValidationError as error:
+            print(f"독립 검수 결과 비교 실패:\n{error}")
+            return 2
+        print(
+            "독립 검수 결과 비교 완료: "
+            f"전체 {summary.total}개, 전원 일치 {summary.unanimous}개, "
+            f"재검토 {summary.disagreements}개"
+        )
         return 0
 
     raise AssertionError(f"지원하지 않는 명령: {args.command}")

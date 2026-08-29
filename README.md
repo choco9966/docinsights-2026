@@ -257,6 +257,15 @@ uv run docinsights validate-submission artifacts/submissions/validation.jsonl
 uv run docinsights validate-submission artifacts/submissions/test.jsonl --tasks data/raw/docsem/test/tasks.jsonl
 ```
 
+세 개 이상의 독립 검수 파일은 각 행에 `instance_id`, `answer`, `evidence`, `rationale`, `confidence`를 기록하고 다음 명령으로 비교합니다. 답과 Evidence가 전원 일치한 항목만 `consensus.jsonl`에 기록되며, 하나라도 다른 항목은 `disagreements.jsonl`로 분리됩니다.
+
+```bash
+uv run docinsights compare-reviews \
+  artifacts/docsem_validation/pass1.jsonl \
+  artifacts/docsem_validation/pass2.jsonl \
+  artifacts/docsem_validation/pass3.jsonl
+```
+
 공식 페이지에는 2026-09-10의 구체적인 마감 시각과 시간대가 기재되어 있지 않습니다. 최종 제출 직전에 [공식 포털](https://amitbcp-docsem-docinsights.hf.space/)의 최신 공지를 다시 확인합니다.
 
 ## 라이선스와 인용
