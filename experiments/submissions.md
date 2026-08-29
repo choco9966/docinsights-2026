@@ -14,7 +14,7 @@
 | `v6` | 2026-08-29 20:42:37 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v6.jsonl` | `889263ea9a6ace1562a8ea7eeb2715765d83d95e8c3b825607516ea159802a44` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | `task_000940=24840`을 복원하고 미확정 후보 `task_001036`을 `42`로 변경 |
 | `v7` | 2026-08-29 20:45:40 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v7.jsonl` | `db953923ca2ec0b9c6c0ad5e8009e64484ea81e560f03e8ecd92a6dba31d19fe` | 217 | 0.995392 | 216/217 | 1.0 | 1.0 | v6에서 `task_001036` 하나만 `105`로 복원해 확정 기준선 수립 |
 | `v8` | 2026-08-29 20:48:24 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
-| `v9` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v7에서 `task_001058` 하나만 `19`로 변경 |
+| `v9` | 2026-08-29 20:52:18 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001058` 하나만 `19`로 변경 |
 
 ## v1 해석
 
@@ -68,7 +68,7 @@
 
 ## v9 단일 후보 실험
 
-`v9`은 확정 기준선 v7에서 `task_001058: 16 → 19` 하나만 변경했습니다. evidence를 포함한 나머지 216개 행은 v7과 동일합니다. 따라서 v9가 217/217이면 `task_001058=19`가 남은 정답이고, 215/217이면 기존 `16`이 정답입니다.
+`v9`은 확정 기준선 v7에서 `task_001058: 16 → 19` 하나만 변경했습니다. 포털 결과가 215/217이므로 기존 `task_001058=16`이 정답으로 확정됩니다. 포털 저장 경로는 `submissions/20260829T115218Z_haetae_v9.json`입니다. 현재 최고 점수 제출은 216/217인 v7입니다.
 
 ## 다음 제출 기록 방법
 
