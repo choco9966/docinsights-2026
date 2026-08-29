@@ -15,7 +15,7 @@
 | `v7` | 2026-08-29 20:45:40 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v7.jsonl` | `db953923ca2ec0b9c6c0ad5e8009e64484ea81e560f03e8ecd92a6dba31d19fe` | 217 | 0.995392 | 216/217 | 1.0 | 1.0 | v6에서 `task_001036` 하나만 `105`로 복원해 확정 기준선 수립 |
 | `v8` | 2026-08-29 20:48:24 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
 | `v9` | 2026-08-29 20:52:18 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001058` 하나만 `19`로 변경 |
-| `v10` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v10.jsonl` | `34f7f14808d80071c1238721b74ca60268b24376b2c96d51139c4b4b16d84ed3` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v7에서 `task_001043` 하나만 `558`로 변경 |
+| `v10` | 2026-08-29 20:53:55 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v10.jsonl` | `34f7f14808d80071c1238721b74ca60268b24376b2c96d51139c4b4b16d84ed3` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001043` 하나만 `558`로 변경 |
 
 ## v1 해석
 
@@ -73,7 +73,7 @@
 
 ## v10 단일 후보 실험
 
-`v10`은 확정 기준선 v7에서 `task_001043: 540 → 558` 하나만 변경했습니다. PDF는 하루 섭취량 합계가 18개라고 제시하지만 한 달의 일수를 명시하지 않으므로 31일 기준 대안값 `18 × 31 = 558`을 검증합니다. evidence를 포함한 나머지 216개 행은 v7과 동일합니다. 따라서 v10이 217/217이면 `task_001043=558`이 남은 정답이고, 215/217이면 기존 `540`이 정답입니다.
+`v10`은 확정 기준선 v7에서 `task_001043: 540 → 558` 하나만 변경했습니다. 포털 결과가 215/217이므로 기존 `task_001043=540`이 정답으로 확정됩니다. 포털 저장 경로는 `submissions/20260829T115355Z_haetae_v10.json`입니다. v5부터 v10까지 검증한 문구 모호 후보가 모두 기존 답으로 확정됐으므로, 남은 오답은 기존 후보군 밖에서 다시 찾습니다.
 
 ## 다음 제출 기록 방법
 
