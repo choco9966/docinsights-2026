@@ -8,6 +8,7 @@
 | --- | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | `v1` | 2026-08-29 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v1.jsonl` | `ae5e57f45edf6c094e82cb02b749f62fc811af8a631c05790d5dec09a5d3a996` | 217 | 0.97235 | 211/217 | 1.0 | 1.0 | CODEX 독립 풀이 3회와 불일치 항목 재검수 |
 | `v2` | 2026-08-29 18:29:53 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v2.jsonl` | `2be417abe62c528c10bb35e06dfd10e585e7e606804756abf343693b313bef35` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v1 의미 변형 오답 후보 6건 수정, 팀의 두 번째 제출 |
+| `v3` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v3.jsonl` | `2a424d2ac66050718678b346a600c5c236f4a0ef90ae2ea8cecafd6fec0a9a52` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v2 잔여 후보 2건 PDF 육안 재검수 |
 
 ## v1 해석
 
@@ -35,8 +36,17 @@
 - 포털에 표시된 Answer accuracy `0.990783`은 217개 중 215개 정답으로 환산되며 오답은 2개입니다.
 - v1보다 정답 수가 4개 증가했으므로 6개 변경의 순효과는 `+4`입니다.
 - Evidence exact match와 Evidence F1은 모두 `1.0`으로 유지되어 남은 오류는 answer에만 존재합니다.
-- 집계 점수만으로는 수정한 6건 중 어느 항목이 맞거나 틀렸는지 식별할 수 없습니다. 가장 낮은 신뢰도로 수정한 `task_001004`와 기존 후보군에서 제외했던 항목을 우선 재검수하되, v1과 v2의 점수 차이만으로 정답을 확정하지 않습니다.
+- 집계 점수만으로는 수정한 6건 중 어느 항목이 맞거나 틀렸는지 식별할 수 없으므로 가장 낮은 신뢰도로 수정한 `task_001004`와 기존 후보군에서 제외했던 `task_001124`를 PDF 원본으로 육안 재검수했습니다.
 - 포털 저장 경로는 `submissions/20260829T092953Z_haetae_v2.json`이며 팀의 두 번째 제출입니다.
+
+## v3 육안 판정
+
+| Instance ID | Evidence | v2 | v3 | PDF 문구 기준 계산 | 판정 |
+| --- | --- | ---: | ---: | --- | --- |
+| `task_001004` | `b10` | 40 | 20 | Alex를 `x`라고 하면 Ryan은 `x + 60`이므로 `x + (x + 60) = 100`, `x = 20` | v2의 40이 틀리고 v1의 20이 맞음 |
+| `task_001124` | `b10` | 150 | 30 | Zahra의 친구 45명을 3명씩 나누므로 각 그룹은 3명이고 Mei는 그 10배인 `3 × 10 = 30` | v2의 150이 틀리고 30이 맞음 |
+
+`v3`는 위 두 answer만 변경했고 evidence는 그대로 유지했습니다. 217개 제출 형식 검사를 통과했으며 포털 점수로 최종 확인합니다.
 
 ## 다음 제출 기록 방법
 
