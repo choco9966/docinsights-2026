@@ -124,6 +124,48 @@ first_pdf = hf_hub_download(
 )
 ```
 
+## 저장소 데이터 분석 도구
+
+이 저장소는 고정된 Hugging Face revision의 DocSem 데이터를 내려받는 CLI와 실제 Query·정답·evidence·PDF 페이지 이미지를 탐색하는 Jupyter Notebook을 제공합니다. Python 3.11 이상과 [uv](https://docs.astral.sh/uv/)를 사용합니다.
+
+```bash
+uv sync --extra notebook
+```
+
+먼저 용량이 작은 train/validation manifest와 공개 train 정답을 내려받습니다.
+
+```bash
+uv run docinsights download --manifests-only
+```
+
+Notebook을 실행합니다.
+
+```bash
+uv run --extra notebook jupyter lab notebooks/01_docsem_data_analysis.ipynb
+```
+
+저장소의 Notebook에는 실행한 표, 그래프, PDF 페이지 이미지 결과가 포함되어 있어 GitHub에서도 바로 확인할 수 있습니다. 값을 변경해 다시 실행하면 새로운 분석 결과로 갱신할 수 있습니다.
+
+Notebook은 다음 분석을 포함합니다.
+
+- train task와 공개 정답을 `instance_id`로 결합해 실제 `user_query`, `answer`, `evidence` 확인
+- Query 길이, 정답 빈도와 수치 분포, 인스턴스당 evidence block 수 시각화
+- 선택한 train 인스턴스의 PDF를 필요한 시점에만 다운로드하고 모든 페이지를 이미지로 렌더링
+- PDF 텍스트에서 정답 evidence block ID가 포함된 구절 탐색
+- 여러 인스턴스의 첫 페이지 이미지, Query, 정답, evidence를 한 화면에서 비교
+
+전체 공개 데이터와 PDF를 미리 내려받으려면 다음 명령을 사용합니다. 전체 데이터 크기는 약 1.3GB입니다.
+
+```bash
+uv run docinsights download
+```
+
+다운로드 경로는 `--output /path/to/data`로 변경할 수 있습니다. Notebook의 `DATA_DIR`도 같은 경로로 맞춰야 합니다. 테스트는 실제 네트워크나 전체 데이터 없이 실행됩니다.
+
+```bash
+uv run pytest
+```
+
 ## Qwen용 OCR 전처리
 
 [Issue #8](https://github.com/choco9966/docinsights-2026/issues/8)은 이미지형 PDF에서 답을 추론하지 않고 ordered `bNN` block, 원문, 위치와 confidence만 복원해 Qwen 추론·학습에 전달하는 독립 OCR 계층입니다. OCR 엔진에는 `user_query`, 정답, evidence를 전달하지 않으며 `user_query`는 OCR이 끝난 뒤 Qwen 입력 레코드를 조립할 때만 결합합니다.

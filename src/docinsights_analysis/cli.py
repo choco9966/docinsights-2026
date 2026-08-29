@@ -10,9 +10,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="DocInsights 2026 DocSem 데이터 도구")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    download_parser = subparsers.add_parser(
-        "download", help="DocSem 공개 데이터 다운로드"
-    )
+    download_parser = subparsers.add_parser("download", help="DocSem 공개 데이터 다운로드")
     download_parser.add_argument(
         "--output", type=Path, default=DEFAULT_DATA_DIR, help="데이터 저장 디렉터리"
     )
