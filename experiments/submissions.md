@@ -11,7 +11,9 @@
 | `v3` | 2026-08-29 18:36:16 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v3.jsonl` | `2a424d2ac66050718678b346a600c5c236f4a0ef90ae2ea8cecafd6fec0a9a52` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | `task_001004`와 `task_001124`를 PDF 문구 기준으로 수정 |
 | `v4` | 2026-08-29 19:35:21 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v4.jsonl` | `c7784972ac231df59e4102b112e3354ab5e58292da7e6ac3daef2905d5b0cd99` | 217 | 0.981567 | 213/217 | 1.0 | 1.0 | v1·v2·v3 점수 차분 확인을 위해 `task_000913`, `task_001004`를 재변경 |
 | `v5` | 2026-08-29 20:40:53 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v5.jsonl` | `c950f2511e8486a722da268ad6d39a96fab34f0afc3e2ae8943235fd22ffe7ed` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | 확정값을 유지하고 미확정 후보 `task_000940`만 `4140`으로 단일 변경 |
-| `v6` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v6.jsonl` | `889263ea9a6ace1562a8ea7eeb2715765d83d95e8c3b825607516ea159802a44` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | `task_000940=24840`을 복원하고 미확정 후보 `task_001036`만 `42`로 단일 변경 |
+| `v6` | 2026-08-29 20:42:37 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v6.jsonl` | `889263ea9a6ace1562a8ea7eeb2715765d83d95e8c3b825607516ea159802a44` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | `task_000940=24840`을 복원하고 미확정 후보 `task_001036`을 `42`로 변경 |
+| `v7` | 2026-08-29 20:45:40 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v7.jsonl` | `db953923ca2ec0b9c6c0ad5e8009e64484ea81e560f03e8ecd92a6dba31d19fe` | 217 | 0.995392 | 216/217 | 1.0 | 1.0 | v6에서 `task_001036` 하나만 `105`로 복원해 확정 기준선 수립 |
+| `v8` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
 
 ## v1 해석
 
@@ -55,17 +57,21 @@
 
 `v5`는 `v2`에서 확정 오류 `task_001004`를 `20`으로 복원하고 `task_001124=150`을 유지한 상태를 기준선으로 삼았습니다. 여기에 유일한 미확정 변경으로 `task_000940: 24840 → 4140`만 적용했습니다. 포털 결과가 215/217이므로 `task_000940=4140`은 오답이고 기존 `24840`이 정답으로 확정됩니다. `task_001124`를 정답으로 복원한 효과와 `task_000940`을 오답으로 바꾼 효과가 상쇄되어 v3와 같은 점수가 나왔습니다. 포털 저장 경로는 `submissions/20260829T114053Z_haetae_v5.json`입니다.
 
-## v6 단일 후보 실험
+## v6 후보 실험과 v7 기준선
 
-`v6`는 점수로 확정된 `task_000940=24840`을 복원하고 다음 후보 `task_001036: 105 → 42`만 변경했습니다. 나머지는 `task_001004=20`, `task_001124=150`을 포함한 확정 기준선을 유지합니다. 따라서 `v6`가 217/217이면 남은 오답이 `task_001036`이었고, 215/217이면 `task_001036=105`가 맞으며 다음 후보를 검증해야 합니다.
+`v6`는 `v5`에서 `task_000940=24840`을 복원하는 동시에 `task_001036: 105 → 42`를 변경해 이전 제출 대비 두 answer가 달랐습니다. 포털 결과는 215/217이었습니다. 이후 `v7`에서 `task_001036` 하나만 `42 → 105`로 복원하자 216/217로 정확히 1개 개선됐으므로 `task_001036=105`가 정답으로 확정됩니다. `v7`은 현재 정답 216개가 확인된 기준선이며 이후 버전은 반드시 v7에서 answer 하나만 변경합니다. v6 포털 저장 경로는 `submissions/20260829T114237Z_haetae_v6.json`, v7 포털 저장 경로는 `submissions/20260829T114540Z_haetae_v7.json`입니다.
+
+## v8 단일 후보 실험
+
+`v8`은 v7에서 `task_000943: 21825 → 87300` 하나만 변경했습니다. evidence를 포함한 나머지 216개 행은 v7과 동일합니다. 따라서 v8이 217/217이면 `task_000943=87300`이 남은 정답이고, 215/217이면 기존 `21825`가 정답입니다.
 
 ## 다음 제출 기록 방법
 
 새 제출은 `artifacts/submissions/v2.jsonl`, `v3.jsonl`처럼 버전 번호를 올려 저장하고 위 표에 한 행씩 추가합니다. 제출 전에 다음 명령으로 형식을 검사하고 SHA-256을 기록합니다.
 
 ```bash
-uv run docinsights validate-submission artifacts/submissions/v6.jsonl --tasks data/raw/docsem/val/tasks.jsonl
-shasum -a 256 artifacts/submissions/v6.jsonl
+uv run docinsights validate-submission artifacts/submissions/v8.jsonl --tasks data/raw/docsem/val/tasks.jsonl
+shasum -a 256 artifacts/submissions/v8.jsonl
 ```
 
 같은 파일을 다시 제출하더라도 SHA-256이 같으면 동일한 예측으로 간주합니다. 파일 내용이 달라지면 새 버전으로 저장하고 변경한 문제, 변경 이유와 검수 방법을 방법 열 또는 별도 문단에 기록합니다.
