@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from docinsights_analysis import cli
+from docinsights_analysis.blind_review import ComparisonSummary, ExportSummary
 from docinsights_analysis.consensus import ConsensusSummary
 from docinsights_analysis.submission import SubmissionSummary
 
@@ -70,3 +71,111 @@ def test_compare_reviews_command_reports_consensus(
     output = capsys.readouterr().out
     assert "전원 일치 200개" in output
     assert "재검토 17개" in output
+
+
+def test_export_blind_review_command_reports_output(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    tasks_path = tmp_path / "tasks.jsonl"
+    output_dir = tmp_path / "packets"
+
+    def fake_export(tasks, output, *, batch_size, workers):
+        assert tasks == tasks_path
+        assert output == output_dir
+        assert batch_size == 7
+        assert workers == 6
+        return ExportSummary(total=217, batches=31, output_dir=output_dir)
+
+    monkeypatch.setattr(cli, "export_blind_review", fake_export)
+
+    exit_code = cli.main(
+        [
+            "export-blind-review",
+            "--tasks",
+            str(tasks_path),
+            "--output",
+            str(output_dir),
+        ]
+    )
+
+    assert exit_code == 0
+    assert "217개" in capsys.readouterr().out
+
+
+def test_export_blind_subset_command_reports_output(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    questions_path = tmp_path / "questions.jsonl"
+    selection_path = tmp_path / "selection.jsonl"
+    output_dir = tmp_path / "subset"
+
+    def fake_export(questions, selection, output, *, batch_size, expected_count):
+        assert questions == questions_path
+        assert selection == selection_path
+        assert output == output_dir
+        assert batch_size == 5
+        assert expected_count == 87
+        return ExportSummary(total=87, batches=18, output_dir=output_dir)
+
+    monkeypatch.setattr(cli, "export_blind_subset", fake_export)
+
+    exit_code = cli.main(
+        [
+            "export-blind-subset",
+            "--questions",
+            str(questions_path),
+            "--selection",
+            str(selection_path),
+            "--output",
+            str(output_dir),
+            "--batch-size",
+            "5",
+            "--expected-count",
+            "87",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "87개" in output
+    assert "18개 배치" in output
+
+
+def test_compare_blind_review_command_reports_candidates(
+    monkeypatch, tmp_path: Path, capsys
+) -> None:
+    review_path = tmp_path / "review.jsonl"
+    baseline_path = tmp_path / "v7.jsonl"
+    output_dir = tmp_path / "comparison"
+
+    def fake_compare(review, baseline, output, *, minimum_confidence):
+        assert review == review_path
+        assert baseline == baseline_path
+        assert output == output_dir
+        assert minimum_confidence == 0.95
+        return ComparisonSummary(
+            total=217,
+            confirmed=200,
+            candidates=1,
+            needs_review=3,
+            excluded_portal_confirmed=13,
+            portal_conflicts=0,
+        )
+
+    monkeypatch.setattr(cli, "compare_blind_review", fake_compare)
+
+    exit_code = cli.main(
+        [
+            "compare-blind-review",
+            str(review_path),
+            "--baseline",
+            str(baseline_path),
+            "--output",
+            str(output_dir),
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "안전 후보 1개" in output
+    assert "포털 확정 제외 13개" in output
