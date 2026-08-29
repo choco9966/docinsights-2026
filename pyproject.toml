@@ -1,44 +1,26 @@
 [build-system]
-requires = ["setuptools>=75"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
-name = "docinsights-ocr"
+name = "docinsights-analysis"
 version = "0.1.0"
-description = "Qwen-facing OCR benchmark pipeline for the DocInsights 2026 DocSem task"
+description = "DocInsights 2026 DocSem dataset download and analysis tools"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "UPL-1.0" }
-dependencies = []
+dependencies = [
+  "huggingface-hub>=1.0,<2",
+]
 
 [project.scripts]
-docinsights-ocr = "docinsights_ocr.cli:main"
-docinsights-hf-ocr = "docinsights_hf_ocr.cli:main"
+docinsights = "docinsights_analysis.cli:main"
 
 [dependency-groups]
 dev = [
-  "pytest>=8.4,<9",
-  "ruff>=0.12,<1",
+  "pytest>=8,<10",
 ]
-
-[tool.setuptools]
-package-dir = { "" = "src" }
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.pytest.ini_options]
-addopts = "-ra"
+addopts = "-q"
+pythonpath = ["src"]
 testpaths = ["tests"]
-
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-extend-exclude = [
-  "notebooks/docsem_hf_small_ocr_smoke.py",
-  "notebooks/docsem_hf_small_ocr_smoke_v2.py",
-  "research/ocr-small-models/raw/v2/runner-executed.py",
-]
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM"]
