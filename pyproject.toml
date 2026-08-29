@@ -12,6 +12,16 @@ dependencies = [
   "huggingface-hub>=1.0,<2",
 ]
 
+[project.optional-dependencies]
+notebook = [
+  "ipykernel>=6,<8",
+  "jupyterlab>=4,<5",
+  "matplotlib>=3.9,<4",
+  "pandas>=2.2,<4",
+  "pillow>=10,<13",
+  "pymupdf>=1.25,<2",
+]
+
 [project.scripts]
 docinsights = "docinsights_analysis.cli:main"
 
