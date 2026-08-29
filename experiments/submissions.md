@@ -15,6 +15,7 @@
 | `v7` | 2026-08-29 20:45:40 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v7.jsonl` | `db953923ca2ec0b9c6c0ad5e8009e64484ea81e560f03e8ecd92a6dba31d19fe` | 217 | 0.995392 | 216/217 | 1.0 | 1.0 | v6에서 `task_001036` 하나만 `105`로 복원해 확정 기준선 수립 |
 | `v8` | 2026-08-29 20:48:24 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
 | `v9` | 2026-08-29 20:52:18 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001058` 하나만 `19`로 변경 |
+| `v10` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v10.jsonl` | `34f7f14808d80071c1238721b74ca60268b24376b2c96d51139c4b4b16d84ed3` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v7에서 `task_001043` 하나만 `558`로 변경 |
 
 ## v1 해석
 
@@ -70,13 +71,17 @@
 
 `v9`은 확정 기준선 v7에서 `task_001058: 16 → 19` 하나만 변경했습니다. 포털 결과가 215/217이므로 기존 `task_001058=16`이 정답으로 확정됩니다. 포털 저장 경로는 `submissions/20260829T115218Z_haetae_v9.json`입니다. 현재 최고 점수 제출은 216/217인 v7입니다.
 
+## v10 단일 후보 실험
+
+`v10`은 확정 기준선 v7에서 `task_001043: 540 → 558` 하나만 변경했습니다. PDF는 하루 섭취량 합계가 18개라고 제시하지만 한 달의 일수를 명시하지 않으므로 31일 기준 대안값 `18 × 31 = 558`을 검증합니다. evidence를 포함한 나머지 216개 행은 v7과 동일합니다. 따라서 v10이 217/217이면 `task_001043=558`이 남은 정답이고, 215/217이면 기존 `540`이 정답입니다.
+
 ## 다음 제출 기록 방법
 
 새 제출은 `artifacts/submissions/v2.jsonl`, `v3.jsonl`처럼 버전 번호를 올려 저장하고 위 표에 한 행씩 추가합니다. 제출 전에 다음 명령으로 형식을 검사하고 SHA-256을 기록합니다.
 
 ```bash
-uv run docinsights validate-submission artifacts/submissions/v9.jsonl --tasks data/raw/docsem/val/tasks.jsonl
-shasum -a 256 artifacts/submissions/v9.jsonl
+uv run docinsights validate-submission artifacts/submissions/v10.jsonl --tasks data/raw/docsem/val/tasks.jsonl
+shasum -a 256 artifacts/submissions/v10.jsonl
 ```
 
 같은 파일을 다시 제출하더라도 SHA-256이 같으면 동일한 예측으로 간주합니다. 파일 내용이 달라지면 새 버전으로 저장하고 변경한 문제, 변경 이유와 검수 방법을 방법 열 또는 별도 문단에 기록합니다.
