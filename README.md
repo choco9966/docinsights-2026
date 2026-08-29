@@ -247,6 +247,8 @@ uv run docinsights-ocr cloud-merge artifacts/ocr/validation-manifest.jsonl artif
 
 제출 전에 JSONL의 스키마, ID 중복·누락, 대상 split과의 일치 여부를 검사합니다.
 
+공식 포털에 제출한 파일의 버전, SHA-256, 평가 점수와 검수 방법은 [DocSem 제출 실험 기록](experiments/submissions.md)에 누적합니다.
+
 ```bash
 uv run docinsights validate-submission artifacts/submissions/validation.jsonl
 ```
