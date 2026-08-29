@@ -13,7 +13,8 @@
 | `v5` | 2026-08-29 20:40:53 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v5.jsonl` | `c950f2511e8486a722da268ad6d39a96fab34f0afc3e2ae8943235fd22ffe7ed` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | 확정값을 유지하고 미확정 후보 `task_000940`만 `4140`으로 단일 변경 |
 | `v6` | 2026-08-29 20:42:37 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v6.jsonl` | `889263ea9a6ace1562a8ea7eeb2715765d83d95e8c3b825607516ea159802a44` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | `task_000940=24840`을 복원하고 미확정 후보 `task_001036`을 `42`로 변경 |
 | `v7` | 2026-08-29 20:45:40 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v7.jsonl` | `db953923ca2ec0b9c6c0ad5e8009e64484ea81e560f03e8ecd92a6dba31d19fe` | 217 | 0.995392 | 216/217 | 1.0 | 1.0 | v6에서 `task_001036` 하나만 `105`로 복원해 확정 기준선 수립 |
-| `v8` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
+| `v8` | 2026-08-29 20:48:24 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
+| `v9` | 제출 전 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 제출 전 | 제출 전 | 제출 전 | 제출 전 | v7에서 `task_001058` 하나만 `19`로 변경 |
 
 ## v1 해석
 
@@ -63,15 +64,19 @@
 
 ## v8 단일 후보 실험
 
-`v8`은 v7에서 `task_000943: 21825 → 87300` 하나만 변경했습니다. evidence를 포함한 나머지 216개 행은 v7과 동일합니다. 따라서 v8이 217/217이면 `task_000943=87300`이 남은 정답이고, 215/217이면 기존 `21825`가 정답입니다.
+`v8`은 v7에서 `task_000943: 21825 → 87300` 하나만 변경했습니다. 포털 결과가 215/217이므로 기존 `task_000943=21825`가 정답으로 확정됩니다. 포털 저장 경로는 `submissions/20260829T114824Z_haetae_v8.json`입니다.
+
+## v9 단일 후보 실험
+
+`v9`은 확정 기준선 v7에서 `task_001058: 16 → 19` 하나만 변경했습니다. evidence를 포함한 나머지 216개 행은 v7과 동일합니다. 따라서 v9가 217/217이면 `task_001058=19`가 남은 정답이고, 215/217이면 기존 `16`이 정답입니다.
 
 ## 다음 제출 기록 방법
 
 새 제출은 `artifacts/submissions/v2.jsonl`, `v3.jsonl`처럼 버전 번호를 올려 저장하고 위 표에 한 행씩 추가합니다. 제출 전에 다음 명령으로 형식을 검사하고 SHA-256을 기록합니다.
 
 ```bash
-uv run docinsights validate-submission artifacts/submissions/v8.jsonl --tasks data/raw/docsem/val/tasks.jsonl
-shasum -a 256 artifacts/submissions/v8.jsonl
+uv run docinsights validate-submission artifacts/submissions/v9.jsonl --tasks data/raw/docsem/val/tasks.jsonl
+shasum -a 256 artifacts/submissions/v9.jsonl
 ```
 
 같은 파일을 다시 제출하더라도 SHA-256이 같으면 동일한 예측으로 간주합니다. 파일 내용이 달라지면 새 버전으로 저장하고 변경한 문제, 변경 이유와 검수 방법을 방법 열 또는 별도 문단에 기록합니다.
