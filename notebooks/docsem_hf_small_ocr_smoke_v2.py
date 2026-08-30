@@ -83,7 +83,7 @@ SPECS: tuple[dict[str, Any], ...] = (
         "gate": "candidate",
         "selection_status": "existing_candidate",
         "model_class": "AutoModelForImageTextToText",
-        "input_mode": "plain",
+        "input_mode": "paddle_chat",
     },
     {
         "name": "GLM-OCR",
@@ -94,7 +94,7 @@ SPECS: tuple[dict[str, Any], ...] = (
         "gate": "diagnostic_gate_fail",
         "selection_status": "not_selected_diagnostic_gate_fail",
         "model_class": "AutoModelForImageTextToText",
-        "input_mode": "plain",
+        "input_mode": "glm_chat",
     },
     {
         "name": "surya-ocr-2",
@@ -108,7 +108,7 @@ SPECS: tuple[dict[str, Any], ...] = (
         "gate": "candidate",
         "selection_status": "existing_candidate",
         "model_class": "AutoModelForImageTextToText",
-        "input_mode": "plain",
+        "input_mode": "surya_chat",
     },
     {
         "name": "granite-docling-258M",
@@ -119,7 +119,7 @@ SPECS: tuple[dict[str, Any], ...] = (
         "gate": "candidate",
         "selection_status": "existing_candidate",
         "model_class": "AutoModelForImageTextToText",
-        "input_mode": "plain",
+        "input_mode": "docling_chat",
     },
     {
         "name": "SmolDocling-256M-preview",
@@ -130,7 +130,7 @@ SPECS: tuple[dict[str, Any], ...] = (
         "gate": "replacement_candidate",
         "selection_status": "replacement_candidate",
         "model_class": "AutoModelForImageTextToText",
-        "input_mode": "smoldocling_chat",
+        "input_mode": "docling_chat",
     },
 )
 
@@ -478,7 +478,51 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
         for page_number, page in enumerate(pages, start=1):
             with Image.open(page) as opened:
                 image = opened.convert("RGB")
-            if spec["input_mode"] == "smoldocling_chat":
+            if spec["input_mode"] == "glm_chat":
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "image", "url": str(page)},
+                            {"type": "text", "text": spec["prompt"]},
+                        ],
+                    }
+                ]
+                inputs = processor.apply_chat_template(
+                    messages,
+                    tokenize=True,
+                    add_generation_prompt=True,
+                    return_dict=True,
+                    return_tensors="pt",
+                ).to(DEVICE)
+                inputs.pop("token_type_ids", None)
+            elif spec["input_mode"] in {"paddle_chat", "surya_chat"}:
+                messages = [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "image", "image": image},
+                            {"type": "text", "text": spec["prompt"]},
+                        ],
+                    }
+                ]
+                template_kwargs: dict[str, Any] = {}
+                if spec["input_mode"] == "paddle_chat":
+                    template_kwargs["images_kwargs"] = {
+                        "size": {
+                            "shortest_edge": processor.image_processor.min_pixels,
+                            "longest_edge": 1280 * 28 * 28,
+                        }
+                    }
+                inputs = processor.apply_chat_template(
+                    messages,
+                    tokenize=True,
+                    add_generation_prompt=True,
+                    return_dict=True,
+                    return_tensors="pt",
+                    **template_kwargs,
+                ).to(DEVICE)
+            elif spec["input_mode"] == "docling_chat":
                 messages = [
                     {
                         "role": "user",
@@ -493,9 +537,7 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
                     DEVICE
                 )
             else:
-                inputs = processor(images=image, text=spec["prompt"], return_tensors="pt").to(
-                    DEVICE
-                )
+                raise ValueError(f"unsupported input_mode: {spec['input_mode']}")
             torch.cuda.synchronize(0)
             page_started = time.perf_counter()
             with torch.inference_mode():
@@ -506,11 +548,13 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
                 )
             torch.cuda.synchronize(0)
             record["page_latency_sec"].append(time.perf_counter() - page_started)
-            if spec["input_mode"] == "smoldocling_chat":
-                generated = generated[:, inputs.input_ids.shape[1] :]
-                text = processor.batch_decode(generated, skip_special_tokens=False)[0].lstrip()
-            else:
-                text = processor.batch_decode(generated, skip_special_tokens=True)[0]
+            generated_tail = generated[:, inputs["input_ids"].shape[1] :]
+            text = processor.batch_decode(
+                generated_tail,
+                skip_special_tokens=spec["input_mode"] == "surya_chat",
+            )[0]
+            if spec["input_mode"] == "docling_chat":
+                text = text.lstrip()
             raw = text.encode("utf-8")
             raw_path = OUT / "raw" / f"{model_index:02d}-{spec['name']}-page-{page_number}.txt"
             write_bytes(raw_path, raw)
