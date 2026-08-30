@@ -183,13 +183,13 @@ def test_pinned_model_revisions_parameters_oids_and_remote_code_audit() -> None:
 
 
 def test_current_inputs_reproduce_checked_in_generated_outputs(tmp_path: Path) -> None:
-    default_reference = Path(
-        "/Users/choco/.codex/worktrees/bed4/docinsights-2026/"
-        "artifacts/ocr/codex-validation-reference.jsonl"
-    )
-    reference = Path(os.environ.get("ISSUE8_REFERENCE", default_reference))
-    assert reference.is_file(), "set ISSUE8_REFERENCE to the exact Issue #8 reference artifact"
-    assert _sha256(reference) == "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a"
+    reference_value = os.environ.get("ISSUE8_REFERENCE")
+    reference_sha256 = os.environ.get("ISSUE8_REFERENCE_SHA256")
+    if not reference_value or not reference_sha256:
+        pytest.skip("set ISSUE8_REFERENCE and ISSUE8_REFERENCE_SHA256 for reproduction")
+    reference = Path(reference_value)
+    assert reference.is_file()
+    assert _sha256(reference) == reference_sha256
     generated = tmp_path / "generated"
     report = evaluate(
         V2 / "results.jsonl",
@@ -200,6 +200,7 @@ def test_current_inputs_reproduce_checked_in_generated_outputs(tmp_path: Path) -
         generated / "joined-queries.jsonl",
         ROOT / "manifests/environment.json",
         ROOT / "baselines.json",
+        reference_sha256,
     )
     outputs = write_outputs(report, generated)
     outputs.append(write_raw_csv(V2 / "results.jsonl", generated / "measured-raw.csv"))

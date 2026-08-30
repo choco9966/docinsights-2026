@@ -11,6 +11,12 @@ SmolDocling 256M preview 네 개를 selected로 기록한다. 1,325,258,240-para
 검사를 통과했다. GLM도 diagnostic에서 둘 다 통과했다. `success=true`만으로 OCR 품질이나
 유효성을 주장하지 않는다.
 
+v2 ingestion은 `success` exact boolean과 일관된 status, 성공 행의 고유 page identity 1/2,
+각 raw path/bytes/SHA-256 및 전체 projection, 실패 행의 완전한 output 부재를 요구한다. raw
+파일을 모두 byte/hash 검증하기 전에는 post-inference query join을 생성하거나 검증하지 않는다.
+Parent RSS는 양수 exact integer, VRAM은 0 이상 exact integer여야 하며 sampling error가
+기록된 행은 peak 값 존재 여부와 무관하게 비교에서 제외한다.
+
 언어·문서 특성·장치 경로는 각 pinned 공식 model card에서 별도 구조화했다. Paddle은
 multilingual 문서 parsing/layout/table/formula와 공식 CPU 설치 경로, GLM은
 zh/en/fr/es/ru/de/ja/ko 및 복합 layout/formula/table/information extraction, Surya는

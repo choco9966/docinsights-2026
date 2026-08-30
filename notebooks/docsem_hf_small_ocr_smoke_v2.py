@@ -705,8 +705,8 @@ def run_fresh_child(
             time.sleep(0.1)
         exit_code = child.wait()
     wall = time.perf_counter() - started
-    if peak_rss is None:
-        rss_sampling_errors.add("no parent RSS sample collected")
+    if peak_rss is None or peak_rss <= 0:
+        rss_sampling_errors.add("no positive parent RSS sample collected")
     if peak_vram is None:
         vram_sampling_errors.add("no parent VRAM sample collected")
     if result_path.is_file():
@@ -721,6 +721,16 @@ def run_fresh_child(
     if exit_code and row["success"]:
         row.update(
             success=False, status="failed", error=f"child exit code {exit_code} contradicted result"
+        )
+    if rss_sampling_errors or vram_sampling_errors:
+        sampling_error = (
+            f"parent resource sampling failed: RSS={'; '.join(sorted(rss_sampling_errors)) or None}; "
+            f"VRAM={'; '.join(sorted(vram_sampling_errors)) or None}"
+        )
+        row.update(
+            success=False,
+            status="failed",
+            error=f"{row['error']}; {sampling_error}" if row.get("error") else sampling_error,
         )
     if not row.get("success"):
         for raw_path in expected_raw_paths:

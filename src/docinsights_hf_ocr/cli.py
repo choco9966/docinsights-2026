@@ -23,6 +23,7 @@ def build_parser() -> argparse.ArgumentParser:
         "out-dir",
     ):
         generate.add_argument(f"--{name}", type=Path, required=True)
+    generate.add_argument("--reference-sha256", required=True)
     digest = commands.add_parser("hash", help="print stable SHA-256 values")
     digest.add_argument("paths", type=Path, nargs="+")
     return parser
@@ -42,6 +43,7 @@ def main(argv: list[str] | None = None) -> int:
         args.joined_tasks,
         args.environment,
         args.baselines,
+        args.reference_sha256,
     )
     paths = write_outputs(report, args.out_dir)
     paths.append(write_raw_csv(args.raw_results, args.out_dir / "measured-raw.csv"))

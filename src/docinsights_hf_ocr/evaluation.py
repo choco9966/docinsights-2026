@@ -193,24 +193,41 @@ def _validate_v2_results(
             or model_file.get("lfs_size") != candidate["weight_bytes"]
         ):
             raise ValueError(f"model.safetensors LFS identity mismatch for {name}")
-        if not isinstance(result.get("peak_process_rss_bytes_parent_sampled"), int):
-            raise TypeError(f"parent RSS sample is missing for {name}")
-        if not isinstance(result.get("peak_vram_bytes_parent_sampled"), int):
-            raise TypeError(f"parent VRAM sample is missing for {name}")
+        rss = result.get("peak_process_rss_bytes_parent_sampled")
+        vram = result.get("peak_vram_bytes_parent_sampled")
+        if type(rss) is not int or rss <= 0:
+            raise TypeError(f"parent RSS sample must be an exact positive integer for {name}")
+        if type(vram) is not int or vram < 0:
+            raise TypeError(f"parent VRAM sample must be an exact non-negative integer for {name}")
+        for error_field in ("parent_rss_sampling_error", "parent_vram_sampling_error"):
+            if result.get(error_field) not in (None, ""):
+                raise ValueError(f"parent resource sampling failed for {name}: {error_field}")
+        success = result.get("success")
+        if type(success) is not bool:
+            raise TypeError(f"success must be an exact boolean for {name}")
         outputs = result.get("raw_outputs")
         digests = result.get("raw_output_sha256")
-        if result.get("success"):
+        if success:
             if result.get("status") != "succeeded":
                 raise ValueError(f"successful result has inconsistent status for {name}")
-            if not isinstance(outputs, list) or not outputs:
-                raise ValueError(f"successful result has no raw outputs for {name}")
+            if not isinstance(outputs, list) or len(outputs) != 2:
+                raise ValueError(
+                    f"successful result must declare exactly two raw outputs for {name}"
+                )
+            if not all(isinstance(output, dict) for output in outputs):
+                raise TypeError(f"raw output identity must be an object for {name}")
+            if {output.get("page") for output in outputs} != {1, 2}:
+                raise ValueError(f"raw output pages must be unique identities 1 and 2 for {name}")
             if not isinstance(digests, list) or digests != [item.get("sha256") for item in outputs]:
                 raise ValueError(f"raw output digest projection mismatch for {name}")
+            if type(result.get("raw_output_bytes")) is not int or result["raw_output_bytes"] <= 0:
+                raise TypeError(f"raw output byte projection must be a positive integer for {name}")
             for output in outputs:
                 if not (
-                    isinstance(output.get("path"), str)
+                    type(output.get("page")) is int
+                    and isinstance(output.get("path"), str)
                     and output["path"]
-                    and isinstance(output.get("bytes"), int)
+                    and type(output.get("bytes")) is int
                     and output["bytes"] > 0
                     and _is_sha256(output.get("sha256"))
                 ):
@@ -218,7 +235,12 @@ def _validate_v2_results(
         else:
             if result.get("status") != "failed":
                 raise ValueError(f"failed result has inconsistent status for {name}")
-            if outputs != [] or digests != [] or result.get("raw_output_bytes") != 0:
+            if (
+                outputs != []
+                or digests != []
+                or type(result.get("raw_output_bytes")) is not int
+                or result["raw_output_bytes"] != 0
+            ):
                 raise ValueError(f"failed result must not declare raw outputs for {name}")
     return candidates
 
@@ -294,6 +316,7 @@ def evaluate(
     joined_tasks_path: Path,
     environment_path: Path,
     baselines_path: Path,
+    expected_reference_sha256: str,
     instance_id: str = "task_000909",
 ) -> dict[str, Any]:
     if (
@@ -308,6 +331,14 @@ def evaluate(
     candidate_rows = candidates_data["models"]
     environment = json.loads(environment_path.read_text(encoding="utf-8"))
     baselines = json.loads(baselines_path.read_text(encoding="utf-8"))
+    if not _is_sha256(expected_reference_sha256):
+        raise ValueError("expected reference SHA-256 must be exactly 64 lowercase hex characters")
+    observed_reference_sha256 = _sha256_file(reference_path)
+    if observed_reference_sha256 != expected_reference_sha256:
+        raise ValueError(
+            "reference artifact SHA-256 mismatch: "
+            f"expected={expected_reference_sha256}, observed={observed_reference_sha256}"
+        )
     references = _reference_index(reference_path)
     reference = references.get(instance_id)
     if reference is None:
@@ -315,6 +346,7 @@ def evaluate(
     rows: list[dict[str, Any]] = []
     result_rows = read_jsonl(raw_results)
     candidates = _validate_v2_results(result_rows, candidate_rows, instance_id)
+    texts_by_name = {result["name"]: _raw_texts(raw_dir, result) for result in result_rows}
     raw_results_sha256 = _sha256_file(raw_results)
     query = _create_or_validate_joined_tasks(
         tasks_path, joined_tasks_path, raw_results_sha256, instance_id
@@ -327,7 +359,7 @@ def evaluate(
         if result.get("repo") != candidate["model"]:
             raise ValueError(f"repository mismatch for {name}")
         revision = result["resolved_revision"]
-        texts = _raw_texts(raw_dir, result)
+        texts = texts_by_name[name]
         valid, invalid_reason = (
             is_valid_ocr(texts) if result.get("success") else (False, "inference_failed")
         )
@@ -402,7 +434,7 @@ def evaluate(
         "raw_evidence_status": environment.get("raw_evidence_status", NA_NOT_MEASURED),
         "reference": {
             "kind": "codex-assisted-silver",
-            "artifact_sha256": _sha256_file(reference_path),
+            "artifact_sha256": observed_reference_sha256,
             "human_gold": False,
             "available_validated_subset": len(references),
             "total_seconds_when_present": codex_total_seconds,

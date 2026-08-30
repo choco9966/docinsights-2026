@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from docinsights_hf_ocr.cli import build_parser
 from docinsights_hf_ocr.evaluation import (
     evaluate,
     hash_paths,
@@ -116,7 +117,9 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
     )
     raw_dir = tmp_path / "raw"
     raw_output = _write(raw_dir / "model-1-page-1.txt", "b01: Alpha")
+    raw_output_2 = _write(raw_dir / "model-1-page-2.txt", "\n")
     output_sha = hashlib.sha256(raw_output.read_bytes()).hexdigest()
+    output_sha_2 = hashlib.sha256(raw_output_2.read_bytes()).hexdigest()
     result_rows = []
     for index, model in enumerate(models, 1):
         success = index == 1
@@ -141,20 +144,29 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
                 "status": "succeeded" if success else "failed",
                 "raw_outputs": [
                     {
+                        "page": 1,
                         "path": "/remote/model-1-page-1.txt",
                         "bytes": raw_output.stat().st_size,
                         "sha256": output_sha,
-                    }
+                    },
+                    {
+                        "page": 2,
+                        "path": "/remote/model-1-page-2.txt",
+                        "bytes": raw_output_2.stat().st_size,
+                        "sha256": output_sha_2,
+                    },
                 ]
                 if success
                 else [],
-                "raw_output_sha256": [output_sha] if success else [],
+                "raw_output_sha256": [output_sha, output_sha_2] if success else [],
                 "doc_latency_sec": 2 if success else None,
                 "peak_process_rss_bytes_child": 30,
                 "peak_process_rss_bytes_parent_sampled": 10 + index,
                 "peak_cuda_allocated_bytes": 20,
                 "peak_vram_bytes_parent_sampled": 20 + index,
-                "raw_output_bytes": raw_output.stat().st_size if success else 0,
+                "raw_output_bytes": raw_output.stat().st_size + raw_output_2.stat().st_size
+                if success
+                else 0,
             }
         )
     results = _write(
@@ -170,6 +182,7 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
         "joined_tasks_path": joined,
         "environment_path": environment,
         "baselines_path": baselines,
+        "expected_reference_sha256": hashlib.sha256(refs.read_bytes()).hexdigest(),
     }
 
 
@@ -281,6 +294,9 @@ def test_evaluate_rejects_missing_reference_and_revision_mismatch(tmp_path: Path
         paths["reference_path"],
         '{"instance_id":"other","status":"failed","blocks":[],"timing":{}}\n',
     )
+    paths["expected_reference_sha256"] = hashlib.sha256(
+        paths["reference_path"].read_bytes()
+    ).hexdigest()
     with pytest.raises(ValueError, match="fixed reference"):
         _evaluate(paths)
 
@@ -304,7 +320,7 @@ def test_evaluate_v2_uses_parent_sampled_peaks_and_validates_output_hash(tmp_pat
     paths = _fixture(tmp_path / "hash")
     rows = _result_rows(paths["raw_results"])
     rows[0]["raw_outputs"][0]["sha256"] = "0" * 64
-    rows[0]["raw_output_sha256"] = ["0" * 64]
+    rows[0]["raw_output_sha256"][0] = "0" * 64
     _write_result_rows(paths["raw_results"], rows)
     with pytest.raises(ValueError, match="SHA-256 mismatch"):
         _evaluate(paths)
@@ -319,6 +335,13 @@ def test_evaluate_v2_uses_parent_sampled_peaks_and_validates_output_hash(tmp_pat
         (lambda rows: rows[0].update(repo_metadata_error="offline"), "metadata failed"),
         (lambda rows: rows[0].update(peak_process_rss_bytes_parent_sampled=None), "RSS"),
         (lambda rows: rows[0].update(peak_vram_bytes_parent_sampled=None), "VRAM"),
+        (lambda rows: rows[0].update(peak_process_rss_bytes_parent_sampled=True), "RSS"),
+        (lambda rows: rows[0].update(peak_process_rss_bytes_parent_sampled=-1), "RSS"),
+        (lambda rows: rows[0].update(peak_vram_bytes_parent_sampled=True), "VRAM"),
+        (lambda rows: rows[0].update(peak_vram_bytes_parent_sampled=-1), "VRAM"),
+        (lambda rows: rows[0].update(parent_rss_sampling_error="sample failed"), "sampling"),
+        (lambda rows: rows[0].update(parent_vram_sampling_error="sample failed"), "sampling"),
+        (lambda rows: rows[0].update(success="true"), "exact boolean"),
         (lambda rows: rows.pop(), "exactly 5"),
     ],
 )
@@ -343,6 +366,9 @@ def test_evaluate_rejects_stale_join_and_non_codex_reference(tmp_path: Path) -> 
     references = [json.loads(line) for line in paths["reference_path"].read_text().splitlines()]
     references[0]["engine"] = "other"
     _write_result_rows(paths["reference_path"], references)
+    paths["expected_reference_sha256"] = hashlib.sha256(
+        paths["reference_path"].read_bytes()
+    ).hexdigest()
     with pytest.raises(ValueError, match="unsupported identity"):
         _evaluate(paths)
 
@@ -363,3 +389,62 @@ def test_evaluate_rejects_lfs_mismatch_and_outputs_on_failure(tmp_path: Path) ->
     _write_result_rows(paths["raw_results"], rows)
     with pytest.raises(ValueError, match="failed result must not declare"):
         _evaluate(paths)
+
+
+@pytest.mark.parametrize("page_mutation", ["missing", "duplicate"])
+def test_evaluate_rejects_missing_or_duplicate_success_page_identities(
+    tmp_path: Path, page_mutation: str
+) -> None:
+    paths = _fixture(tmp_path)
+    rows = _result_rows(paths["raw_results"])
+    if page_mutation == "missing":
+        rows[0]["raw_outputs"][0].pop("page")
+    else:
+        rows[0]["raw_outputs"][1]["page"] = 1
+    _write_result_rows(paths["raw_results"], rows)
+    with pytest.raises(ValueError, match="pages must be unique identities"):
+        _evaluate(paths)
+
+
+def test_raw_output_failure_never_creates_or_modifies_join(tmp_path: Path) -> None:
+    absent = _fixture(tmp_path / "absent")
+    _write(absent["raw_dir"] / "model-1-page-1.txt", "corrupt")
+    with pytest.raises(ValueError, match="byte mismatch"):
+        _evaluate(absent)
+    assert not absent["joined_tasks_path"].exists()
+
+    existing = _fixture(tmp_path / "existing")
+    sentinel = b"preexisting join must remain byte-exact\n"
+    existing["joined_tasks_path"].write_bytes(sentinel)
+    _write(existing["raw_dir"] / "model-1-page-2.txt", "corrupt")
+    with pytest.raises(ValueError, match="byte mismatch"):
+        _evaluate(existing)
+    assert existing["joined_tasks_path"].read_bytes() == sentinel
+
+
+@pytest.mark.parametrize("expected", ["bad", "A" * 64, "0" * 64])
+def test_reference_artifact_hash_is_required_and_exact(tmp_path: Path, expected: str) -> None:
+    paths = _fixture(tmp_path)
+    paths["expected_reference_sha256"] = expected
+    with pytest.raises(ValueError, match="reference.*SHA-256"):
+        _evaluate(paths)
+
+
+def test_generate_cli_requires_reference_sha256() -> None:
+    arguments = ["generate"]
+    for name in (
+        "raw-results",
+        "raw-dir",
+        "candidates",
+        "reference",
+        "tasks",
+        "joined-tasks",
+        "environment",
+        "baselines",
+        "out-dir",
+    ):
+        arguments.extend((f"--{name}", name))
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(arguments)
+    parsed = build_parser().parse_args([*arguments, "--reference-sha256", "0" * 64])
+    assert parsed.reference_sha256 == "0" * 64

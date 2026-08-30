@@ -43,6 +43,9 @@ full-page structure, SmolDocling은 영어와 bbox/table/formula/code/chart를 �
 비교의 peak 값은 fresh child를 감시한 parent-sampled RSS/VRAM을 우선한다. child 내부
 RSS는 모든 행에서 4,690,857,984 B로 기록되었고 allocator VRAM도 함께 남긴다. 둘은
 측정 정의가 다르므로 parent 값을 child 값으로 대체하지 않는다.
+현재 evaluator는 parent RSS를 양의 exact integer, VRAM을 0 이상의 exact integer로
+요구한다. parent sampling error가 하나라도 기록되면 일부 peak가 남아 있어도 해당 행 전체를
+거부하며, 새 runner도 sampling error를 inference 실패로 전환하고 raw 출력을 제거한다.
 
 | 모델 | load s | s/doc | parent RSS B | child RSS B | parent VRAM B | child allocated VRAM B | output B |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -73,6 +76,9 @@ child에 넘기지 않았다. 생성기는 엄격한 v2 결과 검증이 끝난 
 `joined-queries.jsonl`을 만들며, 각 행을 raw `results.jsonl` SHA-256에 결합한다. 기존 join이
 그 결합과 byte-exact하게 일치하지 않으면 stale/prebuilt artifact로 거부한다. 현재
 `user_query`의 raw exact, normalized exact, SHA-256 exact는 모두 1/1이다.
+두 성공 페이지 각각의 page identity 1/2, path, bytes, SHA-256 및 전체 bytes/digest projection을
+실제 raw 파일과 모두 대조한 뒤에만 join 파일을 생성하거나 읽는다. raw 검증이 실패하면 기존
+join은 byte-exact하게 유지되고, join이 없었다면 새로 만들지 않는다.
 
 모든 `status=ok` reference 행은 `codex-assisted-silver` /
 `codex-assisted-visual-transcription` identity와 PDF·rendered image·renderer·Codex executable
@@ -96,13 +102,15 @@ SHA-256 provenance를 갖춰야 한다. 현재 reference artifact SHA-256은
 
 ```bash
 test -n "$ISSUE8_REFERENCE"
+test -n "$ISSUE8_REFERENCE_SHA256"
 test "$(shasum -a 256 "$ISSUE8_REFERENCE" | cut -d ' ' -f 1)" = \
-  d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a
+  "$ISSUE8_REFERENCE_SHA256"
 PYTHONPATH=src python3 -m docinsights_hf_ocr generate \
   --raw-results research/ocr-small-models/raw/v2/results.jsonl \
   --raw-dir research/ocr-small-models/raw/v2/raw \
   --candidates research/ocr-small-models/candidates.json \
   --reference "$ISSUE8_REFERENCE" \
+  --reference-sha256 "$ISSUE8_REFERENCE_SHA256" \
   --tasks research/ocr-small-models/manifests/source-queries.jsonl \
   --joined-tasks research/ocr-small-models/generated/joined-queries.jsonl \
   --environment research/ocr-small-models/manifests/environment.json \
