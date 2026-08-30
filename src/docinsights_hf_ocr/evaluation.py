@@ -23,6 +23,7 @@ EXPECTED_SCHEMA_VERSION = "2.0"
 EXPECTED_MODEL_COUNT = 5
 REFERENCE_KIND = "codex-assisted-silver"
 REFERENCE_ENGINE = "codex-assisted-visual-transcription"
+SILVER_INTERPRETATION = "silver_agreement_not_human_gold_accuracy"
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -392,10 +393,16 @@ def evaluate(
         rows.append(
             {
                 "model": result["repo"],
+                "row_type": "hf_fixed_case_smoke",
+                "cohort": f"DocSem fixed sample {instance_id} (n=1)",
                 "revision": revision,
                 "params": candidate["params"],
                 "weight_bytes": candidate.get("weight_bytes"),
                 "weight_gib": candidate.get("weight_gib") or candidate["weight_bytes"] / 1024**3,
+                "downloads": candidate.get("downloads")
+                if candidate.get("downloads") is not None
+                else NA_NOT_MEASURED,
+                "install_size_bytes": candidate.get("install_size_bytes", NA_NOT_MEASURED),
                 "license": candidate["license"],
                 "device_runtime": result.get("device_runtime")
                 or environment.get("device_runtime")
@@ -407,6 +414,7 @@ def evaluate(
                 "valid_ocr_rate": 1.0 if valid else 0.0,
                 "silver_agreement_cer": cer_value,
                 "silver_agreement_wer": wer_value,
+                "silver_text_score": "NA(different_single_case_metric)",
                 "query_raw_exact": f"{query['raw_exact']}/{query['samples']}",
                 "query_normalized_exact": f"{query['normalized_exact']}/{query['samples']}",
                 "query_sha256_exact": f"{query['sha256_exact']}/{query['samples']}",
@@ -429,6 +437,8 @@ def evaluate(
                 "runner_gate": result.get("gate", NA_NOT_MEASURED),
                 "notes": invalid_reason or "valid OCR; compared with Codex silver, not human gold",
                 "error": result.get("error"),
+                "evaluation_artifact_sha256": NA_NOT_MEASURED,
+                "prediction_artifact_sha256": NA_NOT_MEASURED,
             }
         )
     codex_total_seconds = sum(
@@ -436,7 +446,12 @@ def evaluate(
     )
     return {
         "schema_version": "2.0",
-        "comparison_scope": "one fixed DocSem validation case; no quality-winner claim",
+        "comparison_scope": (
+            "HF models use one fixed DocSem case; Apple Vision and Tesseract use the full "
+            "217-case silver cohort; cross-cohort quality ranking is prohibited"
+        ),
+        "interpretation": SILVER_INTERPRETATION,
+        "cross_cohort_quality_ranking_allowed": False,
         "raw_evidence_status": environment.get("raw_evidence_status", NA_NOT_MEASURED),
         "reference": {
             "kind": "codex-assisted-silver",
@@ -450,31 +465,164 @@ def evaluate(
         },
         "query_passthrough": query,
         "rows": rows,
-        "baselines": _baseline_rows(baselines),
+        "baselines": _baseline_rows(
+            baselines,
+            baselines_path=baselines_path,
+            expected_reference_sha256=observed_reference_sha256,
+        ),
     }
 
 
-def _baseline_rows(baselines: dict[str, Any]) -> list[dict[str, Any]]:
-    existing = baselines["existing_ocr_operational_comparison"]
-    agreement = existing["engine_agreement_not_accuracy"]
+def _baseline_rows(
+    baselines: dict[str, Any],
+    *,
+    baselines_path: Path,
+    expected_reference_sha256: str,
+) -> list[dict[str, Any]]:
+    if baselines.get("schema_version") != "2.0":
+        raise ValueError("unsupported baselines schema")
+    reference_config = baselines.get("reference")
+    if not isinstance(reference_config, dict):
+        raise ValueError("missing baseline reference identity")
+    if (
+        reference_config.get("kind") != REFERENCE_KIND
+        or reference_config.get("sha256") != expected_reference_sha256
+    ):
+        raise ValueError("baseline reference identity mismatch")
+    expected_samples = reference_config.get("records")
+    if type(expected_samples) is not int or expected_samples <= 0:
+        raise ValueError("baseline reference record count must be a positive integer")
+    configured = baselines.get("silver_baselines")
+    if not isinstance(configured, dict) or not configured:
+        raise ValueError("silver_baselines must be a non-empty object")
     rows = []
-    for key, label in (("apple_vision", "Apple Vision"), ("tesseract_psm6", "Tesseract PSM 6")):
-        value = existing[key]
+    for key in ("apple_vision", "tesseract_psm6"):
+        metadata = configured.get(key)
+        if not isinstance(metadata, dict):
+            raise ValueError(f"missing silver baseline configuration: {key}")
+        artifact = metadata.get("evaluation_artifact")
+        if not isinstance(artifact, dict):
+            raise ValueError(f"missing evaluation artifact identity: {key}")
+        relative_path = artifact.get("path")
+        expected_sha256 = artifact.get("sha256")
+        if not isinstance(relative_path, str) or not _is_sha256(expected_sha256):
+            raise ValueError(f"invalid evaluation artifact identity: {key}")
+        evaluation_path = (baselines_path.parent / relative_path).resolve()
+        if not evaluation_path.is_relative_to(baselines_path.parent.resolve()):
+            raise ValueError(f"evaluation artifact escapes research directory: {key}")
+        if not evaluation_path.is_file():
+            raise FileNotFoundError(f"silver evaluation artifact not found: {evaluation_path}")
+        actual_sha256 = _sha256_file(evaluation_path)
+        if actual_sha256 != expected_sha256:
+            raise ValueError(
+                f"silver evaluation SHA-256 mismatch for {key}: "
+                f"expected={expected_sha256}, observed={actual_sha256}"
+            )
+        evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
+        if (
+            evaluation.get("schema_version") != "1.0"
+            or evaluation.get("evaluation_kind") != "codex-silver-text-evaluation"
+            or evaluation.get("reference_kind") != REFERENCE_KIND
+            or evaluation.get("interpretation") != SILVER_INTERPRETATION
+        ):
+            raise ValueError(f"unsupported silver evaluation contract: {key}")
+        sources = evaluation.get("sources")
+        summary = evaluation.get("summary")
+        if not isinstance(sources, dict) or not isinstance(summary, dict):
+            raise ValueError(f"incomplete silver evaluation: {key}")
+        reference_source = sources.get("reference")
+        prediction_source = sources.get("prediction")
+        if not isinstance(reference_source, dict) or not isinstance(prediction_source, dict):
+            raise ValueError(f"incomplete silver evaluation sources: {key}")
+        if reference_source.get("sha256") != expected_reference_sha256:
+            raise ValueError(f"silver evaluation reference mismatch: {key}")
+        prediction_sha256 = metadata.get("prediction_artifact_sha256")
+        if (
+            not _is_sha256(prediction_sha256)
+            or prediction_source.get("sha256") != prediction_sha256
+        ):
+            raise ValueError(f"silver evaluation prediction mismatch: {key}")
+        samples = summary.get("instances")
+        if type(samples) is not int or samples != expected_samples:
+            raise ValueError(f"invalid silver evaluation sample count: {key}")
+        if (
+            reference_source.get("records") != samples
+            or prediction_source.get("records") != samples
+        ):
+            raise ValueError(f"silver evaluation source coverage mismatch: {key}")
+        latency = summary.get("latency")
+        if not isinstance(latency, dict):
+            raise ValueError(f"missing silver evaluation latency: {key}")
+        if latency.get("measured_instances") != samples:
+            raise ValueError(f"silver evaluation latency coverage mismatch: {key}")
+        runtime = metadata.get("runtime")
+        if not isinstance(runtime, dict):
+            raise ValueError(f"missing silver baseline runtime metadata: {key}")
+        prediction_ok = summary.get("prediction_ok")
+        prediction_failed = summary.get("prediction_failed")
+        if type(prediction_ok) is not int or type(prediction_failed) is not int:
+            raise ValueError(f"invalid silver prediction status counts: {key}")
+        if (
+            prediction_ok < 0
+            or prediction_failed < 0
+            or prediction_ok + prediction_failed != samples
+        ):
+            raise ValueError(f"silver prediction status coverage mismatch: {key}")
+        primary_score = evaluation.get("primary_score")
+        if (
+            not isinstance(primary_score, dict)
+            or primary_score.get("name") != "silver_text_score"
+            or primary_score.get("value") != summary.get("silver_text_score")
+        ):
+            raise ValueError(f"silver evaluation primary score mismatch: {key}")
         rows.append(
             {
-                "row_type": "operational_baseline",
-                "model": label,
-                "documents": existing["documents"],
-                "pages": existing["pages"],
-                "blocks": existing["blocks"],
-                "failures": existing["failures"],
-                "total_seconds": value["total_seconds"],
-                "sec_per_doc": value["seconds_per_document"],
-                "peak_ram_bytes": value["peak_rss_bytes"],
-                "engine_agreement_cer": agreement["cer"],
-                "engine_agreement_wer": agreement["wer"],
-                "engine_agreement_block_f1": agreement["block_f1"],
-                "notes": "217-document operational baseline; engine agreement is not accuracy",
+                "row_type": "full_silver_baseline",
+                "cohort": f"DocSem Validation full silver (n={samples})",
+                "model": metadata["model"],
+                "revision": metadata["revision"],
+                "params": metadata.get("params", NA_NOT_MEASURED),
+                "weight_bytes": metadata.get("weight_bytes", NA_NOT_MEASURED),
+                "weight_gib": _nullable_rate(metadata.get("weight_bytes"), 1024**3),
+                "downloads": metadata.get("downloads", NA_NOT_MEASURED),
+                "install_size_bytes": metadata.get("install_size_bytes", NA_NOT_MEASURED),
+                "license": metadata.get("license", NA_NOT_MEASURED),
+                "device_runtime": runtime["device_runtime"],
+                "samples": samples,
+                "quality_samples": samples,
+                "inference_success_rate": prediction_ok / samples,
+                "valid_ocr_rate": prediction_ok / samples,
+                "silver_text_score": summary["silver_text_score"],
+                "silver_agreement_cer": summary["micro_character_error_rate"],
+                "silver_agreement_wer": summary["micro_word_error_rate"],
+                "query_raw_exact": NA_NOT_MEASURED,
+                "query_normalized_exact": NA_NOT_MEASURED,
+                "query_sha256_exact": NA_NOT_MEASURED,
+                "block_fidelity": {
+                    "f1": summary["mean_block_f1"],
+                    "ordered_exact_rate": summary["ordered_block_exact_rate"],
+                },
+                "load_sec": NA_NOT_MEASURED,
+                "sec_per_doc": latency["mean_seconds_per_document"],
+                "docs_per_min": latency["documents_per_minute"],
+                "peak_ram_bytes": runtime["peak_ram_bytes"],
+                "peak_ram_bytes_child": NA_NOT_MEASURED,
+                "peak_vram_bytes": runtime.get("peak_vram_bytes", NA_NOT_MEASURED),
+                "peak_vram_bytes_child_allocated": NA_NOT_MEASURED,
+                "output_bytes": NA_NOT_MEASURED,
+                "cost": runtime["cost"],
+                "candidate_gate_outcome": "operational_baseline",
+                "selection_status": "operational_baseline",
+                "runner_gate": "full_217_coverage",
+                "notes": (
+                    "full 217-case Codex silver agreement; not human-gold accuracy; "
+                    "not rank-comparable with n=1 HF smoke"
+                ),
+                "error": None,
+                "evaluation_artifact_sha256": actual_sha256,
+                "prediction_artifact_sha256": prediction_sha256,
+                "p95_sec_per_doc": latency["p95_seconds_per_document"],
+                "strict_exact_rate": summary["strict_exact_rate"],
             }
         )
     return rows
@@ -509,11 +657,15 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
             writer.writeheader()
             writer.writerows(flat_rows)
     headers = [
+        "row_type",
+        "cohort",
         "model",
         "revision",
         "params",
         "weight_bytes",
         "weight_gib",
+        "downloads",
+        "install_size_bytes",
         "license",
         "device_runtime",
         "samples",
@@ -522,6 +674,7 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         "valid_ocr_rate",
         "silver_agreement_cer",
         "silver_agreement_wer",
+        "silver_text_score",
         "query_raw_exact",
         "query_normalized_exact",
         "query_sha256_exact",
@@ -539,11 +692,16 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         "selection_status",
         "runner_gate",
         "notes",
+        "evaluation_artifact_sha256",
+        "prediction_artifact_sha256",
     ]
     lines = [
         "# DocSem 소형 OCR 비교표",
         "",
-        "Codex 전사는 human gold가 아닌 silver reference다.",
+        "해석 계약: `silver_agreement_not_human_gold_accuracy`.",
+        "",
+        "Apple Vision/Tesseract는 Validation 217건 전수 cohort이고 HF 모델은 고정 1건 "
+        "smoke cohort다. 표본과 실행 조건이 다르므로 교차 cohort 품질 순위를 만들 수 없다.",
         "",
         "| " + " | ".join(headers) + " |",
         "| " + " | ".join("---" for _ in headers) + " |",
@@ -553,33 +711,19 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         for header in headers:
             value = row[header]
             if isinstance(value, dict):
-                value = f"F1={value['f1']:.6f}; ordered={value['ordered_exact']}"
+                ordered = value.get("ordered_exact", value.get("ordered_exact_rate"))
+                value = f"F1={value['f1']:.6f}; ordered={ordered}"
             cells.append(str(value).replace("|", "\\|"))
         lines.append("| " + " | ".join(cells) + " |")
-    lines.extend(
-        [
-            "",
-            "## 기존 OCR 운영 baseline (엔진 간 agreement이며 accuracy가 아님)",
-            "",
-            "| model | documents | pages | blocks | failures | total_seconds | sec_per_doc | peak_ram_bytes | engine_agreement_cer | engine_agreement_wer | engine_agreement_block_f1 |",
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-        ]
-    )
     for row in report["baselines"]:
-        baseline_headers = [
-            "model",
-            "documents",
-            "pages",
-            "blocks",
-            "failures",
-            "total_seconds",
-            "sec_per_doc",
-            "peak_ram_bytes",
-            "engine_agreement_cer",
-            "engine_agreement_wer",
-            "engine_agreement_block_f1",
-        ]
-        lines.append("| " + " | ".join(str(row[key]) for key in baseline_headers) + " |")
+        cells = []
+        for header in headers:
+            value = row[header]
+            if isinstance(value, dict):
+                ordered = value.get("ordered_exact", value.get("ordered_exact_rate"))
+                value = f"F1={value['f1']:.6f}; ordered={ordered}"
+            cells.append(str(value).replace("|", "\\|"))
+        lines.append("| " + " | ".join(cells) + " |")
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return [json_path, csv_path, md_path]
 

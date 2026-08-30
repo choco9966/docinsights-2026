@@ -93,26 +93,89 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
             "cost": "test quota",
         },
     )
+    reference_sha256 = hashlib.sha256(refs.read_bytes()).hexdigest()
+    silver_dir = tmp_path / "raw/silver"
+    silver_artifacts: dict[str, tuple[Path, str]] = {}
+    for key, score, cer, wer, seconds in (
+        ("apple", 90.0, 0.1, 0.2, 5.0),
+        ("tesseract", 95.0, 0.05, 0.1, 10.0),
+    ):
+        prediction_sha256 = ("e" if key == "apple" else "f") * 64
+        evaluation = _json(
+            silver_dir / f"{key}.json",
+            {
+                "schema_version": "1.0",
+                "evaluation_kind": "codex-silver-text-evaluation",
+                "reference_kind": "codex-assisted-silver",
+                "interpretation": "silver_agreement_not_human_gold_accuracy",
+                "primary_score": {"name": "silver_text_score", "value": score},
+                "sources": {
+                    "reference": {"sha256": reference_sha256, "records": 2},
+                    "prediction": {"sha256": prediction_sha256, "records": 2},
+                },
+                "summary": {
+                    "instances": 2,
+                    "prediction_ok": 2,
+                    "prediction_failed": 0,
+                    "silver_text_score": score,
+                    "micro_character_error_rate": cer,
+                    "micro_word_error_rate": wer,
+                    "mean_block_f1": 1.0,
+                    "ordered_block_exact_rate": 1.0,
+                    "strict_exact_rate": 0.5,
+                    "latency": {
+                        "measured_instances": 2,
+                        "mean_seconds_per_document": seconds,
+                        "documents_per_minute": 60 / seconds,
+                        "p95_seconds_per_document": seconds + 1,
+                    },
+                },
+            },
+        )
+        silver_artifacts[key] = (evaluation, prediction_sha256)
     baselines = _json(
         tmp_path / "baselines.json",
         {
-            "existing_ocr_operational_comparison": {
-                "documents": 2,
-                "pages": 4,
-                "blocks": 6,
-                "failures": 0,
+            "schema_version": "2.0",
+            "reference": {
+                "kind": "codex-assisted-silver",
+                "records": 2,
+                "sha256": reference_sha256,
+            },
+            "silver_baselines": {
                 "apple_vision": {
-                    "total_seconds": 10,
-                    "seconds_per_document": 5,
-                    "peak_rss_bytes": 100,
+                    "model": "Apple Vision",
+                    "revision": "fixture-apple",
+                    "prediction_artifact_sha256": silver_artifacts["apple"][1],
+                    "evaluation_artifact": {
+                        "path": "raw/silver/apple.json",
+                        "sha256": hashlib.sha256(
+                            silver_artifacts["apple"][0].read_bytes()
+                        ).hexdigest(),
+                    },
+                    "runtime": {
+                        "device_runtime": "test Apple runtime",
+                        "peak_ram_bytes": 100,
+                        "cost": "test local",
+                    },
                 },
                 "tesseract_psm6": {
-                    "total_seconds": 20,
-                    "seconds_per_document": 10,
-                    "peak_rss_bytes": 50,
+                    "model": "Tesseract PSM 6",
+                    "revision": "fixture-tesseract",
+                    "prediction_artifact_sha256": silver_artifacts["tesseract"][1],
+                    "evaluation_artifact": {
+                        "path": "raw/silver/tesseract.json",
+                        "sha256": hashlib.sha256(
+                            silver_artifacts["tesseract"][0].read_bytes()
+                        ).hexdigest(),
+                    },
+                    "runtime": {
+                        "device_runtime": "test CPU runtime",
+                        "peak_ram_bytes": 50,
+                        "cost": "test local",
+                    },
                 },
-                "engine_agreement_not_accuracy": {"cer": 0.1, "wer": 0.2, "block_f1": 1},
-            }
+            },
         },
     )
     raw_dir = tmp_path / "raw"
@@ -184,7 +247,7 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
         "joined_tasks_path": joined,
         "environment_path": environment,
         "baselines_path": baselines,
-        "expected_reference_sha256": hashlib.sha256(refs.read_bytes()).hexdigest(),
+        "expected_reference_sha256": reference_sha256,
     }
 
 
@@ -220,13 +283,36 @@ def test_dynamic_reference_refresh_join_baselines_and_determinism(tmp_path: Path
     assert report["rows"][0]["device_runtime"].startswith("test platform")
     assert report["rows"][0]["cost"] == "test quota"
     assert {row["model"] for row in report["baselines"]} == {"Apple Vision", "Tesseract PSM 6"}
+    apple = next(row for row in report["baselines"] if row["model"] == "Apple Vision")
+    assert apple["samples"] == 2
+    assert apple["silver_text_score"] == 90.0
+    assert apple["silver_agreement_cer"] == 0.1
+    assert apple["cohort"].endswith("(n=2)")
     first = write_outputs(report, tmp_path / "out")
     hashes_before = hash_paths(first)
     second = write_outputs(report, tmp_path / "out")
     assert hashes_before == hash_paths(second)
-    assert "operational_baseline" in (tmp_path / "out/comparison.csv").read_text()
+    assert "full_silver_baseline" in (tmp_path / "out/comparison.csv").read_text()
     raw_csv = write_raw_csv(paths["raw_results"], tmp_path / "out" / "measured-raw.csv")
     assert "org/model-1" in raw_csv.read_text(encoding="utf-8")
+
+
+def test_silver_baseline_artifacts_fail_closed_on_hash_and_source_mismatch(
+    tmp_path: Path,
+) -> None:
+    paths = _fixture(tmp_path)
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    baselines["silver_baselines"]["apple_vision"]["evaluation_artifact"]["sha256"] = "0" * 64
+    _json(paths["baselines_path"], baselines)
+    with pytest.raises(ValueError, match="evaluation SHA-256 mismatch"):
+        _evaluate(paths)
+
+    paths = _fixture(tmp_path / "source")
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    baselines["silver_baselines"]["apple_vision"]["prediction_artifact_sha256"] = "0" * 64
+    _json(paths["baselines_path"], baselines)
+    with pytest.raises(ValueError, match="prediction mismatch"):
+        _evaluate(paths)
 
 
 def test_query_passthrough_uses_independent_join_and_validates_keys(tmp_path: Path) -> None:

@@ -10,6 +10,7 @@ from docinsights_hf_ocr.evaluation import evaluate, write_outputs, write_raw_csv
 
 ROOT = Path("research/ocr-small-models")
 V2 = ROOT / "raw/v2"
+SILVER = ROOT / "raw/silver"
 
 
 def _sha256(path: Path) -> str:
@@ -119,6 +120,7 @@ def test_selection_gate_has_four_selected_and_glm_diagnostic_rejection() -> None
     assert all(row["gate_outcome"] == "pass" for row in selected)
     assert all(row["trendingScore"] is None for row in data["models"])
     assert all(row["languages"] and row["document_traits"] for row in data["models"])
+    assert all("install_size_bytes" in row for row in data["models"])
     assert all(
         set(row["feasibility"]) == {"cuda_gpu", "cpu", "apple_silicon"} for row in data["models"]
     )
@@ -133,6 +135,50 @@ def test_selection_gate_has_four_selected_and_glm_diagnostic_rejection() -> None
     assert glm["params"] == 1325258240
     assert glm["gate_outcome"] == "fail_params"
     assert glm["selection_status"] == "not_selected_diagnostic"
+
+
+def test_full_silver_baselines_are_scorer_outputs_with_pinned_sources() -> None:
+    expected = {
+        "apple-vision-evaluation.json": {
+            "evaluation_sha256": "0dbe819e5a2a0f7ec6103d53f7a566d8f3df4ee53104c115d4dbe44bc530ab06",
+            "prediction_sha256": "8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01",
+            "score": 99.37773767034393,
+            "cer": 0.0062226232965606745,
+            "wer": 0.00894595377474789,
+        },
+        "tesseract-evaluation.json": {
+            "evaluation_sha256": "7ec24f24e907358091aa393ba7d65dc8d5a2890fede3d2ad0f9655fde36ea35c",
+            "prediction_sha256": "8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf",
+            "score": 99.94149497079819,
+            "cer": 0.00058505029201817,
+            "wer": 0.006029087822589881,
+        },
+    }
+    for filename, values in expected.items():
+        path = SILVER / filename
+        evaluation = json.loads(path.read_text(encoding="utf-8"))
+        assert _sha256(path) == values["evaluation_sha256"]
+        assert evaluation["interpretation"] == "silver_agreement_not_human_gold_accuracy"
+        assert evaluation["sources"]["reference"] == {
+            "path": (
+                "/Users/choco/.codex/worktrees/bed4/docinsights-2026/artifacts/ocr/"
+                "codex-validation-reference.jsonl"
+            ),
+            "records": 217,
+            "sha256": "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a",
+        }
+        assert evaluation["sources"]["prediction"]["sha256"] == values["prediction_sha256"]
+        assert evaluation["summary"]["instances"] == 217
+        assert evaluation["summary"]["prediction_ok"] == 217
+        assert evaluation["summary"]["silver_text_score"] == values["score"]
+        assert evaluation["summary"]["micro_character_error_rate"] == values["cer"]
+        assert evaluation["summary"]["micro_word_error_rate"] == values["wer"]
+
+    comparison = json.loads((ROOT / "generated/comparison.json").read_text(encoding="utf-8"))
+    assert comparison["cross_cohort_quality_ranking_allowed"] is False
+    assert {row["samples"] for row in comparison["rows"]} == {1}
+    assert {row["samples"] for row in comparison["baselines"]} == {217}
+    assert {row["quality_samples"] for row in comparison["baselines"]} == {217}
 
 
 def test_pinned_model_revisions_parameters_oids_and_remote_code_audit() -> None:

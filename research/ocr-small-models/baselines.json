@@ -1,29 +1,54 @@
 {
-  "schema_version": "1.0",
-  "snapshot_at": "2026-08-31T01:30:00+09:00",
-  "issue_8": {
-    "url": "https://github.com/choco9966/docinsights-2026/issues/8",
-    "reference_artifact_sha256": "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a",
-    "validated_codex_reference_rows": 217,
-    "reference_kind": "codex-assisted-silver",
-    "human_gold": false,
-    "fixed_case": {"instance_id": "task_000909", "total_seconds": 41.95216270798119},
-    "dynamic_refresh": "generate 명령은 reference JSONL의 status=ok 행 수와 timing 합계를 매번 다시 집계한다."
+  "schema_version": "2.0",
+  "snapshot_at": "2026-08-31T08:37:00+09:00",
+  "interpretation": "silver_agreement_not_human_gold_accuracy",
+  "reference": {
+    "kind": "codex-assisted-silver",
+    "records": 217,
+    "sha256": "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a",
+    "issue_8_merge_commit": "f57df2b6ab01b1a3024e97f09ab14ed66db8e1a2"
   },
-  "existing_ocr_operational_comparison": {
-    "documents": 217,
-    "pages": 434,
-    "blocks": 4991,
-    "failures": 0,
-    "apple_vision": {"total_seconds": 842.06, "seconds_per_document": 3.878, "peak_rss_bytes": 224903168},
-    "tesseract_psm6": {"total_seconds": 1310.04, "seconds_per_document": 6.033, "peak_rss_bytes": 112754688},
-    "engine_agreement_not_accuracy": {
-      "cer": 0.00665542,
-      "wer": 0.01431542,
-      "block_f1": 1.0,
-      "ordered_exact": "217/217",
-      "critical_token_f1": 0.9802,
-      "quantity_f1": 0.9768
+  "silver_baselines": {
+    "apple_vision": {
+      "model": "Apple Vision accurate 200 DPI",
+      "revision": "NA(os_integrated_revision_not_exposed)",
+      "params": "NA(os_integrated_not_published)",
+      "weight_bytes": "NA(os_integrated_not_separable)",
+      "downloads": "NA(os_integrated_not_applicable)",
+      "install_size_bytes": "NA(os_integrated_not_separable)",
+      "license": "Apple platform API",
+      "prediction_artifact_sha256": "8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01",
+      "evaluation_artifact": {
+        "path": "raw/silver/apple-vision-evaluation.json",
+        "sha256": "0dbe819e5a2a0f7ec6103d53f7a566d8f3df4ee53104c115d4dbe44bc530ab06"
+      },
+      "runtime": {
+        "device_runtime": "macOS Apple Silicon; Vision accurate; Poppler 200 DPI; 217 documents",
+        "peak_ram_bytes": 224903168,
+        "peak_vram_bytes": "NA(not_exposed_by_Vision_API)",
+        "cost": "local macOS; no metered API cost"
+      }
+    },
+    "tesseract_psm6": {
+      "model": "Tesseract 5.5.3 eng PSM 6 200 DPI",
+      "revision": "5.5.3; eng.traineddata",
+      "params": "NA(not_applicable_to_traineddata)",
+      "weight_bytes": 4113088,
+      "downloads": "NA(not_captured_for_Homebrew_install)",
+      "install_size_bytes": 34848768,
+      "install_size_method": "2026-08-31 local Homebrew Cellar du -sk; 34032 KiB",
+      "license": "Apache-2.0",
+      "prediction_artifact_sha256": "8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf",
+      "evaluation_artifact": {
+        "path": "raw/silver/tesseract-evaluation.json",
+        "sha256": "7ec24f24e907358091aa393ba7d65dc8d5a2890fede3d2ad0f9655fde36ea35c"
+      },
+      "runtime": {
+        "device_runtime": "macOS Apple Silicon CPU; Tesseract 5.5.3 eng PSM 6; Poppler 200 DPI; 217 documents",
+        "peak_ram_bytes": 112754688,
+        "peak_vram_bytes": "NA(CPU_runtime)",
+        "cost": "local CPU; no metered API cost"
+      }
     }
   }
 }
