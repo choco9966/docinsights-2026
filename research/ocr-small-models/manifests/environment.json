@@ -15,11 +15,11 @@
     "psutil": "7.0.0",
     "pillow": "10.4.0"
   },
-  "dependency_lock": {
+  "environment_snapshot": {
     "path": "research/ocr-small-models/requirements-kaggle-v2.txt",
     "verbatim_evidence_path": "research/ocr-small-models/raw/v2/pip-freeze.txt",
-    "source": "environment.json pip_freeze_all_verbatim",
-    "note": "pyproject.toml contains only the dependency-free evaluation package; this lock records the complete Kaggle ML runtime."
+    "source": "raw/v2/environment.json pip_freeze_all_verbatim",
+    "note": "This is a verbatim post-install Kaggle environment snapshot, not a reconstructible lock. The runner installed five pinned packages with --no-deps atop the Kaggle base image; local file URLs may be present."
   },
   "runner": {
     "path": "research/ocr-small-models/raw/v2/runner-executed.py",

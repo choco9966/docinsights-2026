@@ -45,6 +45,14 @@
       "license": "apache-2.0",
       "primary_url": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/tree/c5630abae1d940eafe0697512a0325494b02ab42",
       "license_url": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/blob/c5630abae1d940eafe0697512a0325494b02ab42/LICENSE",
+      "model_card_url": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/blob/c5630abae1d940eafe0697512a0325494b02ab42/README.md",
+      "languages": ["multilingual (official card; exact list not enumerated)"],
+      "document_traits": ["document parsing", "layout", "tables", "formulae"],
+      "feasibility": {
+        "cuda_gpu": {"status": "measured_v2_t4_load_failed", "route": "Transformers cuda:0", "local_measurement": "T4 attempted; model load failed before inference"},
+        "cpu": {"status": "official_route_unmeasured", "route": "official PaddleOCR CPU installation", "local_measurement": "not measured; current Transformers path failed"},
+        "apple_silicon": {"status": "unmeasured_no_documented_route", "route": null, "local_measurement": "not measured; current runner has no Apple Silicon support"}
+      },
       "trust_remote_code": true,
       "trust_note": "Pinned remote Python source is executable supply-chain input and requires source review. The v2 run failed under Transformers 5.12.1 before inference.",
       "remote_code_audit": {
@@ -89,6 +97,14 @@
       "license": "mit",
       "primary_url": "https://huggingface.co/zai-org/GLM-OCR/tree/ca5d8b3e287e52589e37c28385d9655ee4372f9d",
       "license_url": "https://huggingface.co/zai-org/GLM-OCR/blob/ca5d8b3e287e52589e37c28385d9655ee4372f9d/README.md",
+      "model_card_url": "https://huggingface.co/zai-org/GLM-OCR/blob/ca5d8b3e287e52589e37c28385d9655ee4372f9d/README.md",
+      "languages": ["zh", "en", "fr", "es", "ru", "de", "ja", "ko"],
+      "document_traits": ["complex document parsing", "layout", "formulae", "tables", "information extraction"],
+      "feasibility": {
+        "cuda_gpu": {"status": "measured_v2_t4_success", "route": "Transformers cuda:0", "local_measurement": "T4 measured in v2 diagnostic run"},
+        "cpu": {"status": "unmeasured_no_current_runner_support", "route": null, "local_measurement": "not measured"},
+        "apple_silicon": {"status": "unmeasured_no_current_runner_support", "route": null, "local_measurement": "not measured"}
+      },
       "trust_remote_code": false,
       "trust_note": "No remote-code execution requested in the v2 run.",
       "gate_outcome": "fail_params",
@@ -123,6 +139,14 @@
       "license": "modified-ai-pubs-openrail-m",
       "primary_url": "https://huggingface.co/datalab-to/surya-ocr-2/tree/3b3d4cdf88d6928b0acdc75181b13206ea67c4a3",
       "license_url": "https://huggingface.co/datalab-to/surya-ocr-2/blob/3b3d4cdf88d6928b0acdc75181b13206ea67c4a3/LICENSE",
+      "model_card_url": "https://huggingface.co/datalab-to/surya-ocr-2/blob/3b3d4cdf88d6928b0acdc75181b13206ea67c4a3/README.md",
+      "languages": ["91 languages (official card)"],
+      "document_traits": ["OCR", "layout", "reading order", "tables", "HTML output"],
+      "feasibility": {
+        "cuda_gpu": {"status": "measured_v2_t4_success", "route": "Transformers cuda:0; official vLLM GPU route also documented", "local_measurement": "T4 measured in v2"},
+        "cpu": {"status": "official_route_unmeasured", "route": "official llama.cpp route", "local_measurement": "not measured"},
+        "apple_silicon": {"status": "official_route_unmeasured", "route": "official llama.cpp route", "local_measurement": "not measured"}
+      },
       "trust_remote_code": false,
       "trust_note": "License contains a commercial restriction above USD 5M annual revenue; legal review remains required.",
       "gate_outcome": "pass",
@@ -157,6 +181,14 @@
       "license": "apache-2.0",
       "primary_url": "https://huggingface.co/ibm-granite/granite-docling-258M/tree/982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
       "license_url": "https://huggingface.co/ibm-granite/granite-docling-258M/blob/982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe/README.md",
+      "model_card_url": "https://huggingface.co/ibm-granite/granite-docling-258M/blob/982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe/README.md",
+      "languages": ["en", "ja (experimental)", "ar (experimental)", "zh (experimental)"],
+      "document_traits": ["full-page OCR", "layout", "tables", "formulae", "code"],
+      "feasibility": {
+        "cuda_gpu": {"status": "measured_v2_t4_invalid_output", "route": "Transformers cuda:0", "local_measurement": "T4 measured; output failed valid-OCR gate"},
+        "cpu": {"status": "official_route_unmeasured", "route": "official Transformers CPU route", "local_measurement": "not measured"},
+        "apple_silicon": {"status": "official_route_unmeasured", "route": "official macOS MPS/MLX routes", "local_measurement": "not measured"}
+      },
       "trust_remote_code": false,
       "trust_note": "No remote-code execution requested; v2 output was degenerate repeated punctuation and is invalid OCR.",
       "gate_outcome": "pass",
@@ -191,6 +223,14 @@
       "license": "cdla-permissive-2.0",
       "primary_url": "https://huggingface.co/docling-project/SmolDocling-256M-preview/tree/ce51f56c4ebe36e0b1c3a55f67b261ba22a50bf8",
       "license_url": "https://huggingface.co/docling-project/SmolDocling-256M-preview/blob/ce51f56c4ebe36e0b1c3a55f67b261ba22a50bf8/README.md",
+      "model_card_url": "https://huggingface.co/docling-project/SmolDocling-256M-preview/blob/ce51f56c4ebe36e0b1c3a55f67b261ba22a50bf8/README.md",
+      "languages": ["en"],
+      "document_traits": ["full-page OCR", "document structure", "bounding boxes", "tables", "formulae", "code", "charts"],
+      "feasibility": {
+        "cuda_gpu": {"status": "measured_v2_t4_success", "route": "Transformers cuda:0", "local_measurement": "T4 measured in v2"},
+        "cpu": {"status": "official_route_unmeasured", "route": "official CPU/ONNX routes", "local_measurement": "not measured"},
+        "apple_silicon": {"status": "official_route_unmeasured", "route": "official MLX route", "local_measurement": "not measured"}
+      },
       "trust_remote_code": false,
       "trust_note": "Pinned preview revision; model-card supersession status is documented, but the pinned artifact license is CDLA-Permissive-2.0.",
       "gate_outcome": "pass",

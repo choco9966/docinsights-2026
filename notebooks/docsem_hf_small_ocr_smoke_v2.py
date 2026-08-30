@@ -166,9 +166,11 @@ RESULT_FIELDS = (
     "parent_wall_sec",
     "peak_process_rss_bytes_child",
     "peak_process_rss_bytes_parent_sampled",
+    "parent_rss_sampling_error",
     "peak_cuda_allocated_bytes",
     "peak_cuda_reserved_bytes",
     "peak_vram_bytes_parent_sampled",
+    "parent_vram_sampling_error",
     "raw_outputs",
     "raw_output_bytes",
     "raw_output_sha256",
@@ -355,10 +357,8 @@ def empty_result(spec: dict[str, Any], model_index: int) -> dict[str, Any]:
         "name": spec["name"],
         "repo": spec["repo"],
         "requested_revision": spec["revision"],
-        # Every requested revision is a full 40-hex commit, so resolution remains
-        # exact even when the optional Hub metadata request is unavailable.
-        "resolved_revision": spec["revision"],
-        "revision_resolution": "requested_full_commit_pin",
+        "resolved_revision": None,
+        "revision_resolution": None,
         "repo_file_metadata": [],
         "repo_metadata_error": None,
         "prompt": spec["prompt"],
@@ -385,9 +385,11 @@ def empty_result(spec: dict[str, Any], model_index: int) -> dict[str, Any]:
         "parent_wall_sec": None,
         "peak_process_rss_bytes_child": None,
         "peak_process_rss_bytes_parent_sampled": None,
+        "parent_rss_sampling_error": None,
         "peak_cuda_allocated_bytes": None,
         "peak_cuda_reserved_bytes": None,
         "peak_vram_bytes_parent_sampled": None,
+        "parent_vram_sampling_error": None,
         "raw_outputs": [],
         "raw_output_bytes": 0,
         "raw_output_sha256": [],
@@ -441,12 +443,25 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
         torch.cuda.reset_peak_memory_stats(0)
         try:
             resolved, metadata = huggingface_repo_metadata(spec["repo"], spec["revision"])
-            if resolved:
-                record["resolved_revision"] = resolved
-                record["revision_resolution"] = "huggingface_api_confirmed_commit"
-            record["repo_file_metadata"] = metadata
-        except Exception as exc:  # noqa: BLE001 - optional Hub metadata has backend-specific errors
+        except Exception as exc:
             record["repo_metadata_error"] = f"{type(exc).__name__}: {exc}"
+            raise RuntimeError(
+                f"repository identity metadata failed: {record['repo_metadata_error']}"
+            ) from exc
+        if resolved != spec["revision"]:
+            raise RuntimeError(
+                f"resolved revision differs from requested pin: requested={spec['revision']}, resolved={resolved}"
+            )
+        model_files = [row for row in metadata if row["rfilename"] == "model.safetensors"]
+        if (
+            len(model_files) != 1
+            or not model_files[0]["lfs_sha256"]
+            or model_files[0]["lfs_size"] is None
+        ):
+            raise RuntimeError("model.safetensors LFS identity is missing or ambiguous")
+        record["resolved_revision"] = resolved
+        record["revision_resolution"] = "huggingface_api_confirmed_commit"
+        record["repo_file_metadata"] = metadata
 
         load_started = time.perf_counter()
         processor = AutoProcessor.from_pretrained(
@@ -466,12 +481,9 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
         torch.cuda.synchronize(0)
         record["load_sec"] = time.perf_counter() - load_started
         config_commit = getattr(model.config, "_commit_hash", None)
-        if config_commit:
-            record["resolved_revision"] = config_commit
-            record["revision_resolution"] = "loaded_model_config_commit"
-        if record["resolved_revision"] and record["resolved_revision"] != spec["revision"]:
+        if config_commit and config_commit != record["resolved_revision"]:
             raise RuntimeError(
-                f"resolved revision differs from requested pin: {record['resolved_revision']}"
+                f"loaded config revision differs from verified Hub revision: {config_commit}"
             )
 
         doc_started = time.perf_counter()
@@ -572,6 +584,11 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
         record["status"] = "succeeded"
         record["success"] = True
     except Exception as exc:  # noqa: BLE001 - failure is a required complete evidence row
+        for output in record["raw_outputs"]:
+            Path(output["path"]).unlink(missing_ok=True)
+        record["raw_outputs"] = []
+        record["raw_output_bytes"] = 0
+        record["raw_output_sha256"] = []
         record["status"] = "failed"
         record["error"] = f"{type(exc).__name__}: {exc}"
         record["traceback"] = traceback.format_exc()
@@ -591,19 +608,14 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
 
 
 def sampled_rss_bytes(process: Any) -> int:
-    import psutil
-
-    try:
-        processes = [process, *process.children(recursive=True)]
-        return sum(item.memory_info().rss for item in processes if item.is_running())
-    except (OSError, psutil.Error):
-        return 0
+    processes = [process, *process.children(recursive=True)]
+    return sum(item.memory_info().rss for item in processes if item.is_running())
 
 
 def sampled_vram_bytes(pid: int) -> int:
     binary = shutil.which("nvidia-smi")
     if binary is None:
-        return 0
+        raise RuntimeError("nvidia-smi is unavailable")
     completed = subprocess.run(
         [
             binary,
@@ -615,15 +627,17 @@ def sampled_vram_bytes(pid: int) -> int:
         check=False,
     )
     if completed.returncode:
-        return 0
+        raise RuntimeError(
+            f"nvidia-smi sampling failed ({completed.returncode}): {completed.stderr.strip()}"
+        )
     total_mib = 0
     for line in completed.stdout.splitlines():
         columns = [column.strip() for column in line.split(",")]
         if len(columns) == 2 and columns[0] == str(pid):
             try:
                 total_mib += int(columns[1])
-            except ValueError:
-                pass
+            except ValueError as exc:
+                raise RuntimeError(f"invalid nvidia-smi memory sample: {columns[1]}") from exc
     return total_mib * 1024 * 1024
 
 
@@ -664,8 +678,10 @@ def run_fresh_child(
     environment = os.environ.copy()
     environment["CUDA_VISIBLE_DEVICES"] = "0"
     started = time.perf_counter()
-    peak_rss = 0
-    peak_vram = 0
+    peak_rss = None
+    peak_vram = None
+    rss_sampling_errors: set[str] = set()
+    vram_sampling_errors: set[str] = set()
     with stdout_path.open("wb") as stdout_handle, stderr_path.open("wb") as stderr_handle:
         child = subprocess.Popen(
             command,
@@ -676,11 +692,23 @@ def run_fresh_child(
         )
         monitored = psutil.Process(child.pid)
         while child.poll() is None:
-            peak_rss = max(peak_rss, sampled_rss_bytes(monitored))
-            peak_vram = max(peak_vram, sampled_vram_bytes(child.pid))
+            try:
+                rss_sample = sampled_rss_bytes(monitored)
+                peak_rss = rss_sample if peak_rss is None else max(peak_rss, rss_sample)
+            except (OSError, psutil.Error) as exc:
+                rss_sampling_errors.add(f"{type(exc).__name__}: {exc}")
+            try:
+                vram_sample = sampled_vram_bytes(child.pid)
+                peak_vram = vram_sample if peak_vram is None else max(peak_vram, vram_sample)
+            except (OSError, RuntimeError) as exc:
+                vram_sampling_errors.add(f"{type(exc).__name__}: {exc}")
             time.sleep(0.1)
         exit_code = child.wait()
     wall = time.perf_counter() - started
+    if peak_rss is None:
+        rss_sampling_errors.add("no parent RSS sample collected")
+    if peak_vram is None:
+        vram_sampling_errors.add("no parent VRAM sample collected")
     if result_path.is_file():
         try:
             row = json.loads(result_path.read_text(encoding="utf-8"))
@@ -690,22 +718,23 @@ def run_fresh_child(
     else:
         row = empty_result(spec, model_index)
         row.update(status="failed", error="child exited without writing its result record")
-    # If the OS terminated a child between a page write and its finally block, retain
-    # the already-written raw bytes in the synthesized failure row.
-    recovered_raw = [
-        {"page": number, **file_fact(path)}
-        for number, path in enumerate(expected_raw_paths, 1)
-        if path.is_file()
-    ]
-    if recovered_raw and not row.get("raw_outputs"):
-        row["raw_outputs"] = recovered_raw
-        row["raw_output_bytes"] = sum(item["bytes"] for item in recovered_raw)
-        row["raw_output_sha256"] = [item["sha256"] for item in recovered_raw]
+    if exit_code and row["success"]:
+        row.update(
+            success=False, status="failed", error=f"child exit code {exit_code} contradicted result"
+        )
+    if not row.get("success"):
+        for raw_path in expected_raw_paths:
+            raw_path.unlink(missing_ok=True)
+        row["raw_outputs"] = []
+        row["raw_output_bytes"] = 0
+        row["raw_output_sha256"] = []
     row.update(
         exit_code=exit_code,
         parent_wall_sec=wall,
         peak_process_rss_bytes_parent_sampled=peak_rss,
+        parent_rss_sampling_error="; ".join(sorted(rss_sampling_errors)) or None,
         peak_vram_bytes_parent_sampled=peak_vram,
+        parent_vram_sampling_error="; ".join(sorted(vram_sampling_errors)) or None,
         stdout_path=str(stdout_path),
         stdout_bytes=stdout_path.stat().st_size,
         stdout_sha256=sha256_file(stdout_path),
@@ -713,10 +742,6 @@ def run_fresh_child(
         stderr_bytes=stderr_path.stat().st_size,
         stderr_sha256=sha256_file(stderr_path),
     )
-    if exit_code and row["success"]:
-        row.update(
-            success=False, status="failed", error=f"child exit code {exit_code} contradicted result"
-        )
     return {field: row.get(field) for field in RESULT_FIELDS}
 
 
@@ -748,23 +773,23 @@ def build_report(rows: list[dict[str, Any]], run_id: str) -> str:
         "- device policy: `CUDA_VISIBLE_DEVICES=0`, model device `cuda:0`, sequential fresh children",
         "- blind-input policy: no task, query, label, answer, or evidence source is read",
         "",
-        "| model | gate | status | load s | doc s | peak RSS B | peak VRAM B | raw B |",
-        "|---|---|---:|---:|---:|---:|---:|---:|",
+        "| model | gate | status | load s | doc s | parent RSS B | child RSS B | parent VRAM B | child allocated VRAM B | raw B |",
+        "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
-        peak_rss = max(
-            row["peak_process_rss_bytes_child"] or 0,
-            row["peak_process_rss_bytes_parent_sampled"] or 0,
-        )
-        peak_vram = max(
-            row["peak_cuda_reserved_bytes"] or 0,
-            row["peak_vram_bytes_parent_sampled"] or 0,
-        )
         lines.append(
             f"| {row['name']} | {row['gate']} | {row['status']} | "
-            f"{row['load_sec']} | {row['doc_latency_sec']} | {peak_rss} | "
-            f"{peak_vram} | {row['raw_output_bytes']} |"
+            f"{row['load_sec']} | {row['doc_latency_sec']} | "
+            f"{row['peak_process_rss_bytes_parent_sampled']} | "
+            f"{row['peak_process_rss_bytes_child']} | "
+            f"{row['peak_vram_bytes_parent_sampled']} | "
+            f"{row['peak_cuda_allocated_bytes']} | {row['raw_output_bytes']} |"
         )
+        if row["parent_rss_sampling_error"] or row["parent_vram_sampling_error"]:
+            lines.append(
+                f"\n`{row['name']}` sampling error: RSS={row['parent_rss_sampling_error']}; "
+                f"VRAM={row['parent_vram_sampling_error']}"
+            )
         if row["error"]:
             lines.append(f"\n`{row['name']}` error: `{row['error']}`")
     lines.extend(

@@ -31,6 +31,13 @@ Docling 258M, SmolDocling 256M preview 네 개다. GLM-OCR은 실제 추론 및 
 SmolDocling의 DocTags 원문에는 `b01` 같은 marker가 남아 있어 현재 parser가 block-ID
 alignment를 수행했다. 구조 marker가 없는 출력을 성공으로 간주하는 예외는 두지 않는다.
 
+공식 model card 기준 언어·문서 특성·실행 route는 `candidates.json`에 구조화했다. Paddle은
+multilingual parsing/layout/table/formula, GLM은 8개 명시 언어와 복합 문서 추출, Surya는
+91개 언어와 layout/reading-order/table/HTML, Granite는 영어와 실험적 ja/ar/zh 및
+full-page structure, SmolDocling은 영어와 bbox/table/formula/code/chart를 다룬다. 장치별
+`feasibility`에서 T4만 이 v2의 실제 측정이며, 공식 CPU·Apple route는 모두 로컬 미측정으로
+구분한다.
+
 ## 실행 시간과 자원
 
 비교의 peak 값은 fresh child를 감시한 parent-sampled RSS/VRAM을 우선한다. child 내부
@@ -56,13 +63,22 @@ hashes, child results, logs, raw text와 실제 실행된 runner를 보존했다
 `9854d5c30e9e56b972bc89f88dec75679296e86768715e25fb1cef45d3c7a03e`, 200 dpi다.
 
 `raw/v2/pip-freeze.txt`와 `requirements-kaggle-v2.txt`는 v2 `environment.json`의
-`pip_freeze_all_verbatim` 문자열과 byte-identical한 evidence/ML runtime lock이다.
-`pyproject.toml`은 dependency-free evaluator 패키지
-정의이므로 ML 실행 lock을 대신하지 않는다.
+`pip_freeze_all_verbatim` 문자열과 byte-identical한 실행 후 환경 snapshot이다. runner가
+Kaggle base 위에 다섯 pinned package를 `--no-deps`로 설치한 결과이며 local file URL도
+포함하므로 reconstructible lock이라고 주장하지 않는다. `pyproject.toml`은 dependency-free
+evaluator 패키지 정의일 뿐 ML 실행 환경을 재구성하지 않는다.
 
 모델에는 두 PNG와 고정 prompt만 전달했다. query, labels, answer, evidence 파일은 읽거나
-child에 넘기지 않았다. `user_query`는 inference 뒤에 instance ID로 join하며 raw exact,
-normalized exact, SHA-256 exact가 모두 1/1이다.
+child에 넘기지 않았다. 생성기는 엄격한 v2 결과 검증이 끝난 뒤에만 독립 source task에서
+`joined-queries.jsonl`을 만들며, 각 행을 raw `results.jsonl` SHA-256에 결합한다. 기존 join이
+그 결합과 byte-exact하게 일치하지 않으면 stale/prebuilt artifact로 거부한다. 현재
+`user_query`의 raw exact, normalized exact, SHA-256 exact는 모두 1/1이다.
+
+모든 `status=ok` reference 행은 `codex-assisted-silver` /
+`codex-assisted-visual-transcription` identity와 PDF·rendered image·renderer·Codex executable
+SHA-256 provenance를 갖춰야 한다. 현재 reference artifact SHA-256은
+`d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a`이며 생성 결과에도
+기록한다. 다른 engine이 섞인 reference는 비교 전에 fail closed한다.
 
 ## 운영 baseline과 한계
 
@@ -79,12 +95,14 @@ normalized exact, SHA-256 exact가 모두 1/1이다.
 ## 재현 및 Issue #11 완료 기준
 
 ```bash
-ISSUE8=/Users/choco/.codex/worktrees/bed4/docinsights-2026
+test -n "$ISSUE8_REFERENCE"
+test "$(shasum -a 256 "$ISSUE8_REFERENCE" | cut -d ' ' -f 1)" = \
+  d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a
 PYTHONPATH=src python3 -m docinsights_hf_ocr generate \
   --raw-results research/ocr-small-models/raw/v2/results.jsonl \
   --raw-dir research/ocr-small-models/raw/v2/raw \
   --candidates research/ocr-small-models/candidates.json \
-  --reference "$ISSUE8/artifacts/ocr/codex-validation-reference.jsonl" \
+  --reference "$ISSUE8_REFERENCE" \
   --tasks research/ocr-small-models/manifests/source-queries.jsonl \
   --joined-tasks research/ocr-small-models/generated/joined-queries.jsonl \
   --environment research/ocr-small-models/manifests/environment.json \

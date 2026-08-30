@@ -35,11 +35,13 @@
   "query_passthrough": {
     "normalized_exact": 1,
     "raw_exact": 1,
+    "raw_results_sha256": "2a567e32ee8c13203f61c02480d775e845f88f905915cdda8f87d2d3aa0db232",
     "samples": 1,
     "sha256_exact": 1
   },
   "raw_evidence_status": "fresh v2 evidence; complete_with_model_failures",
   "reference": {
+    "artifact_sha256": "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a",
     "available_validated_subset": 217,
     "fixed_case_seconds": 41.95216270798119,
     "human_gold": false,

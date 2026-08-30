@@ -1,6 +1,12 @@
 import hashlib
 import json
+import os
+import runpy
 from pathlib import Path
+
+import pytest
+
+from docinsights_hf_ocr.evaluation import evaluate, write_outputs, write_raw_csv
 
 ROOT = Path("research/ocr-small-models")
 V2 = ROOT / "raw/v2"
@@ -62,7 +68,7 @@ def test_v2_results_link_to_raw_outputs_logs_revisions_and_model_files() -> None
                 assert _sha256(path) == row[f"{stream}_sha256"]
 
 
-def test_runner_hash_lock_and_checked_in_source_linkage() -> None:
+def test_executed_runner_is_immutable_and_environment_snapshot_is_verbatim() -> None:
     environment = json.loads((V2 / "environment.json").read_text(encoding="utf-8"))
     run_manifest = json.loads((V2 / "run-manifest.json").read_text(encoding="utf-8"))
     runner = V2 / "runner-executed.py"
@@ -70,13 +76,31 @@ def test_runner_hash_lock_and_checked_in_source_linkage() -> None:
     assert _sha256(runner) == expected
     assert environment["runner"]["sha256"] == expected
     assert run_manifest["started_from_exact_runner_sha256"] == expected
-    assert (
-        Path("notebooks/docsem_hf_small_ocr_smoke_v2.py").read_bytes()
-        == runner.read_bytes() + b"\n"
-    )
-    lock = environment["pip_freeze_all_verbatim"]
-    assert (V2 / "pip-freeze.txt").read_text() == lock
-    assert (ROOT / "requirements-kaggle-v2.txt").read_text() == lock
+    assert Path("notebooks/docsem_hf_small_ocr_smoke_v2.py").read_bytes() != runner.read_bytes()
+    snapshot = environment["pip_freeze_all_verbatim"]
+    assert (V2 / "pip-freeze.txt").read_text() == snapshot
+    assert (ROOT / "requirements-kaggle-v2.txt").read_text() == snapshot
+    manifest = json.loads((ROOT / "manifests/environment.json").read_text())
+    assert "environment_snapshot" in manifest
+    assert "not a reconstructible lock" in manifest["environment_snapshot"]["note"]
+
+
+def test_current_runner_fails_closed_and_reports_resource_columns_separately(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    namespace = runpy.run_path("notebooks/docsem_hf_small_ocr_smoke_v2.py")
+    empty = namespace["empty_result"](namespace["SPECS"][0], 1)
+    assert empty["resolved_revision"] is None
+    assert empty["parent_rss_sampling_error"] is None
+    assert empty["parent_vram_sampling_error"] is None
+    report = namespace["build_report"]([empty], "test-run")
+    assert "parent RSS B | child RSS B | parent VRAM B | child allocated VRAM B" in report
+    monkeypatch.setattr(namespace["shutil"], "which", lambda _name: None)
+    with pytest.raises(RuntimeError, match="nvidia-smi is unavailable"):
+        namespace["sampled_vram_bytes"](123)
+    source = Path("notebooks/docsem_hf_small_ocr_smoke_v2.py").read_text()
+    assert "repository identity metadata failed" in source
+    assert '"resolved_revision": spec["revision"]' not in source
 
 
 def test_selection_gate_has_four_selected_and_glm_diagnostic_rejection() -> None:
@@ -86,6 +110,13 @@ def test_selection_gate_has_four_selected_and_glm_diagnostic_rejection() -> None
     assert len(selected) == 4
     assert all(row["gate_outcome"] == "pass" for row in selected)
     assert all(row["trendingScore"] is None for row in data["models"])
+    assert all(row["languages"] and row["document_traits"] for row in data["models"])
+    assert all(
+        set(row["feasibility"]) == {"cuda_gpu", "cpu", "apple_silicon"} for row in data["models"]
+    )
+    assert all(
+        row["model_card_url"].startswith("https://huggingface.co/") for row in data["models"]
+    )
     assert all(
         sum(item["score"] for item in row["rubric"].values()) == row["score_total"]
         for row in data["models"]
@@ -149,3 +180,31 @@ def test_pinned_model_revisions_parameters_oids_and_remote_code_audit() -> None:
         "modeling_paddleocr_vl.py": "693782514116586458b12cfd911c88d6565f552c",
         "processing_paddleocr_vl.py": "73c3faeff201555fc7b52709848e3c669419dbb1",
     }
+
+
+def test_current_inputs_reproduce_checked_in_generated_outputs(tmp_path: Path) -> None:
+    default_reference = Path(
+        "/Users/choco/.codex/worktrees/bed4/docinsights-2026/"
+        "artifacts/ocr/codex-validation-reference.jsonl"
+    )
+    reference = Path(os.environ.get("ISSUE8_REFERENCE", default_reference))
+    assert reference.is_file(), "set ISSUE8_REFERENCE to the exact Issue #8 reference artifact"
+    assert _sha256(reference) == "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a"
+    generated = tmp_path / "generated"
+    report = evaluate(
+        V2 / "results.jsonl",
+        V2 / "raw",
+        ROOT / "candidates.json",
+        reference,
+        ROOT / "manifests/source-queries.jsonl",
+        generated / "joined-queries.jsonl",
+        ROOT / "manifests/environment.json",
+        ROOT / "baselines.json",
+    )
+    outputs = write_outputs(report, generated)
+    outputs.append(write_raw_csv(V2 / "results.jsonl", generated / "measured-raw.csv"))
+    for output in outputs:
+        assert output.read_bytes() == (ROOT / "generated" / output.name).read_bytes()
+    assert (generated / "joined-queries.jsonl").read_bytes() == (
+        ROOT / "generated/joined-queries.jsonl"
+    ).read_bytes()

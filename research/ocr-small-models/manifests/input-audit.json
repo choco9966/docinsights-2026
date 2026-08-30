@@ -13,8 +13,12 @@
   "model_hidden_fields": ["user_query", "labels", "answer", "evidence"],
   "source_query_artifact": "research/ocr-small-models/manifests/source-queries.jsonl",
   "post_inference_join_artifact": "research/ocr-small-models/generated/joined-queries.jsonl",
-  "post_inference_join": ["instance_id", "user_query"],
+  "post_inference_join": ["instance_id", "user_query", "evidence_binding"],
+  "evidence_binding": {
+    "kind": "raw_results_sha256",
+    "sha256": "2a567e32ee8c13203f61c02480d775e845f88f905915cdda8f87d2d3aa0db232"
+  },
   "audit_result": "pass",
   "verbatim_v2_audit": "research/ocr-small-models/raw/v2/audit.json",
-  "note": "user_query passthrough는 OCR 이후 데이터 계약 검사이며 모델 입력이 아니다."
+  "note": "엄격한 raw v2 검증 뒤 생성되는 user_query passthrough는 OCR 이후 데이터 계약 검사이며 모델 입력이 아니다."
 }

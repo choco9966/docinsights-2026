@@ -19,6 +19,10 @@ from .metrics import (
 NA_NO_VALID = "NA(no_valid_output)"
 NA_NO_REFERENCE = "NA(no_reference)"
 NA_NOT_MEASURED = "NA(not_measured)"
+EXPECTED_SCHEMA_VERSION = "2.0"
+EXPECTED_MODEL_COUNT = 5
+REFERENCE_KIND = "codex-assisted-silver"
+REFERENCE_ENGINE = "codex-assisted-visual-transcription"
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -38,6 +42,14 @@ def sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _is_sha256(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
 def _unique_index(rows: list[dict[str, Any]], key: str, label: str) -> dict[str, dict[str, Any]]:
     index: dict[str, dict[str, Any]] = {}
     for row in rows:
@@ -50,7 +62,13 @@ def _unique_index(rows: list[dict[str, Any]], key: str, label: str) -> dict[str,
     return index
 
 
-def query_passthrough(tasks_path: Path, joined_tasks_path: Path) -> dict[str, int]:
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def query_passthrough(
+    tasks_path: Path, joined_tasks_path: Path, raw_results_sha256: str
+) -> dict[str, int | str]:
     source_rows = read_jsonl(tasks_path)
     joined_rows = read_jsonl(joined_tasks_path)
     sources = _unique_index(source_rows, "instance_id", "tasks")
@@ -65,9 +83,19 @@ def query_passthrough(tasks_path: Path, joined_tasks_path: Path) -> dict[str, in
         joined_query = joined[instance_id].get("user_query")
         if not isinstance(source, str) or not isinstance(joined_query, str):
             raise TypeError(f"user_query must be a string: {instance_id}")
+        if source != joined_query:
+            raise ValueError("post-inference joined user_query differs from source tasks")
         raw += source == joined_query
         normalized += normalize_text(source) == normalize_text(joined_query)
         digest += sha256_text(source) == sha256_text(joined_query)
+        expected_binding = {
+            "kind": "raw_results_sha256",
+            "sha256": raw_results_sha256,
+        }
+        if joined[instance_id].get("evidence_binding") != expected_binding:
+            raise ValueError(f"joined task has stale or invalid evidence binding: {instance_id}")
+        if set(joined[instance_id]) != {"instance_id", "user_query", "evidence_binding"}:
+            raise ValueError(f"joined task has unexpected fields: {instance_id}")
     if raw != len(sources):
         raise ValueError("post-inference joined user_query differs from source tasks")
     return {
@@ -75,12 +103,150 @@ def query_passthrough(tasks_path: Path, joined_tasks_path: Path) -> dict[str, in
         "raw_exact": raw,
         "normalized_exact": normalized,
         "sha256_exact": digest,
+        "raw_results_sha256": raw_results_sha256,
     }
 
 
 def _reference_index(path: Path) -> dict[str, dict[str, Any]]:
     all_references = _unique_index(read_jsonl(path), "instance_id", "references")
-    return {key: row for key, row in all_references.items() if row.get("status") == "ok"}
+    accepted = {key: row for key, row in all_references.items() if row.get("status") == "ok"}
+    for instance_id, row in accepted.items():
+        if row.get("reference_kind") != REFERENCE_KIND or row.get("engine") != REFERENCE_ENGINE:
+            raise ValueError(f"accepted reference has unsupported identity: {instance_id}")
+        provenance = row.get("provenance")
+        if not isinstance(provenance, dict) or provenance.get("reference_kind") != REFERENCE_KIND:
+            raise ValueError(f"accepted reference has invalid provenance: {instance_id}")
+        for key in ("input_pdf_sha256", "input_image_sha256", "renderer"):
+            if not provenance.get(key):
+                raise ValueError(f"accepted reference provenance is missing {key}: {instance_id}")
+        if not _is_sha256(provenance["input_pdf_sha256"]):
+            raise ValueError(f"accepted reference has invalid PDF identity: {instance_id}")
+        if not isinstance(provenance["renderer"], str):
+            raise TypeError(f"accepted reference has invalid renderer identity: {instance_id}")
+        image_identities = provenance["input_image_sha256"]
+        if not isinstance(image_identities, list) or not all(
+            isinstance(item, dict)
+            and isinstance(item.get("page_number"), int)
+            and _is_sha256(item.get("sha256"))
+            for item in image_identities
+        ):
+            raise ValueError(f"accepted reference has invalid image identities: {instance_id}")
+        for identity_key in ("renderer_executable_identity", "codex_executable_identity"):
+            identity = provenance.get(identity_key)
+            if not (
+                isinstance(identity, dict)
+                and identity.get("kind") == "sha256"
+                and isinstance(identity.get("name"), str)
+                and identity["name"]
+                and _is_sha256(identity.get("sha256"))
+            ):
+                raise ValueError(f"accepted reference has invalid {identity_key}: {instance_id}")
+    return accepted
+
+
+def _validate_v2_results(
+    result_rows: list[dict[str, Any]],
+    candidate_rows: list[dict[str, Any]],
+    instance_id: str,
+) -> dict[str, dict[str, Any]]:
+    candidates = _unique_index(
+        [{**row, "name": row["model"].split("/")[-1]} for row in candidate_rows],
+        "name",
+        "candidates",
+    )
+    results = _unique_index(result_rows, "name", "raw results")
+    if len(candidate_rows) != EXPECTED_MODEL_COUNT or len(result_rows) != EXPECTED_MODEL_COUNT:
+        raise ValueError(f"v2 comparison requires exactly {EXPECTED_MODEL_COUNT} models/results")
+    if set(results) != set(candidates):
+        raise ValueError("raw result/candidate model membership differs")
+    if {result.get("model_index") for result in result_rows} != set(
+        range(1, EXPECTED_MODEL_COUNT + 1)
+    ):
+        raise ValueError("raw results require model_index values 1 through 5 exactly once")
+    for name, result in results.items():
+        candidate = candidates[name]
+        if result.get("schema_version") != EXPECTED_SCHEMA_VERSION:
+            raise ValueError(f"unsupported raw result schema for {name}")
+        if result.get("instance_id") != instance_id:
+            raise ValueError(f"fixed instance mismatch for {name}")
+        if result.get("repo") != candidate["model"]:
+            raise ValueError(f"repository mismatch for {name}")
+        requested = result.get("requested_revision")
+        resolved = result.get("resolved_revision")
+        if requested != candidate["revision"] or resolved != candidate["revision"]:
+            raise ValueError(f"requested/resolved revision mismatch for {name}")
+        if "repo_metadata_error" not in result or result["repo_metadata_error"] is not None:
+            raise ValueError(f"repository identity metadata failed for {name}")
+        metadata = result.get("repo_file_metadata")
+        if not isinstance(metadata, list) or not all(isinstance(item, dict) for item in metadata):
+            raise TypeError(f"repository file metadata is missing for {name}")
+        model_files = [item for item in metadata if item.get("rfilename") == "model.safetensors"]
+        if len(model_files) != 1:
+            raise ValueError(f"model.safetensors identity is missing or ambiguous for {name}")
+        model_file = model_files[0]
+        if not _is_sha256(candidate.get("weight_lfs_sha256")) or not isinstance(
+            candidate.get("weight_bytes"), int
+        ):
+            raise ValueError(f"candidate model identity is incomplete for {name}")
+        if (
+            model_file.get("lfs_sha256") != candidate["weight_lfs_sha256"]
+            or model_file.get("lfs_size") != candidate["weight_bytes"]
+        ):
+            raise ValueError(f"model.safetensors LFS identity mismatch for {name}")
+        if not isinstance(result.get("peak_process_rss_bytes_parent_sampled"), int):
+            raise TypeError(f"parent RSS sample is missing for {name}")
+        if not isinstance(result.get("peak_vram_bytes_parent_sampled"), int):
+            raise TypeError(f"parent VRAM sample is missing for {name}")
+        outputs = result.get("raw_outputs")
+        digests = result.get("raw_output_sha256")
+        if result.get("success"):
+            if result.get("status") != "succeeded":
+                raise ValueError(f"successful result has inconsistent status for {name}")
+            if not isinstance(outputs, list) or not outputs:
+                raise ValueError(f"successful result has no raw outputs for {name}")
+            if not isinstance(digests, list) or digests != [item.get("sha256") for item in outputs]:
+                raise ValueError(f"raw output digest projection mismatch for {name}")
+            for output in outputs:
+                if not (
+                    isinstance(output.get("path"), str)
+                    and output["path"]
+                    and isinstance(output.get("bytes"), int)
+                    and output["bytes"] > 0
+                    and _is_sha256(output.get("sha256"))
+                ):
+                    raise ValueError(f"raw output identity is incomplete for {name}")
+        else:
+            if result.get("status") != "failed":
+                raise ValueError(f"failed result has inconsistent status for {name}")
+            if outputs != [] or digests != [] or result.get("raw_output_bytes") != 0:
+                raise ValueError(f"failed result must not declare raw outputs for {name}")
+    return candidates
+
+
+def _create_or_validate_joined_tasks(
+    tasks_path: Path,
+    joined_tasks_path: Path,
+    raw_results_sha256: str,
+    instance_id: str,
+) -> dict[str, int | str]:
+    source_rows = read_jsonl(tasks_path)
+    if len(source_rows) != 1 or source_rows[0].get("instance_id") != instance_id:
+        raise ValueError("source tasks must contain exactly the fixed comparison instance")
+    joined_row = {
+        "instance_id": instance_id,
+        "user_query": source_rows[0].get("user_query"),
+        "evidence_binding": {"kind": "raw_results_sha256", "sha256": raw_results_sha256},
+    }
+    expected = json.dumps(joined_row, ensure_ascii=False, sort_keys=True) + "\n"
+    if joined_tasks_path.exists():
+        if joined_tasks_path.read_text(encoding="utf-8") != expected:
+            raise ValueError(
+                "joined task artifact is stale, prebuilt, or bound to different evidence"
+            )
+    else:
+        joined_tasks_path.parent.mkdir(parents=True, exist_ok=True)
+        joined_tasks_path.write_text(expected, encoding="utf-8")
+    return query_passthrough(tasks_path, joined_tasks_path, raw_results_sha256)
 
 
 def _raw_texts(raw_dir: Path, result: dict[str, Any]) -> list[str]:
@@ -137,22 +303,22 @@ def evaluate(
     ):
         raise FileNotFoundError("required JSON input file is absent")
     candidates_data = json.loads(candidates_path.read_text(encoding="utf-8"))
+    if candidates_data.get("schema_version") != EXPECTED_SCHEMA_VERSION:
+        raise ValueError("unsupported candidates schema")
     candidate_rows = candidates_data["models"]
-    candidates = _unique_index(
-        [{**row, "name": row["model"].split("/")[-1]} for row in candidate_rows],
-        "name",
-        "candidates",
-    )
     environment = json.loads(environment_path.read_text(encoding="utf-8"))
     baselines = json.loads(baselines_path.read_text(encoding="utf-8"))
     references = _reference_index(reference_path)
     reference = references.get(instance_id)
     if reference is None:
         raise ValueError(f"fixed reference is missing or not validated: {instance_id}")
-    query = query_passthrough(tasks_path, joined_tasks_path)
     rows: list[dict[str, Any]] = []
     result_rows = read_jsonl(raw_results)
-    _unique_index(result_rows, "name", "raw results")
+    candidates = _validate_v2_results(result_rows, candidate_rows, instance_id)
+    raw_results_sha256 = _sha256_file(raw_results)
+    query = _create_or_validate_joined_tasks(
+        tasks_path, joined_tasks_path, raw_results_sha256, instance_id
+    )
     for result in result_rows:
         name = result["name"]
         if name not in candidates:
@@ -160,9 +326,7 @@ def evaluate(
         candidate = candidates[name]
         if result.get("repo") != candidate["model"]:
             raise ValueError(f"repository mismatch for {name}")
-        revision = result.get("resolved_revision") or result.get("revision")
-        if revision != candidate["revision"]:
-            raise ValueError(f"revision mismatch for {name}")
+        revision = result["resolved_revision"]
         texts = _raw_texts(raw_dir, result)
         valid, invalid_reason = (
             is_valid_ocr(texts) if result.get("success") else (False, "inference_failed")
@@ -214,13 +378,9 @@ def evaluate(
                 else NA_NOT_MEASURED,
                 "sec_per_doc": latency if latency is not None else NA_NOT_MEASURED,
                 "docs_per_min": _nullable_rate(60, latency) if latency else NA_NOT_MEASURED,
-                "peak_ram_bytes": result.get("peak_process_rss_bytes_parent_sampled")
-                if result.get("peak_process_rss_bytes_parent_sampled") is not None
-                else result.get("peak_process_rss_bytes", NA_NOT_MEASURED),
+                "peak_ram_bytes": result["peak_process_rss_bytes_parent_sampled"],
                 "peak_ram_bytes_child": result.get("peak_process_rss_bytes_child", NA_NOT_MEASURED),
-                "peak_vram_bytes": result.get("peak_vram_bytes_parent_sampled")
-                if result.get("peak_vram_bytes_parent_sampled") is not None
-                else result.get("peak_cuda_allocated_bytes", NA_NOT_MEASURED),
+                "peak_vram_bytes": result["peak_vram_bytes_parent_sampled"],
                 "peak_vram_bytes_child_allocated": result.get(
                     "peak_cuda_allocated_bytes", NA_NOT_MEASURED
                 ),
@@ -242,6 +402,7 @@ def evaluate(
         "raw_evidence_status": environment.get("raw_evidence_status", NA_NOT_MEASURED),
         "reference": {
             "kind": "codex-assisted-silver",
+            "artifact_sha256": _sha256_file(reference_path),
             "human_gold": False,
             "available_validated_subset": len(references),
             "total_seconds_when_present": codex_total_seconds,
