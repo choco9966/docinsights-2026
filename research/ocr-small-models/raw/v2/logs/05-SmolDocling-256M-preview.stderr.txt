@@ -1,3 +1,3 @@
 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
 [transformers] Model config: pad_token_id must be `None` or an integer within the vocabulary (between 0 and 31999), got 128002. This may result in unexpected behavior.
-Loading weights:   0%|          | 0/471 [00:00<?, ?it/s]Loading weights:  33%|███▎      | 156/471 [00:00<00:00, 1555.33it/s]Loading weights:  66%|██████▌   | 312/471 [00:00<00:00, 1557.06it/s]Loading weights:  99%|█████████▉| 468/471 [00:00<00:00, 1492.86it/s]Loading weights: 100%|██████████| 471/471 [00:00<00:00, 1517.62it/s]
+Loading weights:   0%|          | 0/471 [00:00<?, ?it/s]Loading weights:  35%|███▌      | 167/471 [00:00<00:00, 1638.14it/s]Loading weights:  70%|███████   | 331/471 [00:00<00:00, 1465.80it/s]Loading weights: 100%|██████████| 471/471 [00:00<00:00, 1504.54it/s]

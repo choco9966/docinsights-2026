@@ -1,6 +1,6 @@
 {
   "schema_version": "2.0",
-  "captured_at": "2026-08-30T16:54:09.728044+00:00",
+  "captured_at": "2026-08-30T18:16:31.565744+00:00",
   "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
   "python": "3.12.13",
   "gpu": "NVIDIA Tesla T4 x2 allocated; CUDA_VISIBLE_DEVICES=0 for sequential fresh children",
@@ -23,9 +23,9 @@
   },
   "runner": {
     "path": "research/ocr-small-models/raw/v2/runner-executed.py",
-    "bytes": 36723,
-    "sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf",
-    "checked_in_source_commit": "95af62c",
+    "bytes": 38725,
+    "sha256": "4e5be04c3afb6d487b547765a813e9737047cafa18df1882705a06b57ca728e3",
+    "checked_in_source_commit": "5498d5a6cf2eacdc8ea6c16703891be887853fcc",
     "source_acquisition_mode": "ipython_raw_cell_history"
   },
   "poppler": {
@@ -35,8 +35,12 @@
     "dpi": 200
   },
   "bundle_artifacts": {
-    "environment_sha256": "336b5ec334c3cdb60aa5ca332c353d757da72bfda81f3ef0e9309a3b60dba071",
+    "zip_sha256": "08995ebc6283c082fd9add596412a870910d2a875f63948cf1ae824939d2ec17",
+    "run_id": "task_000909-1788113789-4e5be04c3afb",
+    "artifact_count": 34,
+    "environment_sha256": "7b8f7bd4c98dd8b3749eab359d03efd277205a8d1a5ef1405355ee654c27a2ab",
     "input_sha256": "0c793c0059773aac3b26976261d5bd2691e58b87fc455328400dcce88aab30ff",
-    "results_jsonl_sha256": "2a567e32ee8c13203f61c02480d775e845f88f905915cdda8f87d2d3aa0db232"
+    "results_jsonl_sha256": "e94b4beee3306d29d01d474282017a8a0cfcf4fb405c8c94d4a50f07164632c4",
+    "artifact_hashes_sha256": "47b8606af538115799eaecdfd1f6433ead64f1bc892f465d5e5b3d6323f447c7"
   }
 }

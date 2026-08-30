@@ -2,9 +2,12 @@
 
 ## 결론
 
-Issue #11의 현재 비교는 checked-in v2 runner commit `95af62c`와 실행 소스 SHA-256
-`64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf`로 생성된
-Kaggle fresh-child 증거를 사용한다. 한 모델마다 새 child를 순차 실행했고 결과 bundle의
+Issue #11의 현재 비교는 checked-in v2 runner commit `5498d5a`와 실행 소스 SHA-256
+`4e5be04c3afb6d487b547765a813e9737047cafa18df1882705a06b57ca728e3`로 생성된
+Kaggle Version #3 fresh-child 증거를 사용한다. run ID는
+`task_000909-1788113789-4e5be04c3afb`, ZIP SHA-256은
+`08995ebc6283c082fd9add596412a870910d2a875f63948cf1ae824939d2ec17`이다.
+한 모델마다 새 child를 순차 실행했고 결과 bundle의
 텍스트 파일은 `raw/v2/`에 byte-exact하게 보존했다. 이전 reconstructed 자료는
 `raw/v1-historical/`에 분리했으며 현재 비교에는 사용하지 않는다.
 
@@ -41,26 +44,29 @@ full-page structure, SmolDocling은 영어와 bbox/table/formula/code/chart를 �
 ## 실행 시간과 자원
 
 비교의 peak 값은 fresh child를 감시한 parent-sampled RSS/VRAM을 우선한다. child 내부
-RSS는 모든 행에서 4,690,857,984 B로 기록되었고 allocator VRAM도 함께 남긴다. 둘은
+RSS와 allocator VRAM도 별도 열로 함께 남긴다. 둘은
 측정 정의가 다르므로 parent 값을 child 값으로 대체하지 않는다.
 현재 evaluator는 parent RSS를 양의 exact integer, VRAM을 0 이상의 exact integer로
-요구한다. parent sampling error가 하나라도 기록되면 일부 peak가 남아 있어도 해당 행 전체를
-거부하며, 새 runner도 sampling error를 inference 실패로 전환하고 raw 출력을 제거한다.
+요구한다. Version #3의 다섯 행은 `peak_process_rss_sampling_error`와
+`peak_vram_sampling_error`를 모두 명시적으로 `null`로 기록했다. sampling error가 하나라도
+기록되면 일부 peak가 남아 있어도 해당 행 전체를 거부하며, runner도 sampling error를
+inference 실패로 전환하고 raw 출력을 제거한다.
 
 | 모델 | load s | s/doc | parent RSS B | child RSS B | parent VRAM B | child allocated VRAM B | output B |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| PaddleOCR-VL 1.6 | N/A | N/A | 1,209,257,984 | 4,690,857,984 | 106,954,752 | 0 | 0 |
-| GLM-OCR | 3.3231 | 55.9483 | 4,142,870,528 | 4,690,857,984 | 7,442,792,448 | 6,586,189,824 | 4,271 |
-| Surya OCR 2 | 1.9743 | 50.6099 | 2,892,279,808 | 4,690,857,984 | 3,298,820,096 | 2,900,749,312 | 1,333 |
-| Granite Docling 258M | 1.6992 | 352.6226 | 2,299,080,704 | 4,690,857,984 | 1,124,073,472 | 890,579,456 | 1,024 |
-| SmolDocling 256M preview | 1.1509 | 38.9622 | 2,263,355,392 | 4,690,857,984 | 1,157,627,904 | 887,485,952 | 3,729 |
+| PaddleOCR-VL 1.6 | N/A | N/A | 1,112,231,936 | 1,115,394,048 | 106,954,752 | 0 | 0 |
+| GLM-OCR | 3.0923 | 55.4766 | 4,199,813,120 | 4,360,134,656 | 7,442,792,448 | 6,586,189,824 | 4,271 |
+| Surya OCR 2 | 1.8647 | 47.0260 | 2,859,540,480 | 3,020,025,856 | 3,298,820,096 | 2,900,749,312 | 1,333 |
+| Granite Docling 258M | 1.7479 | 354.4969 | 2,262,228,992 | 2,369,581,056 | 1,124,073,472 | 890,579,456 | 1,024 |
+| SmolDocling 256M preview | 1.3555 | 38.1619 | 2,316,926,976 | 2,369,949,696 | 1,157,627,904 | 887,485,952 | 3,729 |
 
 비용은 Kaggle 무료 quota다. 할당된 T4 두 장 중 child에는 `cuda:0`만 노출했다.
 
 ## 증거, 환경, 입력 격리
 
-v2 bundle의 `results.jsonl`, CSV, report, environment, input, audit, run manifest, artifact
-hashes, child results, logs, raw text와 실제 실행된 runner를 보존했다. 렌더링 PNG와 원본 zip은
+v2 bundle의 34개 artifact manifest를 먼저 검증한 뒤 `results.jsonl`, CSV, report,
+environment, input, audit, run manifest, artifact hashes, child results, logs, raw text와 실제
+실행된 runner를 보존했다. 렌더링 PNG와 원본 zip은
 저장소에 중복 체크인하지 않았지만 `input.json`과 artifact manifest의 bytes/SHA-256은
 유지한다. Poppler는 `/usr/bin/pdftoppm` 22.02.0, binary SHA-256
 `9854d5c30e9e56b972bc89f88dec75679296e86768715e25fb1cef45d3c7a03e`, 200 dpi다.

@@ -1,5 +1,5 @@
 {
-  "completed_at": "2026-08-30T17:03:28.995186+00:00",
+  "completed_at": "2026-08-30T18:25:46.420570+00:00",
   "dag": {
     "edges": [
       {
@@ -135,11 +135,11 @@
     ],
     "nodes": [
       {
-        "bytes": 36723,
+        "bytes": 38725,
         "id": "runner",
         "kind": "executed_source",
         "path": "/kaggle/working/docinsights-hf-smoke-v2/runner-executed.py",
-        "sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf"
+        "sha256": "4e5be04c3afb6d487b547765a813e9737047cafa18df1882705a06b57ca728e3"
       },
       {
         "bytes": 564781,
@@ -188,30 +188,30 @@
         "status": "succeeded"
       },
       {
-        "bytes": 36492,
+        "bytes": 36905,
         "id": "results-jsonl",
         "kind": "verbatim_records",
         "path": "/kaggle/working/docinsights-hf-smoke-v2/results.jsonl",
-        "sha256": "2a567e32ee8c13203f61c02480d775e845f88f905915cdda8f87d2d3aa0db232"
+        "sha256": "e94b4beee3306d29d01d474282017a8a0cfcf4fb405c8c94d4a50f07164632c4"
       },
       {
-        "bytes": 33396,
+        "bytes": 33501,
         "id": "results-csv",
         "kind": "verbatim_projection",
         "path": "/kaggle/working/docinsights-hf-smoke-v2/results.csv",
-        "sha256": "3a82b0ac6e04de334cf2d1841748e04bb880716343287398a82ccf54a458bee0"
+        "sha256": "8a71d3afc3e0eb196434963fd0296b55ee0a583760d765aab1a978e9387ab7fa"
       },
       {
-        "bytes": 1490,
+        "bytes": 1670,
         "id": "report",
         "kind": "human_summary",
         "path": "/kaggle/working/docinsights-hf-smoke-v2/report.md",
-        "sha256": "502626ac8052d71820c4528f6b6e28ee9fa3943972c595fed23b6567efed3edc"
+        "sha256": "92e19e85105fb416153ba463159408a71994be9c8e1905ae1fcaa3b73f11b372"
       }
     ]
   },
   "fresh_child_per_model": true,
-  "run_id": "task_000909-1788108847-64706348c218",
+  "run_id": "task_000909-1788113789-4e5be04c3afb",
   "schema_version": "2.0",
   "sequential_model_order": [
     "PaddleOCR-VL-1.6",
@@ -220,6 +220,6 @@
     "granite-docling-258M",
     "SmolDocling-256M-preview"
   ],
-  "started_from_exact_runner_sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf",
+  "started_from_exact_runner_sha256": "4e5be04c3afb6d487b547765a813e9737047cafa18df1882705a06b57ca728e3",
   "terminal_state": "complete_with_model_failures"
 }

@@ -3,6 +3,7 @@
   "snapshot_at": "2026-08-31T01:30:00+09:00",
   "issue_8": {
     "url": "https://github.com/choco9966/docinsights-2026/issues/8",
+    "reference_artifact_sha256": "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a",
     "validated_codex_reference_rows": 217,
     "reference_kind": "codex-assisted-silver",
     "human_gold": false,

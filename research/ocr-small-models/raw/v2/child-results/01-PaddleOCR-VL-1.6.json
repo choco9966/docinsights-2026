@@ -1,5 +1,5 @@
 {
-  "child_wall_sec": 10.372706308000033,
+  "child_wall_sec": 10.024717879000036,
   "device": "cuda:0",
   "doc_latency_sec": null,
   "dtype": "float16",
@@ -18,9 +18,11 @@
   "parent_wall_sec": null,
   "peak_cuda_allocated_bytes": 0,
   "peak_cuda_reserved_bytes": 0,
-  "peak_process_rss_bytes_child": 4690857984,
+  "peak_process_rss_bytes_child": 1115394048,
   "peak_process_rss_bytes_parent_sampled": null,
+  "peak_process_rss_sampling_error": null,
   "peak_vram_bytes_parent_sampled": null,
+  "peak_vram_sampling_error": null,
   "prompt": "OCR:",
   "raw_output_bytes": 0,
   "raw_output_sha256": [],
@@ -182,7 +184,7 @@
   "stdout_path": null,
   "stdout_sha256": null,
   "success": false,
-  "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/docinsights-hf-smoke-v2/runner-executed.py\", line 459, in child_run\n    model = AutoModelForImageTextToText.from_pretrained(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/auto/auto_factory.py\", line 406, in from_pretrained\n    return model_class.from_pretrained(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/modeling_utils.py\", line 4283, in from_pretrained\n    model = cls(config, *model_args, **model_kwargs)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/paddleocr_vl/modeling_paddleocr_vl.py\", line 1330, in __init__\n    self.model = PaddleOCRVLModel(config)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/paddleocr_vl/modeling_paddleocr_vl.py\", line 997, in __init__\n    self.language_model = PaddleOCRTextModel._from_config(config.text_config)\n                                                          ^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/configuration_utils.py\", line 436, in __getattribute__\n    return super().__getattribute__(key)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'PaddleOCRVLConfig' object has no attribute 'text_config'. Did you mean: 'get_text_config'?\n",
+  "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/docinsights-hf-smoke-v2/runner-executed.py\", line 474, in child_run\n    model = AutoModelForImageTextToText.from_pretrained(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/auto/auto_factory.py\", line 406, in from_pretrained\n    return model_class.from_pretrained(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/modeling_utils.py\", line 4283, in from_pretrained\n    model = cls(config, *model_args, **model_kwargs)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/paddleocr_vl/modeling_paddleocr_vl.py\", line 1330, in __init__\n    self.model = PaddleOCRVLModel(config)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/paddleocr_vl/modeling_paddleocr_vl.py\", line 997, in __init__\n    self.language_model = PaddleOCRTextModel._from_config(config.text_config)\n                                                          ^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/configuration_utils.py\", line 436, in __getattribute__\n    return super().__getattribute__(key)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'PaddleOCRVLConfig' object has no attribute 'text_config'. Did you mean: 'get_text_config'?\n",
   "truncation_risk": "possible: max_new_tokens=512 is a fixed comparable preflight ceiling; token-limit completion does not establish full-page coverage",
   "trust_remote_code": true
 }

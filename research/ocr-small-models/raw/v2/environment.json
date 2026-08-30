@@ -35,13 +35,13 @@
     "stderr": "",
     "stdout": "Requirement already satisfied: transformers==5.12.1 in /usr/local/lib/python3.12/dist-packages (5.12.1)\nRequirement already satisfied: accelerate==1.10.1 in /usr/local/lib/python3.12/dist-packages (1.10.1)\nRequirement already satisfied: huggingface-hub==1.5.0 in /usr/local/lib/python3.12/dist-packages (1.5.0)\nRequirement already satisfied: psutil==7.0.0 in /usr/local/lib/python3.12/dist-packages (7.0.0)\nRequirement already satisfied: Pillow==10.4.0 in /usr/local/lib/python3.12/dist-packages (10.4.0)\n"
   },
-  "captured_at": "2026-08-30T16:54:09.728044+00:00",
+  "captured_at": "2026-08-30T18:16:31.565744+00:00",
   "cuda_visible_devices_for_children": "0",
   "device": "cuda:0",
   "dtype": "float16",
   "executable": "/usr/bin/python3",
   "nvidia_smi_L_stderr": "",
-  "nvidia_smi_L_stdout": "GPU 0: Tesla T4 (UUID: GPU-3784ee2a-b617-22e9-ef60-fe99b2a180b4)\nGPU 1: Tesla T4 (UUID: GPU-a40b20b0-fecf-c80d-fd20-d90d964ec7a3)\n",
+  "nvidia_smi_L_stdout": "GPU 0: Tesla T4 (UUID: GPU-a3706499-966b-8639-e3eb-87bbc7b6718c)\nGPU 1: Tesla T4 (UUID: GPU-086a2a9d-d1e8-cced-d09b-4485c1410b60)\n",
   "package_versions": {
     "Authlib": "1.6.11",
     "Boruta": "0.4.3",
@@ -983,15 +983,15 @@
   "python": "3.12.13 (main, Mar  4 2026, 09:23:07) [GCC 11.4.0]",
   "runner": {
     "bootstrap_caveat": "IPython exposes the submitted raw cell, not the notebook JSON container; the recorded SHA covers exactly the Python source submitted for execution.",
-    "bytes": 36723,
+    "bytes": 38725,
     "path": "/kaggle/working/docinsights-hf-smoke-v2/runner-executed.py",
-    "sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf",
+    "sha256": "4e5be04c3afb6d487b547765a813e9737047cafa18df1882705a06b57ca728e3",
     "source_acquisition_mode": "ipython_raw_cell_history"
   },
   "schema_version": "2.0",
   "uname": [
     "Linux",
-    "71ef6beb0663",
+    "b98764dd1127",
     "6.12.90+",
     "#1 SMP Sat May 30 15:40:53 UTC 2026",
     "x86_64",

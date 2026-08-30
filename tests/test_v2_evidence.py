@@ -18,9 +18,10 @@ def _sha256(path: Path) -> str:
 
 def test_v2_textual_bundle_matches_embedded_artifact_manifest() -> None:
     assert _sha256(V2 / "artifact-hashes.json") == (
-        "5fe83dc767facd523bed6a2b29ad0ab4b4815642fcbf064b1de0c9bee9c07b9e"
+        "47b8606af538115799eaecdfd1f6433ead64f1bc892f465d5e5b3d6323f447c7"
     )
     manifest = json.loads((V2 / "artifact-hashes.json").read_text(encoding="utf-8"))
+    assert len(manifest["artifacts"]) == 34
     prefix = "/kaggle/working/docinsights-hf-smoke-v2/"
     omitted = set()
     checked = 0
@@ -72,15 +73,22 @@ def test_executed_runner_is_immutable_and_environment_snapshot_is_verbatim() -> 
     environment = json.loads((V2 / "environment.json").read_text(encoding="utf-8"))
     run_manifest = json.loads((V2 / "run-manifest.json").read_text(encoding="utf-8"))
     runner = V2 / "runner-executed.py"
-    expected = "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf"
+    expected = "4e5be04c3afb6d487b547765a813e9737047cafa18df1882705a06b57ca728e3"
     assert _sha256(runner) == expected
     assert environment["runner"]["sha256"] == expected
     assert run_manifest["started_from_exact_runner_sha256"] == expected
-    assert Path("notebooks/docsem_hf_small_ocr_smoke_v2.py").read_bytes() != runner.read_bytes()
+    assert run_manifest["run_id"] == "task_000909-1788113789-4e5be04c3afb"
+    assert Path("notebooks/docsem_hf_small_ocr_smoke_v2.py").read_bytes() == (
+        runner.read_bytes() + b"\n"
+    )
     snapshot = environment["pip_freeze_all_verbatim"]
     assert (V2 / "pip-freeze.txt").read_text() == snapshot
     assert (ROOT / "requirements-kaggle-v2.txt").read_text() == snapshot
     manifest = json.loads((ROOT / "manifests/environment.json").read_text())
+    assert manifest["bundle_artifacts"]["zip_sha256"] == (
+        "08995ebc6283c082fd9add596412a870910d2a875f63948cf1ae824939d2ec17"
+    )
+    assert manifest["bundle_artifacts"]["artifact_count"] == 34
     assert "environment_snapshot" in manifest
     assert "not a reconstructible lock" in manifest["environment_snapshot"]["note"]
 
@@ -195,8 +203,11 @@ def test_current_inputs_reproduce_checked_in_generated_outputs(tmp_path: Path) -
         "peak_process_rss_sampling_error",
         "peak_vram_sampling_error",
     }
-    if not all(required_sampling_fields <= row.keys() for row in current_rows):
-        pytest.xfail("checked-in raw v2 awaits rerun with explicit sampling-error identities")
+    assert all(required_sampling_fields <= row.keys() for row in current_rows)
+    assert all(
+        row["peak_process_rss_sampling_error"] is None and row["peak_vram_sampling_error"] is None
+        for row in current_rows
+    )
     generated = tmp_path / "generated"
     report = evaluate(
         V2 / "results.jsonl",
