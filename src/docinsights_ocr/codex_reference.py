@@ -285,8 +285,19 @@ def _transcribe_one(
             "timing": {"total_seconds": time.perf_counter() - started},
             "status": "failed",
             "error_kind": _error_kind(exc),
-            "error": str(exc),
+            "error": _failure_diagnostics(exc),
         }
+
+
+def _failure_diagnostics(exc: BaseException) -> str:
+    details = [str(exc)]
+    for stream_name in ("stderr", "stdout"):
+        stream = getattr(exc, stream_name, None)
+        if isinstance(stream, bytes):
+            stream = stream.decode(errors="replace")
+        if isinstance(stream, str) and stream.strip():
+            details.append(f"{stream_name}: {stream.strip()[:4000]}")
+    return "\n".join(details)
 
 
 def _codex_argv(

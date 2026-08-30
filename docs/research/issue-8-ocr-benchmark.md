@@ -104,6 +104,17 @@ Gold annotator에게는 candidate OCR 출력, 기존 모델의 답·풀이·검�
 
 표의 p95와 최대 시간은 문서 단위 `total_seconds`입니다. 모든 문서가 2페이지이지만 이를 2로 나눈 값을 실제 페이지별 p95로 주장하지 않습니다. `process max RSS`는 `/usr/bin/time -l`의 maximum resident set size이며 Mac 전체 unified memory 사용량이 아닙니다. 엔진 confidence는 Tesseract의 평균 word confidence와 Apple Vision observation confidence처럼 의미와 보정 상태가 다르므로 엔진 간 품질 비교에 직접 사용하지 않습니다.
 
+## Codex silver 기준 텍스트 점수
+
+완전성·PDF SHA·raw/provenance/fingerprint를 검증한 Codex Validation 217개 전사를 engineering silver reference로 고정했다. 대표 `silver_text_score`는 `100 × max(0, 1 − micro CER)`이며 사람 gold 정확도와 구분하기 위해 출력 계약에 `silver_agreement_not_human_gold_accuracy`를 기록한다.
+
+| 엔진 | Silver score | micro CER | micro WER | 문자 유사도 | block exact | exact-token F1 | quantity F1 | 평균 sec/doc | process max RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Tesseract 5.5.3 `eng`, PSM 6, 200 DPI | **99.9415** | 0.000585 | 0.006029 | 0.999415 | 217/217 | 0.992057 | 0.991993 | 6.0335 | 107.531MiB |
+| Apple Vision accurate, 200 DPI | **99.3777** | 0.006223 | 0.008946 | 0.993800 | 217/217 | 0.985062 | 0.981604 | 3.8781 | 214.484MiB |
+
+계산 함수, JSON schema, per-instance 원자료, 해시와 재현 명령은 [`issue-8-silver-text-evaluation.md`](issue-8-silver-text-evaluation.md)에 기록한다. 이 점수는 두 OCR 엔진의 상대적인 silver agreement와 운영 선택에는 사용할 수 있지만 대회 정확도나 unbiased human accuracy로 인용하지 않는다.
+
 ## Cross-engine agreement 해석
 
 | 비교 방향 | 문서 | mean CER | mean WER | mean block F1 | ordered block exact | exact-token F1 | ordered-quantity F1 |
@@ -124,7 +135,7 @@ Gold annotator에게는 candidate OCR 출력, 기존 모델의 답·풀이·검�
 
 ## Qwen 전달 계약
 
-OCR 엔진이 받는 의미 입력은 렌더링된 문서 이미지만입니다. 엔진은 읽기 순서가 보존된 `bNN` block, 원문 line, page, bbox와 engine-specific confidence를 생성하고, `user_query`는 OCR 호출이 모두 끝난 뒤 Qwen-facing JSONL을 조립할 때만 결합합니다. `answer`, `evidence` label, Claude·Codex 답안, v12 제출 파일과 포털 점수는 OCR 입력·설정 선택·후처리에 사용하지 않으며 출력 writer도 `answer`와 `evidence` 필드를 거부합니다. 이미지와 block ID만 받은 Codex-assisted 전사는 disagreement 진단과 사람 검수 queue 생성에 한해 silver reference로 사용할 수 있지만 human gold, accuracy denominator 또는 단독 모델 선택 근거로 사용하지 않습니다.
+OCR 엔진이 받는 의미 입력은 렌더링된 문서 이미지만입니다. 엔진은 읽기 순서가 보존된 `bNN` block, 원문 line, page, bbox와 engine-specific confidence를 생성하고, `user_query`는 OCR 호출이 모두 끝난 뒤 Qwen-facing JSONL을 조립할 때만 결합합니다. `answer`, `evidence` label, Claude·Codex 답안, v12 제출 파일과 포털 점수는 OCR 입력·설정 선택·후처리에 사용하지 않으며 출력 writer도 `answer`와 `evidence` 필드를 거부합니다. 이미지와 block ID만 받은 검증된 Codex-assisted 전사는 engineering silver agreement의 평가 분모, disagreement 진단, 사람 검수 queue와 운영 모델 선택 근거로 사용할 수 있다. 다만 이를 human gold, unbiased accuracy 또는 대회 정확도로 표현하지 않는다.
 
 이번 이슈가 검증하는 범위는 [`docsem-ocr-v1`](../../schemas/docsem-ocr-v1.schema.json)에 맞는 Qwen 입력 계약 생성까지입니다. 실제 Qwen loader가 이 JSONL을 읽고 expected block order와 query를 받는 smoke test를 통과하기 전에는 "Qwen이 정상 소비한다"거나 Qwen 정확도가 개선됐다고 주장하지 않습니다. Qwen 성능 영향은 동일한 Qwen·prompt·decoder를 고정하고 OCR 입력만 바꾸는 후속 ablation에서 평가합니다.
 
@@ -132,7 +143,7 @@ OCR 엔진이 받는 의미 입력은 렌더링된 문서 이미지만입니다.
 
 수정된 Tesseract PSM 6을 portable primary로 사용하고 Apple Vision accurate와 PP-OCRv5 mobile을 diagnostic challenger로 유지합니다. primary가 실패·timeout·빈 block을 반환하거나 challenger와 block ID, 순서, critical token 또는 ordered quantity가 다르면 해당 문서를 `ocr_uncertain`으로 표시해 visual review로 보내며 challenger 출력을 primary 결과 위에 자동으로 덮어쓰지 않습니다. 실패 레코드는 partial block을 남기지 않는 fail-closed 형식을 유지하고, 재시도나 수동 판정은 별도 provenance로 기록합니다.
 
-이 정책은 Apple보다 Tesseract가 더 정확하다는 주장이 아닙니다. 사람 전사 gold가 없는 현재에는 portability, deterministic marker repair, 실행 가능 범위와 오류 추적성을 우선한 운영 선택이며, canonical 변경은 독립 gold에서 critical error 감소가 확인되거나 동등한 품질에서 wall time 또는 memory가 2배 이상 개선될 때만 검토합니다.
+Codex silver 기준에서는 Tesseract의 agreement가 Apple보다 높지만 이는 사람 gold 정확도 우위를 뜻하지 않습니다. 현재 canonical 선택은 silver agreement와 함께 portability, deterministic marker repair, 실행 가능 범위와 오류 추적성을 종합한 운영 판정입니다. unbiased 정확도 주장이나 canonical 변경은 독립 gold에서 critical error 감소가 확인되거나 동등한 품질에서 wall time 또는 memory가 2배 이상 개선될 때 다시 검토합니다.
 
 ## 한계와 validity threats
 
@@ -146,9 +157,9 @@ OCR 엔진이 받는 의미 입력은 렌더링된 문서 이미지만입니다.
 - PSM 3 산출물이 final code 이전에 생성됐다면 최종 PSM 6과 동일 조건 ablation으로 사용하지 않고 historical preflight로만 남깁니다.
 - Qwen loader와 end-to-end inference를 아직 검증하지 않았으므로 downstream usability와 task accuracy는 미측정입니다.
 
-## Issue #8 잔여 완료 조건
+## Issue #8 완료 판정
 
-현재 구현은 전수 coverage, baseline·neural OCR 실행 경로, Qwen-facing JSONL 계약과 cloud 분산 실행 준비까지 완료한 상태입니다. Issue #8은 독립 annotator가 만든 층화 human OCR gold의 CER·WER·critical-token·evidence-block 검수와 실제 Qwen loader smoke를 완료하기 전까지 닫지 않습니다. 그 전의 Codex-assisted 비교와 cross-engine agreement는 exploratory 진단으로만 보고합니다.
+Validation 217개 coverage, baseline·neural OCR 실행, Qwen-facing JSONL 계약, Codex silver 전수 검증, strict text/CER/WER/block/critical-token 평가와 재현 가능한 CLI·schema가 완료됐다. 사용자 승인에 따라 engineering Golden Label 역할은 검증된 Codex silver로 한정하고 Issue #8을 닫는다. 독립 human transcription과 Qwen end-to-end ablation은 이 점수를 unbiased accuracy로 승격하거나 downstream 성능을 주장할 때 필요한 후속 연구이며 Issue #8의 운영 완료를 막는 조건으로 남기지 않는다.
 
 ## 재현 산출물과 해시
 
@@ -160,6 +171,8 @@ OCR 엔진이 받는 의미 입력은 렌더링된 문서 이미지만입니다.
 | `artifacts/ocr/tesseract-200dpi-psm6-final.jsonl` | 수정된 Tesseract 최종 전수 출력 | OCR aggregate hash `15ceb5f26d42e9c7556c7c5e25b2267a4ce3344bae4282c3aec37b819beee0be` |
 | `artifacts/ocr/tesseract-200dpi-psm6-final.hash.json` | Tesseract record별·aggregate semantic hash | 생성 완료 |
 | `artifacts/ocr/tesseract-vs-apple-200dpi-final.json` | 방향이 명시된 cross-engine agreement | 217개 비교, 누락·예상 밖 ID 0 |
+| `artifacts/ocr/codex-silver-apple-vision-evaluation.json` | Codex silver 대비 Apple Vision text score | Silver score `99.3777`, SHA-256 `0dbe819e5a2a0f7ec6103d53f7a566d8f3df4ee53104c115d4dbe44bc530ab06` |
+| `artifacts/ocr/codex-silver-tesseract-evaluation.json` | Codex silver 대비 Tesseract text score | Silver score `99.9415`, SHA-256 `7ec24f24e907358091aa393ba7d65dc8d5a2890fede3d2ad0f9655fde36ea35c` |
 | `artifacts/ocr/tesseract-rerun20-final.jsonl` | 고정 20개 deterministic rerun | OCR aggregate hash `111c78780e34300291fe3897e3077d01c42cadba5b5558caf56ebc5562a5bd5b` |
 | `artifacts/ocr/apple-rerun20-final.jsonl` | 동일 20개 Apple deterministic rerun | OCR aggregate hash `84d008b8b8bf2f0e4bfdd6ad14583f8ae2bd7d36242d1604cf9224d351095655` |
 | `artifacts/ocr/docsem-validation-ocr-input.tar.gz` | Colab·Kaggle label-free 입력 archive | SHA-256 `9fb35e81feead385fedd3a5bd66ca780ca2aaee5b92b2247f75114cfae642967` |
