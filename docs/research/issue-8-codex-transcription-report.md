@@ -158,6 +158,7 @@ git diff --check
 ## 검수 한계
 
 - Codex 전사는 human gold가 아닌 `codex-assisted-silver` reference다. 전수 계약 검증은 완전성과 재현 가능한 provenance를 증명하지만 문자 정확도 자체를 사람 정답 수준으로 보증하지 않는다.
+- 이 silver reference를 Golden Label과 같은 계산 방향으로 사용한 CER·WER·유사도·점수 함수, JSON schema와 Apple Vision/Tesseract 217개 실측은 [`issue-8-silver-text-evaluation.md`](issue-8-silver-text-evaluation.md)에 별도로 고정했다.
 - PDF 근거 Query 추출의 독립 비교자는 이미지형 페이지에 Tesseract를 사용한다. `ocr` 범주는 Codex와 Tesseract 사이의 관찰된 차이이며 어느 한쪽이 정답이라는 판정이 아니다.
 - normalized exact는 Unicode NFKC와 공백·줄바꿈 통합만 허용한다. 구두점 교정, 의미 교정, 의역, 숫자·단위 변환은 허용하지 않았다.
 - 기존 `user_query`는 설계상 PDF 시나리오 Query의 패러프레이즈/메타 질의이므로 exact 0건은 전사 실패율이나 데이터 오류율을 의미하지 않는다.
@@ -172,6 +173,6 @@ git diff --check
 - verifier 보고서의 `valid=true`, raw/stderr 집합 SHA를 재계산해 일치를 확인했다.
 - Query 비교의 manifest `user_query`, source/PDF SHA, diff/evidence, category를 재계산했다. Validation `0/0/217/0`과 category `actual_content_difference=166`, `ocr=51`; Train `0/0/908/0`과 category `actual_content_difference=732`, `ocr=176`이 모두 일치했다.
 - 이 보고서에 나열된 전사·검증·Query 산출물 12개와 기존 Validation 파생 산출물 2개의 SHA-256이 모두 일치했다.
-- 독립 실행한 `uv run pytest -q`는 `176 passed`, `uv run ruff check .`와 `git diff --check`는 통과했다. Pyright 실행 파일은 설치되어 있지 않아 새로 설치하지 않았으며, 앞선 독립 코드 리뷰에서는 Pyright `0 errors, 0 warnings`가 확인됐다.
+- 전사·Query 비교 구현에 대해 독립 실행한 `uv run pytest -q`는 `176 passed`, `uv run ruff check .`와 `git diff --check`는 통과했다. 후속 silver 평가 구현을 포함한 최종 검증 결과는 silver 평가 보고서와 PR 검수 기록에 추가한다. Pyright 실행 파일은 설치되어 있지 않아 새로 설치하지 않았으며, 앞선 독립 코드 리뷰에서는 Pyright `0 errors, 0 warnings`가 확인됐다.
 
 Validation raw 최종 시각은 Train raw 최초 시각보다 앞서 전사 순서가 확인된다. 현재 Validation 검증 보고서는 최종 코드로 재검증하며 덮어쓴 파일이므로 “Train 시작 직전 실행된 최초 게이트”의 파일 시각은 보존되지 않는다. 게이트 순서는 실행 로그와 본 작업의 checkpoint 진행 기록으로 확인했으며, 최종 보고서는 동일 Validation 217개에 대해 더 엄격한 verifier를 재실행한 결과다.

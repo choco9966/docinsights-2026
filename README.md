@@ -166,9 +166,17 @@ uv run docinsights-ocr compare \
   artifacts/ocr/tesseract-200dpi-psm6-final.jsonl \
   artifacts/ocr/apple-vision-200dpi.jsonl \
   --output artifacts/ocr/tesseract-vs-apple-200dpi-final.json
+
+uv run docinsights-ocr codex-silver-evaluate \
+  artifacts/ocr/codex-validation-reference.jsonl \
+  artifacts/ocr/tesseract-200dpi-psm6-final.jsonl \
+  artifacts/ocr/codex-silver-tesseract-evaluation.json \
+  --markdown artifacts/ocr/codex-silver-tesseract-evaluation.md
 ```
 
-`compare` 결과는 사람이 전사한 gold가 없는 동안 두 엔진의 agreement 진단일 뿐 OCR 정확도로 해석하지 않습니다. Qwen 입력 JSONL은 [`schemas/docsem-ocr-v1.schema.json`](schemas/docsem-ocr-v1.schema.json)을 따르며 `answer`와 `evidence`를 포함하지 않습니다. 실험 설계와 누수 경계는 [`docs/research/issue-8-ocr-benchmark.md`](docs/research/issue-8-ocr-benchmark.md)에 기록합니다.
+`codex-silver-evaluate`는 완전성 검증을 통과한 Codex 전사를 engineering silver reference로 사용해 CER·WER·문자 유사도·block exact·critical-token F1과 0~100 `silver_text_score`를 계산합니다. 이 점수는 human-gold accuracy가 아니며 출력 schema도 그 해석을 강제합니다. 계산식, 함수, 데이터 계약과 Validation 217개 실측은 [`docs/research/issue-8-silver-text-evaluation.md`](docs/research/issue-8-silver-text-evaluation.md), JSON 계약은 [`schemas/codex-silver-evaluation-v1.schema.json`](schemas/codex-silver-evaluation-v1.schema.json)에 있습니다.
+
+Qwen 입력 JSONL은 [`schemas/docsem-ocr-v1.schema.json`](schemas/docsem-ocr-v1.schema.json)을 따르며 `answer`와 `evidence`를 포함하지 않습니다. 전체 실험 설계와 누수 경계는 [`docs/research/issue-8-ocr-benchmark.md`](docs/research/issue-8-ocr-benchmark.md)에 기록합니다.
 
 ### Colab·Kaggle CPU와 Mac Studio
 
