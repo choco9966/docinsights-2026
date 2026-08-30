@@ -22,9 +22,7 @@ def test_download_command_forwards_manifest_option(monkeypatch, tmp_path: Path) 
     assert captured["include_pdfs"] is False
 
 
-def test_validate_submission_command_reports_success(
-    monkeypatch, tmp_path: Path, capsys
-) -> None:
+def test_validate_submission_command_reports_success(monkeypatch, tmp_path: Path, capsys) -> None:
     submission_path = tmp_path / "submission.jsonl"
     tasks_path = tmp_path / "tasks.jsonl"
     submission_path.touch()
@@ -37,17 +35,13 @@ def test_validate_submission_command_reports_success(
 
     monkeypatch.setattr(cli, "validate_submission", fake_validate)
 
-    exit_code = cli.main(
-        ["validate-submission", str(submission_path), "--tasks", str(tasks_path)]
-    )
+    exit_code = cli.main(["validate-submission", str(submission_path), "--tasks", str(tasks_path)])
 
     assert exit_code == 0
     assert "217개 인스턴스" in capsys.readouterr().out
 
 
-def test_compare_reviews_command_reports_consensus(
-    monkeypatch, tmp_path: Path, capsys
-) -> None:
+def test_compare_reviews_command_reports_consensus(monkeypatch, tmp_path: Path, capsys) -> None:
     pass_paths = [tmp_path / f"pass{number}.jsonl" for number in range(1, 4)]
     tasks_path = tmp_path / "tasks.jsonl"
 
@@ -73,9 +67,7 @@ def test_compare_reviews_command_reports_consensus(
     assert "재검토 17개" in output
 
 
-def test_export_blind_review_command_reports_output(
-    monkeypatch, tmp_path: Path, capsys
-) -> None:
+def test_export_blind_review_command_reports_output(monkeypatch, tmp_path: Path, capsys) -> None:
     tasks_path = tmp_path / "tasks.jsonl"
     output_dir = tmp_path / "packets"
 
@@ -102,9 +94,7 @@ def test_export_blind_review_command_reports_output(
     assert "217개" in capsys.readouterr().out
 
 
-def test_export_blind_subset_command_reports_output(
-    monkeypatch, tmp_path: Path, capsys
-) -> None:
+def test_export_blind_subset_command_reports_output(monkeypatch, tmp_path: Path, capsys) -> None:
     questions_path = tmp_path / "questions.jsonl"
     selection_path = tmp_path / "selection.jsonl"
     output_dir = tmp_path / "subset"
@@ -139,6 +129,41 @@ def test_export_blind_subset_command_reports_output(
     output = capsys.readouterr().out
     assert "87개" in output
     assert "18개 배치" in output
+
+
+def test_export_qa_review_command_reports_output(monkeypatch, tmp_path: Path, capsys) -> None:
+    review_path = tmp_path / "review.jsonl"
+    baseline_path = tmp_path / "v7.jsonl"
+    output_dir = tmp_path / "qa"
+
+    def fake_export(review, baseline, output, *, batch_size, expected_count):
+        assert review == review_path
+        assert baseline == baseline_path
+        assert output == output_dir
+        assert batch_size == 5
+        assert expected_count == 217
+        return ExportSummary(total=217, batches=44, output_dir=output_dir)
+
+    monkeypatch.setattr(cli, "export_qa_review", fake_export)
+
+    exit_code = cli.main(
+        [
+            "export-qa-review",
+            "--review",
+            str(review_path),
+            "--baseline",
+            str(baseline_path),
+            "--output",
+            str(output_dir),
+            "--batch-size",
+            "5",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "217개" in output
+    assert "44개 배치" in output
 
 
 def test_compare_blind_review_command_reports_candidates(

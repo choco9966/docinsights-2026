@@ -7,6 +7,7 @@ from docinsights_analysis.blind_review import (
     compare_blind_review,
     export_blind_review,
     export_blind_subset,
+    export_qa_review,
     merge_blind_reviews,
 )
 from docinsights_analysis.consensus import ReviewValidationError, compare_review_passes
@@ -49,9 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
     consensus_parser = subparsers.add_parser(
         "compare-reviews", help="독립 검수 결과의 전원 일치 여부 비교"
     )
-    consensus_parser.add_argument(
-        "passes", nargs="+", type=Path, help="독립 검수 JSONL 3개 이상"
-    )
+    consensus_parser.add_argument("passes", nargs="+", type=Path, help="독립 검수 JSONL 3개 이상")
     consensus_parser.add_argument(
         "--tasks",
         type=Path,
@@ -101,9 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
     subset_parser.add_argument(
         "--selection",
         type=Path,
-        default=Path(
-            "artifacts/docsem_validation/codex_blind/comparison/needs_review.jsonl"
-        ),
+        default=Path("artifacts/docsem_validation/codex_blind/comparison/needs_review.jsonl"),
         help="남길 instance_id가 들어 있는 JSONL",
     )
     subset_parser.add_argument(
@@ -118,6 +115,36 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         required=True,
         help="선택 파일이 반드시 포함해야 하는 instance 수",
+    )
+
+    qa_review_parser = subparsers.add_parser(
+        "export-qa-review",
+        help="PDF 없이 문제와 현재 답만 담은 외부 LLM 검산 패킷 생성",
+    )
+    qa_review_parser.add_argument(
+        "--review",
+        type=Path,
+        default=Path("artifacts/docsem_validation/codex_blind/review.jsonl"),
+        help="문제 문장이 들어 있는 전수 검수 JSONL",
+    )
+    qa_review_parser.add_argument(
+        "--baseline",
+        type=Path,
+        default=Path("artifacts/submissions/v7.jsonl"),
+        help="검증할 현재 답변 JSONL",
+    )
+    qa_review_parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("artifacts/docsem_validation/claude_qa_review"),
+        help="Q/A 검산 패킷 출력 디렉터리",
+    )
+    qa_review_parser.add_argument("--batch-size", type=int, default=7)
+    qa_review_parser.add_argument(
+        "--expected-count",
+        type=int,
+        default=217,
+        help="두 입력에 반드시 있어야 하는 전체 instance 수",
     )
 
     blind_compare_parser = subparsers.add_parser(
@@ -220,6 +247,24 @@ def main(argv: Sequence[str] | None = None) -> int:
             return 2
         print(
             f"선별 블라인드 검수 Q/A 생성 완료: {summary.total}개, "
+            f"{summary.batches}개 배치, {summary.output_dir}"
+        )
+        return 0
+
+    if args.command == "export-qa-review":
+        try:
+            summary = export_qa_review(
+                args.review,
+                args.baseline,
+                args.output,
+                batch_size=args.batch_size,
+                expected_count=args.expected_count,
+            )
+        except BlindReviewError as error:
+            print(f"Q/A 풀이 검증 패킷 생성 실패:\n{error}")
+            return 2
+        print(
+            f"Q/A 풀이 검증 패킷 생성 완료: {summary.total}개, "
             f"{summary.batches}개 배치, {summary.output_dir}"
         )
         return 0
