@@ -177,6 +177,39 @@ def test_codex_reference_fails_closed_when_page_count_or_response_is_invalid(
     assert "answer" not in record and "evidence" not in record
 
 
+def test_codex_reference_preserves_subprocess_stderr_in_failure_record(
+    tmp_path: Path,
+) -> None:
+    manifest = _manifest(tmp_path)
+    output = tmp_path / "artifacts" / "reference.jsonl"
+    rendered = (tmp_path / "rendered-1.png", tmp_path / "rendered-2.png")
+    for image in rendered:
+        image.write_bytes(b"image")
+    failure = subprocess.CalledProcessError(
+        1,
+        ["codex", "exec"],
+        stderr="remote service unavailable",
+        output="request id 123",
+    )
+
+    with (
+        patch("docinsights_ocr.codex_reference._codex_version", return_value="codex-cli test"),
+        patch(
+            "docinsights_ocr.codex_reference._executable_identity",
+            return_value={"name": "test", "kind": "sha256", "sha256": "1" * 64},
+        ),
+        patch("docinsights_ocr.codex_reference.render_pdf", return_value=rendered),
+        patch("docinsights_ocr.codex_reference.subprocess.run", side_effect=failure),
+    ):
+        run_codex_reference(manifest, output, documents_root=tmp_path)
+
+    record = json.loads(output.read_text(encoding="utf-8"))
+    assert record["status"] == "failed"
+    assert record["error_kind"] == "subprocess_error"
+    assert "stderr: remote service unavailable" in record["error"]
+    assert "stdout: request id 123" in record["error"]
+
+
 def test_codex_reference_resume_retry_replaces_only_failed_record(tmp_path: Path) -> None:
     manifest = _manifest(tmp_path, count=2)
     output = tmp_path / "artifacts" / "reference.jsonl"

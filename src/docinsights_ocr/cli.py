@@ -8,7 +8,9 @@ from collections.abc import Sequence
 
 from .benchmark import compare, hash_run, prepare, run, write_comparison
 from .cloud import merge_shards, pack_cloud_input, split_manifest
+from .codex_query_compare import compare_codex_queries, write_codex_query_comparison
 from .codex_reference import DEFAULT_MODEL, run_codex_reference
+from .codex_verify import verify_codex_reference
 from .paddle_ocr import DETECTION_MODEL_REVISION, RECOGNITION_MODEL_REVISION
 
 
@@ -77,6 +79,30 @@ def build_parser() -> argparse.ArgumentParser:
     codex_parser.add_argument("--workers", type=int, default=1)
     codex_parser.add_argument("--retry-failed", action="store_true")
     _add_batch_options(codex_parser)
+
+    codex_verify_parser = subparsers.add_parser("codex-verify")
+    codex_verify_parser.add_argument("tasks")
+    codex_verify_parser.add_argument("output")
+    codex_verify_parser.add_argument("raw_dir")
+    codex_verify_parser.add_argument("--documents-root")
+    codex_verify_parser.add_argument("--schema")
+    codex_verify_parser.add_argument("--poppler-executable", default="pdftoppm")
+    codex_verify_parser.add_argument("--timeout-seconds", type=float, default=120.0)
+    codex_verify_parser.add_argument("--report")
+
+    codex_query_parser = subparsers.add_parser("codex-query-compare")
+    codex_query_parser.add_argument("tasks")
+    codex_query_parser.add_argument("reference")
+    codex_query_parser.add_argument("jsonl_output")
+    codex_query_parser.add_argument("markdown_output")
+    codex_query_parser.add_argument("--documents-root")
+    codex_query_parser.add_argument("--split-name")
+    codex_query_parser.add_argument("--pdftotext-executable", default="pdftotext")
+    codex_query_parser.add_argument("--renderer-executable", default="pdftoppm")
+    codex_query_parser.add_argument("--tesseract-executable", default="tesseract")
+    codex_query_parser.add_argument("--fallback-dpi", type=int, default=200)
+    codex_query_parser.add_argument("--workers", type=int, default=1)
+    codex_query_parser.add_argument("--timeout-seconds", type=float, default=30.0)
 
     shard_parser = subparsers.add_parser("cloud-shard")
     shard_parser.add_argument("input")
@@ -152,6 +178,38 @@ def main(argv: Sequence[str] | None = None) -> int:
             limit=args.limit,
             resume=args.resume,
         )
+    elif args.command == "codex-verify":
+        result = verify_codex_reference(
+            args.tasks,
+            args.output,
+            args.raw_dir,
+            documents_root=args.documents_root,
+            schema_path=args.schema,
+            poppler_executable=args.poppler_executable,
+            timeout_seconds=args.timeout_seconds,
+        )
+        if args.report:
+            write_comparison(args.report, result)
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    elif args.command == "codex-query-compare":
+        comparison = compare_codex_queries(
+            args.tasks,
+            args.reference,
+            documents_root=args.documents_root,
+            split_name=args.split_name,
+            pdftotext_executable=args.pdftotext_executable,
+            renderer_executable=args.renderer_executable,
+            tesseract_executable=args.tesseract_executable,
+            fallback_dpi=args.fallback_dpi,
+            workers=args.workers,
+            timeout_seconds=args.timeout_seconds,
+        )
+        result = write_codex_query_comparison(
+            comparison,
+            args.jsonl_output,
+            args.markdown_output,
+        )
+        print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     elif args.command == "cloud-shard":
         options = {"shard_count": args.shard_count}
         if args.seed is not None:
