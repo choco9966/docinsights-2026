@@ -270,6 +270,10 @@ uv run docinsights compare-reviews \
 
 공식 페이지에는 2026-09-10의 구체적인 마감 시각과 시간대가 기재되어 있지 않습니다. 최종 제출 직전에 [공식 포털](https://amitbcp-docsem-docinsights.hf.space/)의 최신 공지를 다시 확인합니다.
 
+## Qwen 연구 계획
+
+Training 908개 라벨 QA, family-disjoint 내부 평가, Qwen3.5-4B 중심 SFT·GRPO/RLOO와 선택적 9B 실험을 다루는 독립 연구 범위와 72시간 gate는 [Issue #7 Qwen 연구 계획](docs/research/issue-7-qwen-72h-plan.md)에 정리했습니다. SFT/RL은 train ID만 허용하고 `sealed_internal_test`는 H+64 one-shot 전까지 어떤 Qwen lane도 실행하지 않습니다. CUDA가 없으면 4B OCR-text inference·trajectory validator·LoRA SFT smoke와 GRPO feasibility까지만 보장합니다. Qwen3-0.6B는 교차세대 feasibility 하한선이고, Qwen3.8-27B는 128GB 이상 Mac에서 multimodal smoke를 통과할 때도 diagnostic-only upper bound입니다. Codex·Claude 산출물과 Validation·기존 제출·포털 feedback은 supervision이나 모델 선택에 사용하지 않습니다.
+
 ## 라이선스와 인용
 
 공개 participant release와 Hugging Face 미러는 [Universal Permissive License v1.0](https://github.com/oracle-samples/gsm-sem/blob/main/LICENSE.txt)에 따라 제공됩니다. 데이터 또는 과제를 사용한 결과물에는 canonical source가 안내하는 GSM-SEM 논문을 인용하세요.
