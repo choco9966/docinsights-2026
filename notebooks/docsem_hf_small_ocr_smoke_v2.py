@@ -166,11 +166,11 @@ RESULT_FIELDS = (
     "parent_wall_sec",
     "peak_process_rss_bytes_child",
     "peak_process_rss_bytes_parent_sampled",
-    "parent_rss_sampling_error",
+    "peak_process_rss_sampling_error",
     "peak_cuda_allocated_bytes",
     "peak_cuda_reserved_bytes",
     "peak_vram_bytes_parent_sampled",
-    "parent_vram_sampling_error",
+    "peak_vram_sampling_error",
     "raw_outputs",
     "raw_output_bytes",
     "raw_output_sha256",
@@ -385,11 +385,11 @@ def empty_result(spec: dict[str, Any], model_index: int) -> dict[str, Any]:
         "parent_wall_sec": None,
         "peak_process_rss_bytes_child": None,
         "peak_process_rss_bytes_parent_sampled": None,
-        "parent_rss_sampling_error": None,
+        "peak_process_rss_sampling_error": None,
         "peak_cuda_allocated_bytes": None,
         "peak_cuda_reserved_bytes": None,
         "peak_vram_bytes_parent_sampled": None,
-        "parent_vram_sampling_error": None,
+        "peak_vram_sampling_error": None,
         "raw_outputs": [],
         "raw_output_bytes": 0,
         "raw_output_sha256": [],
@@ -742,9 +742,9 @@ def run_fresh_child(
         exit_code=exit_code,
         parent_wall_sec=wall,
         peak_process_rss_bytes_parent_sampled=peak_rss,
-        parent_rss_sampling_error="; ".join(sorted(rss_sampling_errors)) or None,
+        peak_process_rss_sampling_error="; ".join(sorted(rss_sampling_errors)) or None,
         peak_vram_bytes_parent_sampled=peak_vram,
-        parent_vram_sampling_error="; ".join(sorted(vram_sampling_errors)) or None,
+        peak_vram_sampling_error="; ".join(sorted(vram_sampling_errors)) or None,
         stdout_path=str(stdout_path),
         stdout_bytes=stdout_path.stat().st_size,
         stdout_sha256=sha256_file(stdout_path),
@@ -795,10 +795,11 @@ def build_report(rows: list[dict[str, Any]], run_id: str) -> str:
             f"{row['peak_vram_bytes_parent_sampled']} | "
             f"{row['peak_cuda_allocated_bytes']} | {row['raw_output_bytes']} |"
         )
-        if row["parent_rss_sampling_error"] or row["parent_vram_sampling_error"]:
+        if row["peak_process_rss_sampling_error"] or row["peak_vram_sampling_error"]:
             lines.append(
-                f"\n`{row['name']}` sampling error: RSS={row['parent_rss_sampling_error']}; "
-                f"VRAM={row['parent_vram_sampling_error']}"
+                f"\n`{row['name']}` sampling error: "
+                f"RSS={row['peak_process_rss_sampling_error']}; "
+                f"VRAM={row['peak_vram_sampling_error']}"
             )
         if row["error"]:
             lines.append(f"\n`{row['name']}` error: `{row['error']}`")

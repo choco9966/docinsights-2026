@@ -199,9 +199,15 @@ def _validate_v2_results(
             raise TypeError(f"parent RSS sample must be an exact positive integer for {name}")
         if type(vram) is not int or vram < 0:
             raise TypeError(f"parent VRAM sample must be an exact non-negative integer for {name}")
-        for error_field in ("parent_rss_sampling_error", "parent_vram_sampling_error"):
-            if result.get(error_field) not in (None, ""):
-                raise ValueError(f"parent resource sampling failed for {name}: {error_field}")
+        for error_field in (
+            "peak_process_rss_sampling_error",
+            "peak_vram_sampling_error",
+        ):
+            if error_field not in result or result[error_field] is not None:
+                raise ValueError(
+                    f"parent resource sampling identity must be present and null for {name}: "
+                    f"{error_field}"
+                )
         success = result.get("success")
         if type(success) is not bool:
             raise TypeError(f"success must be an exact boolean for {name}")
@@ -216,8 +222,8 @@ def _validate_v2_results(
                 )
             if not all(isinstance(output, dict) for output in outputs):
                 raise TypeError(f"raw output identity must be an object for {name}")
-            if {output.get("page") for output in outputs} != {1, 2}:
-                raise ValueError(f"raw output pages must be unique identities 1 and 2 for {name}")
+            if [output.get("page") for output in outputs] != [1, 2]:
+                raise ValueError(f"raw output page sequence must be exactly [1, 2] for {name}")
             if not isinstance(digests, list) or digests != [item.get("sha256") for item in outputs]:
                 raise ValueError(f"raw output digest projection mismatch for {name}")
             if type(result.get("raw_output_bytes")) is not int or result["raw_output_bytes"] <= 0:

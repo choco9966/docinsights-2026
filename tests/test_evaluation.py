@@ -162,8 +162,10 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
                 "doc_latency_sec": 2 if success else None,
                 "peak_process_rss_bytes_child": 30,
                 "peak_process_rss_bytes_parent_sampled": 10 + index,
+                "peak_process_rss_sampling_error": None,
                 "peak_cuda_allocated_bytes": 20,
                 "peak_vram_bytes_parent_sampled": 20 + index,
+                "peak_vram_sampling_error": None,
                 "raw_output_bytes": raw_output.stat().st_size + raw_output_2.stat().st_size
                 if success
                 else 0,
@@ -339,8 +341,16 @@ def test_evaluate_v2_uses_parent_sampled_peaks_and_validates_output_hash(tmp_pat
         (lambda rows: rows[0].update(peak_process_rss_bytes_parent_sampled=-1), "RSS"),
         (lambda rows: rows[0].update(peak_vram_bytes_parent_sampled=True), "VRAM"),
         (lambda rows: rows[0].update(peak_vram_bytes_parent_sampled=-1), "VRAM"),
-        (lambda rows: rows[0].update(parent_rss_sampling_error="sample failed"), "sampling"),
-        (lambda rows: rows[0].update(parent_vram_sampling_error="sample failed"), "sampling"),
+        (
+            lambda rows: rows[0].update(peak_process_rss_sampling_error="sample failed"),
+            "sampling identity",
+        ),
+        (
+            lambda rows: rows[0].update(peak_vram_sampling_error="sample failed"),
+            "sampling identity",
+        ),
+        (lambda rows: rows[0].pop("peak_process_rss_sampling_error"), "sampling identity"),
+        (lambda rows: rows[0].pop("peak_vram_sampling_error"), "sampling identity"),
         (lambda rows: rows[0].update(success="true"), "exact boolean"),
         (lambda rows: rows.pop(), "exactly 5"),
     ],
@@ -391,7 +401,7 @@ def test_evaluate_rejects_lfs_mismatch_and_outputs_on_failure(tmp_path: Path) ->
         _evaluate(paths)
 
 
-@pytest.mark.parametrize("page_mutation", ["missing", "duplicate"])
+@pytest.mark.parametrize("page_mutation", ["missing", "duplicate", "reversed"])
 def test_evaluate_rejects_missing_or_duplicate_success_page_identities(
     tmp_path: Path, page_mutation: str
 ) -> None:
@@ -399,10 +409,13 @@ def test_evaluate_rejects_missing_or_duplicate_success_page_identities(
     rows = _result_rows(paths["raw_results"])
     if page_mutation == "missing":
         rows[0]["raw_outputs"][0].pop("page")
-    else:
+    elif page_mutation == "duplicate":
         rows[0]["raw_outputs"][1]["page"] = 1
+    else:
+        rows[0]["raw_outputs"].reverse()
+        rows[0]["raw_output_sha256"].reverse()
     _write_result_rows(paths["raw_results"], rows)
-    with pytest.raises(ValueError, match="pages must be unique identities"):
+    with pytest.raises(ValueError, match=r"page sequence must be exactly \[1, 2\]"):
         _evaluate(paths)
 
 
