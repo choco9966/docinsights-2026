@@ -1,0 +1,22 @@
+{
+  "approved_source_reads": [
+    "/kaggle/input/datasets/chocozzz/docsem-validation-ocr-input/bundle/documents-root/val/documents/task_000909.pdf"
+  ],
+  "model_visible_inputs": [
+    "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-1.png",
+    "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-2.png"
+  ],
+  "model_visible_non_file_input": [
+    "fixed per-model OCR prompt"
+  ],
+  "prohibited_source_reads": [
+    "tasks",
+    "query",
+    "labels",
+    "answer",
+    "evidence"
+  ],
+  "result": "pass",
+  "schema_version": "2.0",
+  "statement": "The parent selects only the exact task_000909 PDF; children receive only the two rendered page paths and fixed spec. No task/query/label/answer/evidence source path is discovered, opened, joined, or passed to a model."
+}

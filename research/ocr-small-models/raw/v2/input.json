@@ -1,0 +1,36 @@
+{
+  "expected_page_sha256": [
+    "8f6d64c96a7b7434ea95612b983e986838598f88d5fbf63c186b049727d9d12b",
+    "26644f2ecedd9ab14976d13f68e3103797058a06a2c10bebff03d8bad6cae2cd"
+  ],
+  "expected_pdf_sha256": "fa54e0a898b530757c8419524552d00dcb60bb9449e92b78c3c8c6ce3d82b798",
+  "instance_id": "task_000909",
+  "pages": [
+    {
+      "bytes": 1845064,
+      "page": 1,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-1.png",
+      "sha256": "8f6d64c96a7b7434ea95612b983e986838598f88d5fbf63c186b049727d9d12b"
+    },
+    {
+      "bytes": 1332857,
+      "page": 2,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-2.png",
+      "sha256": "26644f2ecedd9ab14976d13f68e3103797058a06a2c10bebff03d8bad6cae2cd"
+    }
+  ],
+  "pdf": {
+    "bytes": 564781,
+    "path": "/kaggle/input/datasets/chocozzz/docsem-validation-ocr-input/bundle/documents-root/val/documents/task_000909.pdf",
+    "sha256": "fa54e0a898b530757c8419524552d00dcb60bb9449e92b78c3c8c6ce3d82b798"
+  },
+  "poppler": {
+    "binary_path": "/usr/bin/pdftoppm",
+    "binary_sha256": "9854d5c30e9e56b972bc89f88dec75679296e86768715e25fb1cef45d3c7a03e",
+    "dpi": 200,
+    "version_exit_code": 0,
+    "version_stderr": "pdftoppm version 22.02.0\nCopyright 2005-2022 The Poppler Developers - http://poppler.freedesktop.org\nCopyright 1996-2011 Glyph & Cog, LLC\n",
+    "version_stdout": ""
+  },
+  "schema_version": "2.0"
+}

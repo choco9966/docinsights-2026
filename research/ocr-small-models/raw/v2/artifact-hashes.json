@@ -1,0 +1,176 @@
+{
+  "artifacts": [
+    {
+      "bytes": 801,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/audit.json",
+      "sha256": "974256e769f710ddd976f5ff5c9cc9cc8e1711d6a748c5bc8c1dc3e1137e89e8"
+    },
+    {
+      "bytes": 1231,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/bootstrap.json",
+      "sha256": "5f8a8b79be08928deaea8ef64d8de264f15cae491ced1f1492ce30dbae7a52cb"
+    },
+    {
+      "bytes": 7010,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/child-results/01-PaddleOCR-VL-1.6.json",
+      "sha256": "47cf1a58befaf18b7936473b29eb3bd238537546d159a960ee42cad6da40bf4b"
+    },
+    {
+      "bytes": 4310,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/child-results/02-GLM-OCR.json",
+      "sha256": "a7b7956259d920399728af9f1787a78ecd861e137beb474114560ebc90e63478"
+    },
+    {
+      "bytes": 12130,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/child-results/03-surya-ocr-2.json",
+      "sha256": "6c424d536909c77bb0c7cb48dbe2f0424853e4df54552f42d9c61d35ddaf084a"
+    },
+    {
+      "bytes": 5647,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/child-results/04-granite-docling-258M.json",
+      "sha256": "c3a43f7a2a8c32e0b2a3adc2aacedfde81f99fdaed0494e8351f7b82e1bcc077"
+    },
+    {
+      "bytes": 12023,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/child-results/05-SmolDocling-256M-preview.json",
+      "sha256": "14acdbfd664a2027e2756917ea170572c519d3fd25df370fd008085921ad7318"
+    },
+    {
+      "bytes": 48117,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/environment.json",
+      "sha256": "336b5ec334c3cdb60aa5ca332c353d757da72bfda81f3ef0e9309a3b60dba071"
+    },
+    {
+      "bytes": 1424,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/input.json",
+      "sha256": "0c793c0059773aac3b26976261d5bd2691e58b87fc455328400dcce88aab30ff"
+    },
+    {
+      "bytes": 1687,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/01-PaddleOCR-VL-1.6.stderr.txt",
+      "sha256": "621b7e42ce004dc57ccfcaff13d9bf14c6c20d9958977050fa7c489ecb1571c5"
+    },
+    {
+      "bytes": 118,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/01-PaddleOCR-VL-1.6.stdout.txt",
+      "sha256": "6bfd3cc1d3441b8947b549a9176a0c9f97697674eeaf4aae97ff96a8f9c84d2b"
+    },
+    {
+      "bytes": 1042,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/02-GLM-OCR.stderr.txt",
+      "sha256": "b661e1d93c26bcf44c9477519a1d5b1769b60d8a5ac02d3815c2ce439e6a1e38"
+    },
+    {
+      "bytes": 112,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/02-GLM-OCR.stdout.txt",
+      "sha256": "d1160aa4ed64d92d7c1a2b7ad3ce2ead62edb6a7c09d30da733a602ac01b44b6"
+    },
+    {
+      "bytes": 1267,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/03-surya-ocr-2.stderr.txt",
+      "sha256": "2ce352f7d27f53a2a003dd04f07324e51bb13e59b3a1e7075d3e4ebf45ca6cac"
+    },
+    {
+      "bytes": 116,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/03-surya-ocr-2.stdout.txt",
+      "sha256": "4359e89f1f430ceda01c0216ee3e5d54b5cce77da9d3bd2192508af078676c86"
+    },
+    {
+      "bytes": 696,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/04-granite-docling-258M.stderr.txt",
+      "sha256": "0f6f8bdf0c106e11a05d516f18b87bb801fc7c8fa1a4c25f8056e5740b0afda3"
+    },
+    {
+      "bytes": 125,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/04-granite-docling-258M.stdout.txt",
+      "sha256": "1b4cb4ec95592a4abcad8c9508717730a3a3185557b95d7649ff80c4814cc246"
+    },
+    {
+      "bytes": 702,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/05-SmolDocling-256M-preview.stderr.txt",
+      "sha256": "31ffe1f5d83d217de216579f55bec1077769d5c36133d85c1db647d55aa8b2b0"
+    },
+    {
+      "bytes": 129,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/logs/05-SmolDocling-256M-preview.stdout.txt",
+      "sha256": "713547371f8a33062e0f1b3fe5bf540fb2ee9e535b9e26ef7168824af036e633"
+    },
+    {
+      "bytes": 1845064,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-1.png",
+      "sha256": "8f6d64c96a7b7434ea95612b983e986838598f88d5fbf63c186b049727d9d12b"
+    },
+    {
+      "bytes": 1332857,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-2.png",
+      "sha256": "26644f2ecedd9ab14976d13f68e3103797058a06a2c10bebff03d8bad6cae2cd"
+    },
+    {
+      "bytes": 2247,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/02-GLM-OCR-page-1.txt",
+      "sha256": "21913fe73c52282cd30400b585068e915e04ad912f7cac22d07f1e3d0e5b1ee4"
+    },
+    {
+      "bytes": 2024,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/02-GLM-OCR-page-2.txt",
+      "sha256": "035d36785dbe1a687a3208fed7630ab22fb3b1add6d8904fb3b20e8b701e1702"
+    },
+    {
+      "bytes": 730,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/03-surya-ocr-2-page-1.txt",
+      "sha256": "79c43d8c564ac39658ce4e5cc055401fa7b0883c04b22963e488192318dd5b84"
+    },
+    {
+      "bytes": 603,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/03-surya-ocr-2-page-2.txt",
+      "sha256": "5dff01f22d441df1091a6416c2a1808fbe6e30bc5fe25e99f13babf93747d7c5"
+    },
+    {
+      "bytes": 512,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/04-granite-docling-258M-page-1.txt",
+      "sha256": "aeb1da71a4ab6e3c659da3f13cfe8d51afefd31365cee129668ff91002a71a86"
+    },
+    {
+      "bytes": 512,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/04-granite-docling-258M-page-2.txt",
+      "sha256": "aeb1da71a4ab6e3c659da3f13cfe8d51afefd31365cee129668ff91002a71a86"
+    },
+    {
+      "bytes": 1760,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/05-SmolDocling-256M-preview-page-1.txt",
+      "sha256": "fb62c615af2887f3877db5abc02a12b3498033e01e6014fa688ff026a3ee2cdb"
+    },
+    {
+      "bytes": 1969,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/05-SmolDocling-256M-preview-page-2.txt",
+      "sha256": "7ee473849b76a2bb92aba8d7e1de10d1ead86da7f9de954c02cb39b6a04fc068"
+    },
+    {
+      "bytes": 1490,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/report.md",
+      "sha256": "502626ac8052d71820c4528f6b6e28ee9fa3943972c595fed23b6567efed3edc"
+    },
+    {
+      "bytes": 33396,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/results.csv",
+      "sha256": "3a82b0ac6e04de334cf2d1841748e04bb880716343287398a82ccf54a458bee0"
+    },
+    {
+      "bytes": 36492,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/results.jsonl",
+      "sha256": "2a567e32ee8c13203f61c02480d775e845f88f905915cdda8f87d2d3aa0db232"
+    },
+    {
+      "bytes": 5819,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/run-manifest.json",
+      "sha256": "86c912c0adf33631b6132250c3d208ae2e3060ad09f9f400cba417b52e51c851"
+    },
+    {
+      "bytes": 36723,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/runner-executed.py",
+      "sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf"
+    }
+  ],
+  "schema_version": "2.0",
+  "scope": "all files under OUT except this self-referential manifest"
+}

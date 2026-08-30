@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -222,4 +223,34 @@ def test_evaluate_rejects_missing_reference_and_revision_mismatch(tmp_path: Path
     result["revision"] = "wrong"
     _json(paths["raw_results"], result)
     with pytest.raises(ValueError, match="revision mismatch"):
+        _evaluate(paths)
+
+
+def test_evaluate_v2_uses_parent_sampled_peaks_and_validates_output_hash(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    output = paths["raw_dir"] / "model-page-1.txt"
+    result = json.loads(paths["raw_results"].read_text())
+    result.pop("revision")
+    result.pop("raw_output_paths")
+    result["resolved_revision"] = "abc"
+    result["raw_outputs"] = [
+        {
+            "path": "/remote/model-page-1.txt",
+            "bytes": output.stat().st_size,
+            "sha256": hashlib.sha256(output.read_bytes()).hexdigest(),
+        }
+    ]
+    result["peak_process_rss_bytes_child"] = 30
+    result["peak_process_rss_bytes_parent_sampled"] = 11
+    result["peak_vram_bytes_parent_sampled"] = 21
+    _json(paths["raw_results"], result)
+    row = _evaluate(paths)["rows"][0]
+    assert row["peak_ram_bytes"] == 11
+    assert row["peak_ram_bytes_child"] == 30
+    assert row["peak_vram_bytes"] == 21
+    assert row["peak_vram_bytes_child_allocated"] == 20
+
+    result["raw_outputs"][0]["sha256"] = "0" * 64
+    _json(paths["raw_results"], result)
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
         _evaluate(paths)

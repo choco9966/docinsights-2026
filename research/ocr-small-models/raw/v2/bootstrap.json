@@ -1,0 +1,36 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "-m",
+    "pip",
+    "install",
+    "--disable-pip-version-check",
+    "--no-input",
+    "--no-deps",
+    "transformers==5.12.1",
+    "accelerate==1.10.1",
+    "huggingface-hub==1.5.0",
+    "psutil==7.0.0",
+    "Pillow==10.4.0"
+  ],
+  "exit_code": 0,
+  "expected": {
+    "Pillow": "10.4.0",
+    "accelerate": "1.10.1",
+    "huggingface-hub": "1.5.0",
+    "psutil": "7.0.0",
+    "torch": "2.10.0+cu128",
+    "transformers": "5.12.1"
+  },
+  "mismatches": {},
+  "observed": {
+    "Pillow": "10.4.0",
+    "accelerate": "1.10.1",
+    "huggingface-hub": "1.5.0",
+    "psutil": "7.0.0",
+    "torch": "2.10.0+cu128",
+    "transformers": "5.12.1"
+  },
+  "stderr": "",
+  "stdout": "Requirement already satisfied: transformers==5.12.1 in /usr/local/lib/python3.12/dist-packages (5.12.1)\nRequirement already satisfied: accelerate==1.10.1 in /usr/local/lib/python3.12/dist-packages (1.10.1)\nRequirement already satisfied: huggingface-hub==1.5.0 in /usr/local/lib/python3.12/dist-packages (1.5.0)\nRequirement already satisfied: psutil==7.0.0 in /usr/local/lib/python3.12/dist-packages (7.0.0)\nRequirement already satisfied: Pillow==10.4.0 in /usr/local/lib/python3.12/dist-packages (10.4.0)\n"
+}

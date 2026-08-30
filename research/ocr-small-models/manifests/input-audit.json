@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "2.0",
   "instance_id": "task_000909",
   "inference_input": {
     "pdf_sha256": "fa54e0a898b530757c8419524552d00dcb60bb9449e92b78c3c8c6ce3d82b798",
@@ -15,5 +15,6 @@
   "post_inference_join_artifact": "research/ocr-small-models/generated/joined-queries.jsonl",
   "post_inference_join": ["instance_id", "user_query"],
   "audit_result": "pass",
+  "verbatim_v2_audit": "research/ocr-small-models/raw/v2/audit.json",
   "note": "user_query passthrough는 OCR 이후 데이터 계약 검사이며 모델 입력이 아니다."
 }

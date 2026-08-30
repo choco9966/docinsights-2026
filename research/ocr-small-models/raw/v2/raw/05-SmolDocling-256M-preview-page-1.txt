@@ -1,0 +1,10 @@
+<doctag><section_header_level_1><loc_113><loc_37><loc_388><loc_50>Regional Operations Brief - SEM scenario</section_header_level_1>
+<text><loc_75><loc_60><loc_410><loc_82>b01: Regional Operations Brief prepared for the 11:00 coordination call. This internal document combines service updates, weather-sensitive observations, planning notes, and open questions from several teams.</text>
+<section_header_level_1><loc_49><loc_98><loc_202><loc_106>b02: 1. Purpose and reading note</section_header_level_1>
+<text><loc_49><loc_114><loc_440><loc_136>b03: Each item in this brief is submitted by a different team. Dates, staff counts, message totals, and operational questions apply only to the item in which they appear. They should not be combined across sections when assessing a separate request.</text>
+<text><loc_49><loc_142><loc_63><loc_147>b04:</text>
+<text><loc_63><loc_142><loc_449><loc_196>Team On-call staff Next check-in Roads 13 09:30 Parks 5 10:15 Communications 5 11:00</text>
+<text><loc_49><loc_204><loc_449><loc_227>b05: The morning desk received 18 messages, including 5 requests for follow-up. Can all messages be reviewed before the next check-in? No review-rate estimate has been supplied, so this is an operational question rather than a calculation request.</text>
+<section_header_level_1><loc_49><loc_235><loc_208><loc_243>b06: 2. Topic and conditions update</section_header_level_1>
+<text><loc_49><loc_251><loc_438><loc_274>b07: Several field notes refer to farmer, owns, and acres. The notes describe current observations and communications needs, rather than a forecast or a quantitative estimate. Staff have been asked to distinguish verified observations from planning scenarios in the public record.</text>
+<text><loc_49><loc_280><loc_4

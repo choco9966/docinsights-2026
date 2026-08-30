@@ -1,11 +1,12 @@
 {
-  "schema_version": "1.0",
-  "platform": "Kaggle Python 3.12.13 Linux",
-  "notebook": {
-    "url": "https://www.kaggle.com/code/chocozzz/notebooke3d56c2c4c/edit",
-    "version": 1,
-    "version_title": "DocSem fixed-sample smoke evidence"
-  },
+  "schema_version": "2.0",
+  "captured_at": "2026-08-30T16:54:09.728044+00:00",
+  "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+  "python": "3.12.13",
+  "gpu": "NVIDIA Tesla T4 x2 allocated; CUDA_VISIBLE_DEVICES=0 for sequential fresh children",
+  "device_runtime": "Kaggle Linux; NVIDIA Tesla T4 cuda:0; float16; torch 2.10.0+cu128; transformers 5.12.1",
+  "cost": "free Kaggle quota",
+  "raw_evidence_status": "fresh v2 evidence; complete_with_model_failures",
   "packages": {
     "torch": "2.10.0+cu128",
     "transformers": "5.12.1",
@@ -14,14 +15,28 @@
     "psutil": "7.0.0",
     "pillow": "10.4.0"
   },
-  "cuda": "12.8",
-  "gpu": "NVIDIA T4 x2 allocated; cuda:0 only used",
-  "cost": "free Kaggle quota",
-  "raw_evidence_status": "historical/reconstructed preflight; no fresh-run provenance asserted",
-  "max_new_tokens": 512,
-  "input_policy": {
-    "inference_inputs": ["rendered page PNG"],
-    "post_inference_join_only": ["instance_id", "user_query"],
-    "forbidden_before_or_during_inference": ["labels", "answer", "evidence", "user_query"]
+  "dependency_lock": {
+    "path": "research/ocr-small-models/requirements-kaggle-v2.txt",
+    "verbatim_evidence_path": "research/ocr-small-models/raw/v2/pip-freeze.txt",
+    "source": "environment.json pip_freeze_all_verbatim",
+    "note": "pyproject.toml contains only the dependency-free evaluation package; this lock records the complete Kaggle ML runtime."
+  },
+  "runner": {
+    "path": "research/ocr-small-models/raw/v2/runner-executed.py",
+    "bytes": 36723,
+    "sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf",
+    "checked_in_source_commit": "95af62c",
+    "source_acquisition_mode": "ipython_raw_cell_history"
+  },
+  "poppler": {
+    "binary_path": "/usr/bin/pdftoppm",
+    "binary_sha256": "9854d5c30e9e56b972bc89f88dec75679296e86768715e25fb1cef45d3c7a03e",
+    "version": "22.02.0",
+    "dpi": 200
+  },
+  "bundle_artifacts": {
+    "environment_sha256": "336b5ec334c3cdb60aa5ca332c353d757da72bfda81f3ef0e9309a3b60dba071",
+    "input_sha256": "0c793c0059773aac3b26976261d5bd2691e58b87fc455328400dcce88aab30ff",
+    "results_jsonl_sha256": "2a567e32ee8c13203f61c02480d775e845f88f905915cdda8f87d2d3aa0db232"
   }
 }

@@ -84,16 +84,28 @@ def _reference_index(path: Path) -> dict[str, dict[str, Any]]:
 
 
 def _raw_texts(raw_dir: Path, result: dict[str, Any]) -> list[str]:
-    paths = result.get("raw_output_paths", [])
+    outputs = result.get("raw_outputs")
+    paths = outputs if isinstance(outputs, list) else result.get("raw_output_paths", [])
     if result.get("success") and not paths:
         raise ValueError(f"successful result has no declared raw output: {result['name']}")
     texts = []
     byte_count = 0
-    for raw_path in paths:
+    for raw_output in paths:
+        metadata = raw_output if isinstance(raw_output, dict) else {}
+        raw_path = metadata.get("path") if metadata else raw_output
+        if not isinstance(raw_path, str):
+            raise TypeError(f"declared raw output path is invalid: {result['name']}")
         candidate = raw_dir / Path(raw_path).name
         if not candidate.is_file():
             raise FileNotFoundError(f"declared raw output not found: {candidate}")
-        byte_count += candidate.stat().st_size
+        contents = candidate.read_bytes()
+        byte_count += len(contents)
+        if metadata.get("bytes") is not None and metadata["bytes"] != len(contents):
+            raise ValueError(f"raw output byte mismatch for {candidate}")
+        if metadata.get("sha256") is not None:
+            actual_sha256 = hashlib.sha256(contents).hexdigest()
+            if metadata["sha256"] != actual_sha256:
+                raise ValueError(f"raw output SHA-256 mismatch for {candidate}")
         texts.append(candidate.read_text(encoding="utf-8"))
     if result.get("raw_output_bytes") != byte_count:
         raise ValueError(
@@ -148,7 +160,8 @@ def evaluate(
         candidate = candidates[name]
         if result.get("repo") != candidate["model"]:
             raise ValueError(f"repository mismatch for {name}")
-        if result.get("revision") != candidate["revision"]:
+        revision = result.get("resolved_revision") or result.get("revision")
+        if revision != candidate["revision"]:
             raise ValueError(f"revision mismatch for {name}")
         texts = _raw_texts(raw_dir, result)
         valid, invalid_reason = (
@@ -177,9 +190,10 @@ def evaluate(
         rows.append(
             {
                 "model": result["repo"],
-                "revision": result["revision"],
+                "revision": revision,
                 "params": candidate["params"],
-                "weight_gib": candidate["weight_gib"],
+                "weight_bytes": candidate.get("weight_bytes"),
+                "weight_gib": candidate.get("weight_gib") or candidate["weight_bytes"] / 1024**3,
                 "license": candidate["license"],
                 "device_runtime": result.get("device_runtime")
                 or environment.get("device_runtime")
@@ -200,10 +214,21 @@ def evaluate(
                 else NA_NOT_MEASURED,
                 "sec_per_doc": latency if latency is not None else NA_NOT_MEASURED,
                 "docs_per_min": _nullable_rate(60, latency) if latency else NA_NOT_MEASURED,
-                "peak_ram_bytes": result.get("peak_process_rss_bytes", NA_NOT_MEASURED),
-                "peak_vram_bytes": result.get("peak_cuda_allocated_bytes", NA_NOT_MEASURED),
+                "peak_ram_bytes": result.get("peak_process_rss_bytes_parent_sampled")
+                if result.get("peak_process_rss_bytes_parent_sampled") is not None
+                else result.get("peak_process_rss_bytes", NA_NOT_MEASURED),
+                "peak_ram_bytes_child": result.get("peak_process_rss_bytes_child", NA_NOT_MEASURED),
+                "peak_vram_bytes": result.get("peak_vram_bytes_parent_sampled")
+                if result.get("peak_vram_bytes_parent_sampled") is not None
+                else result.get("peak_cuda_allocated_bytes", NA_NOT_MEASURED),
+                "peak_vram_bytes_child_allocated": result.get(
+                    "peak_cuda_allocated_bytes", NA_NOT_MEASURED
+                ),
                 "output_bytes": result.get("raw_output_bytes", 0),
                 "cost": result.get("cost", environment.get("cost", NA_NOT_MEASURED)),
+                "candidate_gate_outcome": candidate.get("gate_outcome", NA_NOT_MEASURED),
+                "selection_status": candidate.get("selection_status", NA_NOT_MEASURED),
+                "runner_gate": result.get("gate", NA_NOT_MEASURED),
                 "notes": invalid_reason or "valid OCR; compared with Codex silver, not human gold",
                 "error": result.get("error"),
             }
@@ -212,7 +237,7 @@ def evaluate(
         row.get("timing", {}).get("total_seconds", 0.0) for row in references.values()
     )
     return {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "comparison_scope": "one fixed DocSem validation case; no quality-winner claim",
         "raw_evidence_status": environment.get("raw_evidence_status", NA_NOT_MEASURED),
         "reference": {
@@ -288,6 +313,7 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         "model",
         "revision",
         "params",
+        "weight_bytes",
         "weight_gib",
         "license",
         "device_runtime",
@@ -305,9 +331,14 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         "sec_per_doc",
         "docs_per_min",
         "peak_ram_bytes",
+        "peak_ram_bytes_child",
         "peak_vram_bytes",
+        "peak_vram_bytes_child_allocated",
         "output_bytes",
         "cost",
+        "candidate_gate_outcome",
+        "selection_status",
+        "runner_gate",
         "notes",
     ]
     lines = [

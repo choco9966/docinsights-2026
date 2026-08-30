@@ -1,0 +1,225 @@
+{
+  "completed_at": "2026-08-30T17:03:28.995186+00:00",
+  "dag": {
+    "edges": [
+      {
+        "from": "runner",
+        "operation": "Poppler render",
+        "to": "page-1"
+      },
+      {
+        "from": "runner",
+        "operation": "Poppler render",
+        "to": "page-2"
+      },
+      {
+        "from": "pdf",
+        "operation": "page 1 at 200 dpi",
+        "to": "page-1"
+      },
+      {
+        "from": "pdf",
+        "operation": "page 2 at 200 dpi",
+        "to": "page-2"
+      },
+      {
+        "from": "runner",
+        "operation": "fresh sequential child",
+        "to": "model-1"
+      },
+      {
+        "from": "page-1",
+        "operation": "pixel input",
+        "to": "model-1"
+      },
+      {
+        "from": "page-2",
+        "operation": "pixel input",
+        "to": "model-1"
+      },
+      {
+        "from": "model-1",
+        "operation": "verbatim result row",
+        "to": "results-jsonl"
+      },
+      {
+        "from": "runner",
+        "operation": "fresh sequential child",
+        "to": "model-2"
+      },
+      {
+        "from": "page-1",
+        "operation": "pixel input",
+        "to": "model-2"
+      },
+      {
+        "from": "page-2",
+        "operation": "pixel input",
+        "to": "model-2"
+      },
+      {
+        "from": "model-2",
+        "operation": "verbatim result row",
+        "to": "results-jsonl"
+      },
+      {
+        "from": "runner",
+        "operation": "fresh sequential child",
+        "to": "model-3"
+      },
+      {
+        "from": "page-1",
+        "operation": "pixel input",
+        "to": "model-3"
+      },
+      {
+        "from": "page-2",
+        "operation": "pixel input",
+        "to": "model-3"
+      },
+      {
+        "from": "model-3",
+        "operation": "verbatim result row",
+        "to": "results-jsonl"
+      },
+      {
+        "from": "runner",
+        "operation": "fresh sequential child",
+        "to": "model-4"
+      },
+      {
+        "from": "page-1",
+        "operation": "pixel input",
+        "to": "model-4"
+      },
+      {
+        "from": "page-2",
+        "operation": "pixel input",
+        "to": "model-4"
+      },
+      {
+        "from": "model-4",
+        "operation": "verbatim result row",
+        "to": "results-jsonl"
+      },
+      {
+        "from": "runner",
+        "operation": "fresh sequential child",
+        "to": "model-5"
+      },
+      {
+        "from": "page-1",
+        "operation": "pixel input",
+        "to": "model-5"
+      },
+      {
+        "from": "page-2",
+        "operation": "pixel input",
+        "to": "model-5"
+      },
+      {
+        "from": "model-5",
+        "operation": "verbatim result row",
+        "to": "results-jsonl"
+      },
+      {
+        "from": "results-jsonl",
+        "operation": "field projection",
+        "to": "results-csv"
+      },
+      {
+        "from": "results-jsonl",
+        "operation": "summary",
+        "to": "report"
+      }
+    ],
+    "nodes": [
+      {
+        "bytes": 36723,
+        "id": "runner",
+        "kind": "executed_source",
+        "path": "/kaggle/working/docinsights-hf-smoke-v2/runner-executed.py",
+        "sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf"
+      },
+      {
+        "bytes": 564781,
+        "id": "pdf",
+        "kind": "fixed_input",
+        "path": "/kaggle/input/datasets/chocozzz/docsem-validation-ocr-input/bundle/documents-root/val/documents/task_000909.pdf",
+        "sha256": "fa54e0a898b530757c8419524552d00dcb60bb9449e92b78c3c8c6ce3d82b798"
+      },
+      {
+        "bytes": 1845064,
+        "id": "page-1",
+        "kind": "rendered_input",
+        "path": "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-1.png",
+        "sha256": "8f6d64c96a7b7434ea95612b983e986838598f88d5fbf63c186b049727d9d12b"
+      },
+      {
+        "bytes": 1332857,
+        "id": "page-2",
+        "kind": "rendered_input",
+        "path": "/kaggle/working/docinsights-hf-smoke-v2/pages/task_000909-page-2.png",
+        "sha256": "26644f2ecedd9ab14976d13f68e3103797058a06a2c10bebff03d8bad6cae2cd"
+      },
+      {
+        "id": "model-1",
+        "kind": "fresh_child_result",
+        "status": "failed"
+      },
+      {
+        "id": "model-2",
+        "kind": "fresh_child_result",
+        "status": "succeeded"
+      },
+      {
+        "id": "model-3",
+        "kind": "fresh_child_result",
+        "status": "succeeded"
+      },
+      {
+        "id": "model-4",
+        "kind": "fresh_child_result",
+        "status": "succeeded"
+      },
+      {
+        "id": "model-5",
+        "kind": "fresh_child_result",
+        "status": "succeeded"
+      },
+      {
+        "bytes": 36492,
+        "id": "results-jsonl",
+        "kind": "verbatim_records",
+        "path": "/kaggle/working/docinsights-hf-smoke-v2/results.jsonl",
+        "sha256": "2a567e32ee8c13203f61c02480d775e845f88f905915cdda8f87d2d3aa0db232"
+      },
+      {
+        "bytes": 33396,
+        "id": "results-csv",
+        "kind": "verbatim_projection",
+        "path": "/kaggle/working/docinsights-hf-smoke-v2/results.csv",
+        "sha256": "3a82b0ac6e04de334cf2d1841748e04bb880716343287398a82ccf54a458bee0"
+      },
+      {
+        "bytes": 1490,
+        "id": "report",
+        "kind": "human_summary",
+        "path": "/kaggle/working/docinsights-hf-smoke-v2/report.md",
+        "sha256": "502626ac8052d71820c4528f6b6e28ee9fa3943972c595fed23b6567efed3edc"
+      }
+    ]
+  },
+  "fresh_child_per_model": true,
+  "run_id": "task_000909-1788108847-64706348c218",
+  "schema_version": "2.0",
+  "sequential_model_order": [
+    "PaddleOCR-VL-1.6",
+    "GLM-OCR",
+    "surya-ocr-2",
+    "granite-docling-258M",
+    "SmolDocling-256M-preview"
+  ],
+  "started_from_exact_runner_sha256": "64706348c218f729e94430ab0fa4b33e9ec6467e41f05e665731a3a7c78644cf",
+  "terminal_state": "complete_with_model_failures"
+}

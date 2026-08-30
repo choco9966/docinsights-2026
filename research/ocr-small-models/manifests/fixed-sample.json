@@ -13,7 +13,13 @@
     {
       "instance_id": "task_000909",
       "pdf_sha256": "fa54e0a898b530757c8419524552d00dcb60bb9449e92b78c3c8c6ce3d82b798",
-      "render": {"engine": "Poppler pdftoppm", "dpi": 200, "format": "PNG"},
+      "render": {
+        "engine": "Poppler pdftoppm",
+        "version": "22.02.0",
+        "binary_sha256": "9854d5c30e9e56b972bc89f88dec75679296e86768715e25fb1cef45d3c7a03e",
+        "dpi": 200,
+        "format": "PNG"
+      },
       "page_sha256": [
         "8f6d64c96a7b7434ea95612b983e986838598f88d5fbf63c186b049727d9d12b",
         "26644f2ecedd9ab14976d13f68e3103797058a06a2c10bebff03d8bad6cae2cd"

@@ -1,20 +1,20 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "2.0",
   "observed_at": "2026-08-31T00:30:00+09:00",
   "discovery": {
-    "method": "Hugging Face Hub API와 모델 카드의 조회 시점 스냅샷",
+    "method": "Hugging Face Hub API, pinned repository trees, model cards, and v2 runner repository metadata",
     "official_sources": [
       "https://huggingface.co/docs/huggingface_hub/en/package_reference/hf_api",
       "https://huggingface.co/docs/hub/models-download-stats"
     ],
-    "note": "downloads, likes, trending 신호는 조회 시점 이후 변할 수 있다. revision은 아래 commit SHA로 고정한다."
+    "note": "downloads와 likes는 조회 시점 스냅샷이다. API trendingScore는 모든 후보에 null로 응답했으며 숫자를 추정하지 않는다."
   },
   "hard_gates": {
     "max_params": 1000000000,
-    "max_weight_gib": 2.5,
-    "clean_smoke_required": true,
+    "max_weight_bytes": 2684354560,
     "estimated_hours_for_217_max": 24,
-    "max_ram_or_vram_utilization_fraction": 0.8
+    "max_ram_or_vram_utilization_fraction": 0.8,
+    "note": "gate_outcome은 pinned metadata의 크기·라이선스·trust 검토 결과다. v2 smoke 결과는 별도 execution_evidence이며 Paddle의 현재 Transformers 실패를 성공으로 해석하지 않는다."
   },
   "score_rubric": {
     "freshness": 15,
@@ -27,8 +27,7 @@
     "memory": 5,
     "determinism": 5,
     "output_contract": 5,
-    "executable_threshold": 70,
-    "full_run_priority_threshold": 85
+    "scoring_policy": "명시적 threshold와 v2 증거가 있는 항목만 득점한다. freshness와 throughput은 사전 등록된 구간이 없어 모두 0/NA이며 추정 점수를 만들지 않는다."
   },
   "models": [
     {
@@ -38,22 +37,42 @@
       "last_modified": "2026-08-08",
       "downloads": 37225,
       "likes": 434,
-      "trend": 7,
-      "params": 900000000,
-      "weight_gib": 1.79,
-      "license": "Apache-2.0",
-      "languages": ["multilingual"],
-      "document_traits": ["document parsing", "layout", "tables", "formulae"],
+      "trendingScore": null,
+      "params": 958588736,
+      "weight_bytes": 1917255968,
+      "weight_gib": 1.7855837643146515,
+      "weight_lfs_sha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+      "license": "apache-2.0",
+      "primary_url": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/tree/c5630abae1d940eafe0697512a0325494b02ab42",
+      "license_url": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/blob/c5630abae1d940eafe0697512a0325494b02ab42/LICENSE",
       "trust_remote_code": true,
-      "sources": [
-        "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/tree/c5630abae1d940eafe0697512a0325494b02ab42",
-        "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6"
-      ],
-      "feasibility": {
-        "cuda_gpu": "candidate; custom code and pinned dependency review required",
-        "cpu": "technically possible but full-run latency is unverified",
-        "apple_silicon": "unverified; remote code and operator compatibility risk"
-      }
+      "trust_note": "Pinned remote Python source is executable supply-chain input and requires source review. The v2 run failed under Transformers 5.12.1 before inference.",
+      "remote_code_audit": {
+        "result": "reviewed_pinned_sources_runtime_failed",
+        "failure": "AttributeError: 'PaddleOCRVLConfig' object has no attribute 'text_config'",
+        "source_files": [
+          {"filename": "configuration_paddleocr_vl.py", "blob_id": "a8fd139287293301b287db6dfdaac21d7ad1a236"},
+          {"filename": "image_processing_paddleocr_vl.py", "blob_id": "f7e28fd3c1971331581f73d573b9c4a2a4ce7a58"},
+          {"filename": "modeling_paddleocr_vl.py", "blob_id": "693782514116586458b12cfd911c88d6565f552c"},
+          {"filename": "processing_paddleocr_vl.py", "blob_id": "73c3faeff201555fc7b52709848e3c669419dbb1"}
+        ]
+      },
+      "gate_outcome": "pass",
+      "selection_status": "selected",
+      "execution_evidence": "failed_load_transformers_5.12.1",
+      "rubric": {
+        "freshness": {"score": 0, "max": 15, "status": "NA", "evidence": "no preregistered freshness bands"},
+        "parameter_size": {"score": 15, "max": 15, "status": "measured", "evidence": "958588736 <= 1000000000"},
+        "weight_size": {"score": 10, "max": 10, "status": "measured", "evidence": "1917255968 <= 2684354560"},
+        "clean_install": {"score": 0, "max": 10, "status": "failed", "evidence": "model load failed under pinned environment"},
+        "smoke_success": {"score": 0, "max": 15, "status": "failed", "evidence": "no inference output"},
+        "full_coverage_feasibility": {"score": 0, "max": 10, "status": "NA", "evidence": "no document latency"},
+        "throughput": {"score": 0, "max": 10, "status": "NA", "evidence": "no preregistered bands and no document latency"},
+        "memory": {"score": 0, "max": 5, "status": "NA", "evidence": "failure peak is not an inference peak"},
+        "determinism": {"score": 0, "max": 5, "status": "NA", "evidence": "not rerun"},
+        "output_contract": {"score": 0, "max": 5, "status": "failed", "evidence": "no output"}
+      },
+      "score_total": 25
     },
     {
       "model": "zai-org/GLM-OCR",
@@ -62,22 +81,32 @@
       "last_modified": "2026-05-19",
       "downloads": 2194805,
       "likes": 2007,
-      "trend": 9,
-      "params": 900000000,
-      "weight_gib": 2.47,
-      "license": "MIT",
-      "languages": ["English", "Chinese", "Korean", "Japanese", "multilingual"],
-      "document_traits": ["text recognition", "layout-aware OCR", "parallel OCR"],
+      "trendingScore": null,
+      "params": 1325258240,
+      "weight_bytes": 2650579464,
+      "weight_gib": 2.468544490635395,
+      "weight_lfs_sha256": "a16eb0de98d199293371c560f95f83130d2a2c9612449df16839f08ff9498815",
+      "license": "mit",
+      "primary_url": "https://huggingface.co/zai-org/GLM-OCR/tree/ca5d8b3e287e52589e37c28385d9655ee4372f9d",
+      "license_url": "https://huggingface.co/zai-org/GLM-OCR/blob/ca5d8b3e287e52589e37c28385d9655ee4372f9d/README.md",
       "trust_remote_code": false,
-      "sources": [
-        "https://huggingface.co/zai-org/GLM-OCR/tree/ca5d8b3e287e52589e37c28385d9655ee4372f9d",
-        "https://huggingface.co/zai-org/GLM-OCR"
-      ],
-      "feasibility": {
-        "cuda_gpu": "verified on Kaggle T4 cuda:0 fixed-case smoke",
-        "cpu": "possible but 0.9B checkpoint is expected to be slow; unmeasured",
-        "apple_silicon": "possible in principle with MPS/CPU fallback; unmeasured"
-      }
+      "trust_note": "No remote-code execution requested in the v2 run.",
+      "gate_outcome": "fail_params",
+      "selection_status": "not_selected_diagnostic",
+      "execution_evidence": "inference_succeeded_valid_ocr_diagnostic_only",
+      "rubric": {
+        "freshness": {"score": 0, "max": 15, "status": "NA", "evidence": "no preregistered freshness bands"},
+        "parameter_size": {"score": 0, "max": 15, "status": "failed", "evidence": "1325258240 > 1000000000"},
+        "weight_size": {"score": 10, "max": 10, "status": "measured", "evidence": "2650579464 <= 2684354560"},
+        "clean_install": {"score": 10, "max": 10, "status": "measured", "evidence": "pinned load succeeded"},
+        "smoke_success": {"score": 15, "max": 15, "status": "measured", "evidence": "inference succeeded"},
+        "full_coverage_feasibility": {"score": 10, "max": 10, "status": "measured", "evidence": "217 * 55.9483 sec < 24 hours"},
+        "throughput": {"score": 0, "max": 10, "status": "NA", "evidence": "no preregistered throughput bands"},
+        "memory": {"score": 5, "max": 5, "status": "measured", "evidence": "parent-sampled VRAM 7442792448 B < 80% of T4 15360 MiB"},
+        "determinism": {"score": 0, "max": 5, "status": "NA", "evidence": "not rerun"},
+        "output_contract": {"score": 5, "max": 5, "status": "measured", "evidence": "b-prefixed blocks parsed"}
+      },
+      "score_total": 55
     },
     {
       "model": "datalab-to/surya-ocr-2",
@@ -86,22 +115,32 @@
       "last_modified": "2026-05-27",
       "downloads": 1346459,
       "likes": 100,
-      "trend": 3,
-      "params": 650000000,
-      "weight_gib": 1.28,
-      "license": "modified AI Pubs Open RAIL-M (commercial restriction above USD 5M revenue)",
-      "languages": ["91 languages"],
-      "document_traits": ["OCR", "reading order", "layout", "tables", "HTML output"],
+      "trendingScore": null,
+      "params": 686154304,
+      "weight_bytes": 1372368672,
+      "weight_gib": 1.2781179249286652,
+      "weight_lfs_sha256": "5755f82a997dd0b111964fa8b31cc2daef7aeb7a706bbd17d73d6a93ef3f723e",
+      "license": "modified-ai-pubs-openrail-m",
+      "primary_url": "https://huggingface.co/datalab-to/surya-ocr-2/tree/3b3d4cdf88d6928b0acdc75181b13206ea67c4a3",
+      "license_url": "https://huggingface.co/datalab-to/surya-ocr-2/blob/3b3d4cdf88d6928b0acdc75181b13206ea67c4a3/LICENSE",
       "trust_remote_code": false,
-      "sources": [
-        "https://huggingface.co/datalab-to/surya-ocr-2/tree/3b3d4cdf88d6928b0acdc75181b13206ea67c4a3",
-        "https://huggingface.co/datalab-to/surya-ocr-2"
-      ],
-      "feasibility": {
-        "cuda_gpu": "verified on Kaggle T4 cuda:0 fixed-case smoke",
-        "cpu": "upstream runtime supports CPU but latency is unmeasured",
-        "apple_silicon": "upstream runtime may use MPS; this experiment did not measure it"
-      }
+      "trust_note": "License contains a commercial restriction above USD 5M annual revenue; legal review remains required.",
+      "gate_outcome": "pass",
+      "selection_status": "selected",
+      "execution_evidence": "inference_succeeded_valid_ocr",
+      "rubric": {
+        "freshness": {"score": 0, "max": 15, "status": "NA", "evidence": "no preregistered freshness bands"},
+        "parameter_size": {"score": 15, "max": 15, "status": "measured", "evidence": "686154304 <= 1000000000"},
+        "weight_size": {"score": 10, "max": 10, "status": "measured", "evidence": "1372368672 <= 2684354560"},
+        "clean_install": {"score": 10, "max": 10, "status": "measured", "evidence": "pinned load succeeded"},
+        "smoke_success": {"score": 15, "max": 15, "status": "measured", "evidence": "inference succeeded"},
+        "full_coverage_feasibility": {"score": 10, "max": 10, "status": "measured", "evidence": "217 * 50.6099 sec < 24 hours"},
+        "throughput": {"score": 0, "max": 10, "status": "NA", "evidence": "no preregistered throughput bands"},
+        "memory": {"score": 5, "max": 5, "status": "measured", "evidence": "parent-sampled VRAM 3298820096 B < 80% of T4 15360 MiB"},
+        "determinism": {"score": 0, "max": 5, "status": "NA", "evidence": "not rerun"},
+        "output_contract": {"score": 5, "max": 5, "status": "measured", "evidence": "b-prefixed blocks parsed"}
+      },
+      "score_total": 70
     },
     {
       "model": "ibm-granite/granite-docling-258M",
@@ -110,44 +149,75 @@
       "last_modified": "2025-09-23",
       "downloads": 266675,
       "likes": 1257,
-      "trend": 5,
-      "params": 258000000,
-      "weight_gib": 0.48,
-      "license": "Apache-2.0",
-      "languages": ["English"],
-      "document_traits": ["document structure", "DocTags", "layout"],
+      "trendingScore": null,
+      "params": 257517120,
+      "weight_bytes": 515093104,
+      "weight_gib": 0.47971783578395844,
+      "weight_lfs_sha256": "1cdad234deb1cde18ee6a586f849057f19851daf1fedce2e40aff791dbe46f61",
+      "license": "apache-2.0",
+      "primary_url": "https://huggingface.co/ibm-granite/granite-docling-258M/tree/982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
+      "license_url": "https://huggingface.co/ibm-granite/granite-docling-258M/blob/982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe/README.md",
       "trust_remote_code": false,
-      "sources": [
-        "https://huggingface.co/ibm-granite/granite-docling-258M/tree/982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
-        "https://huggingface.co/ibm-granite/granite-docling-258M"
-      ],
-      "feasibility": {
-        "cuda_gpu": "generation ran on Kaggle T4 but output validity failed",
-        "cpu": "smallest checkpoint and plausible, but unmeasured",
-        "apple_silicon": "plausible through transformers MPS/CPU fallback, but unmeasured"
-      }
-    }
-  ],
-  "screened_out": [
+      "trust_note": "No remote-code execution requested; v2 output was degenerate repeated punctuation and is invalid OCR.",
+      "gate_outcome": "pass",
+      "selection_status": "selected",
+      "execution_evidence": "inference_succeeded_invalid_ocr",
+      "rubric": {
+        "freshness": {"score": 0, "max": 15, "status": "NA", "evidence": "no preregistered freshness bands"},
+        "parameter_size": {"score": 15, "max": 15, "status": "measured", "evidence": "257517120 <= 1000000000"},
+        "weight_size": {"score": 10, "max": 10, "status": "measured", "evidence": "515093104 <= 2684354560"},
+        "clean_install": {"score": 10, "max": 10, "status": "measured", "evidence": "pinned load succeeded"},
+        "smoke_success": {"score": 15, "max": 15, "status": "measured", "evidence": "inference process succeeded"},
+        "full_coverage_feasibility": {"score": 10, "max": 10, "status": "measured", "evidence": "217 * 352.6226 sec < 24 hours"},
+        "throughput": {"score": 0, "max": 10, "status": "NA", "evidence": "no preregistered throughput bands"},
+        "memory": {"score": 5, "max": 5, "status": "measured", "evidence": "parent-sampled VRAM 1124073472 B < 80% of T4 15360 MiB"},
+        "determinism": {"score": 0, "max": 5, "status": "NA", "evidence": "not rerun"},
+        "output_contract": {"score": 0, "max": 5, "status": "failed", "evidence": "degenerate repeated character"}
+      },
+      "score_total": 65
+    },
     {
       "model": "docling-project/SmolDocling-256M-preview",
-      "reason": "preview model, superseded status and license-card ambiguity",
-      "source": "https://huggingface.co/docling-project/SmolDocling-256M-preview"
-    },
-    {
-      "model": "baidu/Unlimited-OCR",
-      "reason": "3B parameters and 6.22 GiB exceed both hard size gates; custom code",
-      "source": "https://huggingface.co/baidu/Unlimited-OCR"
-    },
-    {
-      "model": "stepfun-ai/GOT-OCR-2.0-hf",
-      "reason": "older candidate and remote-code execution requirement",
-      "source": "https://huggingface.co/stepfun-ai/GOT-OCR-2.0-hf"
-    },
-    {
-      "model": "microsoft/trocr-small-printed",
-      "reason": "line-level OCR control rather than full-document structure benchmark",
-      "source": "https://huggingface.co/microsoft/trocr-small-printed"
+      "revision": "ce51f56c4ebe36e0b1c3a55f67b261ba22a50bf8",
+      "created_at": "2025-02-26",
+      "last_modified": "2025-06-13",
+      "downloads": null,
+      "likes": null,
+      "trendingScore": null,
+      "params": 256484928,
+      "weight_bytes": 513028808,
+      "weight_gib": 0.47779531031847,
+      "weight_lfs_sha256": "cdcdf5d823c5684029c7d8e52177cf10f9034b3aba6577549cfb1a9ce36ad0a2",
+      "license": "cdla-permissive-2.0",
+      "primary_url": "https://huggingface.co/docling-project/SmolDocling-256M-preview/tree/ce51f56c4ebe36e0b1c3a55f67b261ba22a50bf8",
+      "license_url": "https://huggingface.co/docling-project/SmolDocling-256M-preview/blob/ce51f56c4ebe36e0b1c3a55f67b261ba22a50bf8/README.md",
+      "trust_remote_code": false,
+      "trust_note": "Pinned preview revision; model-card supersession status is documented, but the pinned artifact license is CDLA-Permissive-2.0.",
+      "gate_outcome": "pass",
+      "selection_status": "selected",
+      "execution_evidence": "inference_succeeded_valid_ocr",
+      "rubric": {
+        "freshness": {"score": 0, "max": 15, "status": "NA", "evidence": "no preregistered freshness bands"},
+        "parameter_size": {"score": 15, "max": 15, "status": "measured", "evidence": "256484928 <= 1000000000"},
+        "weight_size": {"score": 10, "max": 10, "status": "measured", "evidence": "513028808 <= 2684354560"},
+        "clean_install": {"score": 10, "max": 10, "status": "measured", "evidence": "pinned load succeeded"},
+        "smoke_success": {"score": 15, "max": 15, "status": "measured", "evidence": "inference succeeded"},
+        "full_coverage_feasibility": {"score": 10, "max": 10, "status": "measured", "evidence": "217 * 38.9622 sec < 24 hours"},
+        "throughput": {"score": 0, "max": 10, "status": "NA", "evidence": "no preregistered throughput bands"},
+        "memory": {"score": 5, "max": 5, "status": "measured", "evidence": "parent-sampled VRAM 1157627904 B < 80% of T4 15360 MiB"},
+        "determinism": {"score": 0, "max": 5, "status": "NA", "evidence": "not rerun"},
+        "output_contract": {"score": 5, "max": 5, "status": "measured", "evidence": "DocTags retain b-prefixed blocks and parser accepts them"}
+      },
+      "score_total": 70
     }
+  ],
+  "selected_models": [
+    "PaddlePaddle/PaddleOCR-VL-1.6",
+    "datalab-to/surya-ocr-2",
+    "ibm-granite/granite-docling-258M",
+    "docling-project/SmolDocling-256M-preview"
+  ],
+  "diagnostic_rejections": [
+    {"model": "zai-org/GLM-OCR", "reason": "1325258240 parameters exceed the 1000000000 hard gate"}
   ]
 }

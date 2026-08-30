@@ -1,0 +1,11 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[transformers] `PaddleOCRVLProcessor` defines `image_processor_class = 'AutoImageProcessor'`, which is deprecated. Register the correct mapping in `AutoImageProcessor` instead.
+/usr/local/lib/python3.12/dist-packages/transformers/modeling_rope_utils.py:1036: FutureWarning: `rope_config_validation` is deprecated and has been removed. Its functionality has been moved to RotaryEmbeddingConfigMixin.validate_rope method. PreTrainedConfig inherits this class, so please call self.validate_rope() instead. Also, make sure to use the new rope_parameters syntax. You can call self.standardize_rope_params() in the meantime.
+  warnings.warn(
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'mrope_section'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'mrope_section'}
+[transformers] Model config: image_token_id must be `None` or an integer within the vocabulary (between 0 and 31999), got 101304. This may result in unexpected behavior.
+[transformers] Model config: video_token_id must be `None` or an integer within the vocabulary (between 0 and 31999), got 101305. This may result in unexpected behavior.
+[transformers] Model config: vision_start_token_id must be `None` or an integer within the vocabulary (between 0 and 31999), got 101306. This may result in unexpected behavior.
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'mrope_section'}
+[transformers] Unrecognized keys in `rope_parameters` for 'rope_type'='default': {'mrope_section'}

@@ -1,0 +1,188 @@
+{
+  "child_wall_sec": 10.372706308000033,
+  "device": "cuda:0",
+  "doc_latency_sec": null,
+  "dtype": "float16",
+  "error": "AttributeError: 'PaddleOCRVLConfig' object has no attribute 'text_config'",
+  "exit_code": null,
+  "fixed_preflight": true,
+  "gate": "candidate",
+  "input_mode": "paddle_chat",
+  "instance_id": "task_000909",
+  "load_sec": null,
+  "max_new_tokens": 512,
+  "model_class": "AutoModelForImageTextToText",
+  "model_index": 1,
+  "name": "PaddleOCR-VL-1.6",
+  "page_latency_sec": [],
+  "parent_wall_sec": null,
+  "peak_cuda_allocated_bytes": 0,
+  "peak_cuda_reserved_bytes": 0,
+  "peak_process_rss_bytes_child": 4690857984,
+  "peak_process_rss_bytes_parent_sampled": null,
+  "peak_vram_bytes_parent_sampled": null,
+  "prompt": "OCR:",
+  "raw_output_bytes": 0,
+  "raw_output_sha256": [],
+  "raw_outputs": [],
+  "repo": "PaddlePaddle/PaddleOCR-VL-1.6",
+  "repo_file_metadata": [
+    {
+      "blob_id": "57e6759f2c21614b485d2308714b7fe16821120d",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": ".eval_results/real5_omnidocbench.yaml",
+      "size": 1418
+    },
+    {
+      "blob_id": "52373fe24473b1aa44333d318f578ae6bf04b49b",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": ".gitattributes",
+      "size": 1570
+    },
+    {
+      "blob_id": "0491a00e80b424eb709078b57e35d8b83ffee985",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "LICENSE",
+      "size": 11376
+    },
+    {
+      "blob_id": "58e9801f72ad5f992f0fc2e397ccf0fb014e5e5f",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "README.md",
+      "size": 21424
+    },
+    {
+      "blob_id": "6a2790e1462ecb007f9b92dfb00f594701462889",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "added_tokens.json",
+      "size": 25381
+    },
+    {
+      "blob_id": "d8b8c271d7a7245d4937098f53aa372cff3dba70",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "chat_template.jinja",
+      "size": 1474
+    },
+    {
+      "blob_id": "c54711466ae75457f8e57b909a49dae570bfa5c5",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "config.json",
+      "size": 2059
+    },
+    {
+      "blob_id": "a8fd139287293301b287db6dfdaac21d7ad1a236",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "configuration_paddleocr_vl.py",
+      "size": 8104
+    },
+    {
+      "blob_id": "ba87d71b9881c1d52f0be4286fb63e381ce3febf",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "generation_config.json",
+      "size": 133
+    },
+    {
+      "blob_id": "f7e28fd3c1971331581f73d573b9c4a2a4ce7a58",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "image_processing_paddleocr_vl.py",
+      "size": 25032
+    },
+    {
+      "blob_id": "93f88dfb31b6dbc3f529094ccfe26ddec98fa8ad",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "inference.yml",
+      "size": 43
+    },
+    {
+      "blob_id": "04667d00268d801a65293c1041e0fa4ad2ef573b",
+      "lfs_sha256": "85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db",
+      "lfs_size": 1917255968,
+      "rfilename": "model.safetensors",
+      "size": 1917255968
+    },
+    {
+      "blob_id": "693782514116586458b12cfd911c88d6565f552c",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "modeling_paddleocr_vl.py",
+      "size": 103889
+    },
+    {
+      "blob_id": "d873cd63d04d9e6243999759fc30f7752dab3222",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "preprocessor_config.json",
+      "size": 641
+    },
+    {
+      "blob_id": "73c3faeff201555fc7b52709848e3c669419dbb1",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "processing_paddleocr_vl.py",
+      "size": 12253
+    },
+    {
+      "blob_id": "033053ac4d8b5de2e47884ce85a6b4939cc58e87",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "processor_config.json",
+      "size": 137
+    },
+    {
+      "blob_id": "dcd70aaa8c9987899d7593995546d9c0cfc6a1f3",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "special_tokens_map.json",
+      "size": 1151
+    },
+    {
+      "blob_id": "e42528d5cae447340ed0a3e403001c88fe9b0f17",
+      "lfs_sha256": "c8a215a59183d0d0781adc33bacd3ce6162716f7fd568fb30234a74d69803a7d",
+      "lfs_size": 11189060,
+      "rfilename": "tokenizer.json",
+      "size": 11189060
+    },
+    {
+      "blob_id": "81e33aa7fdb8ef76fceb1a69f1997021f3056770",
+      "lfs_sha256": "34ef7db83df785924fb83d7b887b6e822a031c56e15cff40aaf9b982988180df",
+      "lfs_size": 1614363,
+      "rfilename": "tokenizer.model",
+      "size": 1614363
+    },
+    {
+      "blob_id": "cd9eb7da01a3209f4fb9b3561e04be022cd87764",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "tokenizer_config.json",
+      "size": 186947
+    }
+  ],
+  "repo_metadata_error": null,
+  "requested_revision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "resolved_revision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "revision_resolution": "huggingface_api_confirmed_commit",
+  "schema_version": "2.0",
+  "selection_status": "existing_candidate",
+  "status": "failed",
+  "stderr_bytes": 0,
+  "stderr_path": null,
+  "stderr_sha256": null,
+  "stdout_bytes": 0,
+  "stdout_path": null,
+  "stdout_sha256": null,
+  "success": false,
+  "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/docinsights-hf-smoke-v2/runner-executed.py\", line 459, in child_run\n    model = AutoModelForImageTextToText.from_pretrained(\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/auto/auto_factory.py\", line 406, in from_pretrained\n    return model_class.from_pretrained(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/modeling_utils.py\", line 4283, in from_pretrained\n    model = cls(config, *model_args, **model_kwargs)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/paddleocr_vl/modeling_paddleocr_vl.py\", line 1330, in __init__\n    self.model = PaddleOCRVLModel(config)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/models/paddleocr_vl/modeling_paddleocr_vl.py\", line 997, in __init__\n    self.language_model = PaddleOCRTextModel._from_config(config.text_config)\n                                                          ^^^^^^^^^^^^^^^^^^\n  File \"/usr/local/lib/python3.12/dist-packages/transformers/configuration_utils.py\", line 436, in __getattribute__\n    return super().__getattribute__(key)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'PaddleOCRVLConfig' object has no attribute 'text_config'. Did you mean: 'get_text_config'?\n",
+  "truncation_risk": "possible: max_new_tokens=512 is a fixed comparable preflight ceiling; token-limit completion does not establish full-page coverage",
+  "trust_remote_code": true
+}
