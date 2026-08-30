@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/choco9966/docinsights-2026/schemas/codex-transcription-response-v1.schema.json",
+  "title": "Codex-assisted DocSem visual transcription response",
+  "type": "object",
+  "required": [
+    "blocks"
+  ],
+  "properties": {
+    "blocks": {
+      "type": "array",
+      "minItems": 23,
+      "maxItems": 23,
+      "items": {
+        "type": "object",
+        "required": [
+          "block_id",
+          "text"
+        ],
+        "properties": {
+          "block_id": {
+            "type": "string",
+            "pattern": "^b(?:0[1-9]|1[0-9]|2[0-3])$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

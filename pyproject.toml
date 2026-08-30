@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "docinsights-ocr"
+version = "0.1.0"
+description = "Qwen-facing OCR benchmark pipeline for the DocInsights 2026 DocSem task"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "UPL-1.0" }
+dependencies = []
+
+[project.scripts]
+docinsights-ocr = "docinsights_ocr.cli:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4,<9",
+  "ruff>=0.12,<1",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

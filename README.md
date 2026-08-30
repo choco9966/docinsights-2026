@@ -120,6 +120,68 @@ first_pdf = hf_hub_download(
 )
 ```
 
+## Qwen용 OCR 전처리
+
+[Issue #8](https://github.com/choco9966/docinsights-2026/issues/8)은 이미지형 PDF에서 답을 추론하지 않고 ordered `bNN` block, 원문, 위치와 confidence만 복원해 Qwen 추론·학습에 전달하는 독립 OCR 계층입니다. OCR 엔진에는 `user_query`, 정답, evidence를 전달하지 않으며 `user_query`는 OCR이 끝난 뒤 Qwen 입력 레코드를 조립할 때만 결합합니다.
+
+Python 환경과 Apple Vision 실행 파일을 준비합니다. Apple Vision은 macOS에서만 사용할 수 있으며 Tesseract 실행에는 `tesseract`와 Poppler의 `pdftoppm`이 필요합니다.
+
+```bash
+uv sync --all-groups
+mkdir -p artifacts/ocr/bin
+swiftc -O -warnings-as-errors tools/apple_vision_ocr.swift -o artifacts/ocr/bin/apple_vision_ocr
+```
+
+Validation 217개를 모델 출력과 무관한 SHA-256 순서로 OCR-dev 30개와 OCR-eval 187개로 고정하고, 두 OCR 엔진을 같은 200 DPI 입력에서 실행합니다. 현재 실험에서는 설정 보정에 사용한 `task_000909`가 OCR-eval에 포함됐으므로 187개를 sealed holdout으로 주장하지 않고 217개 전체를 exploratory coverage·agreement 분석에만 사용합니다.
+
+```bash
+uv run docinsights-ocr prepare \
+  data/raw/docsem/val/tasks.jsonl \
+  artifacts/ocr/validation-manifest.jsonl \
+  --documents-root data/raw/docsem
+
+uv run docinsights-ocr run \
+  artifacts/ocr/validation-manifest.jsonl \
+  artifacts/ocr/tesseract-200dpi-psm6-final.jsonl \
+  --engine tesseract \
+  --dpi 200 \
+  --page-segmentation-mode 6 \
+  --documents-root data/raw/docsem \
+  --timeout-seconds 120
+
+uv run docinsights-ocr run \
+  artifacts/ocr/validation-manifest.jsonl \
+  artifacts/ocr/apple-vision-200dpi.jsonl \
+  --engine apple-vision \
+  --dpi 200 \
+  --apple-vision-executable artifacts/ocr/bin/apple_vision_ocr \
+  --documents-root data/raw/docsem \
+  --timeout-seconds 120
+
+uv run docinsights-ocr hash \
+  artifacts/ocr/apple-vision-200dpi.jsonl \
+  --output artifacts/ocr/apple-vision-200dpi.hash.json
+
+uv run docinsights-ocr compare \
+  artifacts/ocr/tesseract-200dpi-psm6-final.jsonl \
+  artifacts/ocr/apple-vision-200dpi.jsonl \
+  --output artifacts/ocr/tesseract-vs-apple-200dpi-final.json
+```
+
+`compare` 결과는 사람이 전사한 gold가 없는 동안 두 엔진의 agreement 진단일 뿐 OCR 정확도로 해석하지 않습니다. Qwen 입력 JSONL은 [`schemas/docsem-ocr-v1.schema.json`](schemas/docsem-ocr-v1.schema.json)을 따르며 `answer`와 `evidence`를 포함하지 않습니다. 실험 설계와 누수 경계는 [`docs/research/issue-8-ocr-benchmark.md`](docs/research/issue-8-ocr-benchmark.md)에 기록합니다.
+
+### Colab·Kaggle CPU와 Mac Studio
+
+PP-OCRv5 mobile은 [`notebooks/ocr/cloud_cpu_ppocrv5.ipynb`](notebooks/ocr/cloud_cpu_ppocrv5.ipynb)에서 217개 Validation 문서를 8개 결정적 shard로 나눠 Kaggle 또는 Colab CPU에서 실행할 수 있습니다. Kaggle을 주 cloud cohort, Colab을 독립 재현 cohort, Mac Studio를 입력 생성·병합·Apple Vision·LightOnOCR·GLM-OCR 실행 환경으로 사용합니다. Notebook은 immutable commit·입력 hash·VM session을 확인하고, 병합기는 runtime sidecar가 다른 Kaggle·Colab·package·model cohort를 섞지 않습니다.
+
+```bash
+uv run docinsights-ocr cloud-pack artifacts/ocr/validation-manifest.jsonl /absolute/path/to/docsem artifacts/ocr/docsem-validation-ocr-input.tar.gz
+uv run docinsights-ocr cloud-shard artifacts/ocr/validation-manifest.jsonl artifacts/ocr/cloud-8 --shard-count 8
+uv run docinsights-ocr cloud-merge artifacts/ocr/validation-manifest.jsonl artifacts/ocr/paddleocr-kaggle-200dpi.jsonl artifacts/ocr/kaggle/result-shard-*-of-08.jsonl --runtimes artifacts/ocr/kaggle/runtime-shard-*-of-08.json --report artifacts/ocr/paddleocr-kaggle-200dpi.merge.json
+```
+
+공식 자원 제약, checkpoint 복구, 고정 model revision과 Mac Studio 인수 절차는 [`docs/research/issue-8-cloud-compute-runbook.md`](docs/research/issue-8-cloud-compute-runbook.md)에 기록합니다.
+
 ## 제출과 주요 일정
 
 - 개발 데이터는 **2026-08-05 릴리스**로 동결되었습니다. 그 전에 내려받았다면 최신 버전으로 갱신해야 합니다.
