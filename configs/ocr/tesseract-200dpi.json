@@ -1,0 +1,6 @@
+{
+  "dpi": 200,
+  "engine": "tesseract",
+  "language": "eng",
+  "page_segmentation_mode": 6
+}
