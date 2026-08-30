@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/choco9966/docinsights-2026/schemas/codex-silver-evaluation-v1.schema.json",
+  "title": "Codex-assisted silver OCR text evaluation",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "evaluation_kind",
+    "reference_kind",
+    "interpretation",
+    "primary_score",
+    "normalization",
+    "sources",
+    "summary",
+    "instances"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "evaluation_kind": {
+      "const": "codex-silver-text-evaluation"
+    },
+    "reference_kind": {
+      "const": "codex-assisted-silver"
+    },
+    "interpretation": {
+      "const": "silver_agreement_not_human_gold_accuracy"
+    },
+    "primary_score": {
+      "type": "object",
+      "required": ["name", "range", "definition", "value"],
+      "properties": {
+        "name": {
+          "const": "silver_text_score"
+        },
+        "range": {
+          "const": [0.0, 100.0]
+        },
+        "definition": {
+          "const": "100 * max(0, 1 - micro_character_error_rate)"
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "normalization": {
+      "type": "object",
+      "required": [
+        "strict",
+        "compatible",
+        "semantic_corrections",
+        "number_or_unit_corrections"
+      ],
+      "properties": {
+        "strict": {"type": "string"},
+        "compatible": {"type": "string"},
+        "semantic_corrections": {"const": false},
+        "number_or_unit_corrections": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "sources": {
+      "type": "object",
+      "required": ["reference", "prediction"],
+      "properties": {
+        "reference": {"$ref": "#/$defs/source"},
+        "prediction": {
+          "allOf": [
+            {"$ref": "#/$defs/source"},
+            {
+              "type": "object",
+              "required": ["engine_label", "engines"]
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "instances",
+        "prediction_ok",
+        "prediction_failed",
+        "micro_character_error_rate",
+        "micro_word_error_rate",
+        "micro_character_similarity",
+        "micro_compatible_character_similarity",
+        "ordered_block_exact_rate",
+        "exact_token_f1",
+        "ordered_quantity_f1",
+        "silver_text_score",
+        "latency"
+      ]
+    },
+    "instances": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/instance"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source": {
+      "type": "object",
+      "required": ["path", "sha256", "records"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "records": {"type": "integer", "minimum": 0},
+        "engine_label": {"type": "string"},
+        "engines": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "instance": {
+      "type": "object",
+      "required": [
+        "instance_id",
+        "reference_status",
+        "prediction_status",
+        "strict_text",
+        "compatible_text",
+        "words",
+        "blocks",
+        "exact_tokens",
+        "ordered_quantities",
+        "total_seconds"
+      ],
+      "properties": {
+        "instance_id": {
+          "type": "string",
+          "pattern": "^task_[0-9]{6}$"
+        },
+        "reference_status": {"const": "ok"},
+        "prediction_status": {"type": "string"},
+        "strict_text": {"type": "object"},
+        "compatible_text": {"type": "object"},
+        "words": {"type": "object"},
+        "blocks": {"type": "object"},
+        "exact_tokens": {"type": "object"},
+        "ordered_quantities": {"type": "object"},
+        "total_seconds": {
+          "type": ["number", "null"],
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

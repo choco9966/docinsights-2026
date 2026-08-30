@@ -88,6 +88,11 @@ def relaxed_normalize_text(text: str) -> str:
     return " ".join(normalized.split())
 
 
+def nfkc_whitespace_normalize_text(text: str) -> str:
+    """Apply NFKC and collapse whitespace without changing case or punctuation."""
+    return " ".join(unicodedata.normalize("NFKC", text).split())
+
+
 def edit_distance(reference: Sequence[T], predicted: Sequence[T]) -> int:
     """Compute exact Levenshtein distance with a bit-parallel fast path.
 
@@ -109,6 +114,14 @@ def edit_distance(reference: Sequence[T], predicted: Sequence[T]) -> int:
         return _myers_edit_distance(reference, predicted)
     except TypeError:
         return _dynamic_edit_distance(reference, predicted)
+
+
+def edit_similarity(reference: Sequence[T], predicted: Sequence[T]) -> float:
+    """Return symmetric Levenshtein similarity in the inclusive range 0..1."""
+    denominator = max(len(reference), len(predicted))
+    if denominator == 0:
+        return 1.0
+    return 1.0 - edit_distance(reference, predicted) / denominator
 
 
 def _myers_edit_distance(pattern: Sequence[T], text: Sequence[T]) -> int:

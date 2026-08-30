@@ -12,6 +12,7 @@ from .codex_query_compare import compare_codex_queries, write_codex_query_compar
 from .codex_reference import DEFAULT_MODEL, run_codex_reference
 from .codex_verify import verify_codex_reference
 from .paddle_ocr import DETECTION_MODEL_REVISION, RECOGNITION_MODEL_REVISION
+from .silver_evaluation import evaluate_codex_silver, write_silver_evaluation
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -103,6 +104,13 @@ def build_parser() -> argparse.ArgumentParser:
     codex_query_parser.add_argument("--fallback-dpi", type=int, default=200)
     codex_query_parser.add_argument("--workers", type=int, default=1)
     codex_query_parser.add_argument("--timeout-seconds", type=float, default=30.0)
+
+    silver_parser = subparsers.add_parser("codex-silver-evaluate")
+    silver_parser.add_argument("reference")
+    silver_parser.add_argument("prediction")
+    silver_parser.add_argument("output")
+    silver_parser.add_argument("--markdown")
+    silver_parser.add_argument("--engine-label")
 
     shard_parser = subparsers.add_parser("cloud-shard")
     shard_parser.add_argument("input")
@@ -210,6 +218,25 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.markdown_output,
         )
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+    elif args.command == "codex-silver-evaluate":
+        evaluation = evaluate_codex_silver(
+            args.reference,
+            args.prediction,
+            engine_label=args.engine_label,
+        )
+        outputs = write_silver_evaluation(
+            evaluation,
+            args.output,
+            markdown_path=args.markdown,
+        )
+        print(
+            json.dumps(
+                {"outputs": outputs, "summary": evaluation["summary"]},
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            )
+        )
     elif args.command == "cloud-shard":
         options = {"shard_count": args.shard_count}
         if args.seed is not None:
