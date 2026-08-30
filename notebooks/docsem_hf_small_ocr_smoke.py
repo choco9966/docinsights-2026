@@ -27,6 +27,7 @@ INPUT_CANDIDATES = (
     Path("/kaggle/input/docsem-validation-ocr-input/val/documents/task_000909.pdf"),
 )
 OUT = Path("/kaggle/working/docinsights-hf-smoke")
+MAX_NEW_TOKENS = 512
 SPECS = (
     (
         "PaddleOCR-VL-1.6",
@@ -94,7 +95,7 @@ def run_model(
         "repo": repo,
         "revision": revision,
         "prompt": prompt,
-        "max_new_tokens": 512,
+        "max_new_tokens": MAX_NEW_TOKENS,
         "trust_remote_code": remote,
         "success": False,
     }
@@ -120,7 +121,7 @@ def run_model(
             synchronize()
             page_started = time.perf_counter()
             with torch.inference_mode():
-                generated = model.generate(**inputs, max_new_tokens=512, do_sample=False)
+                generated = model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS, do_sample=False)
             synchronize()
             latencies.append(time.perf_counter() - page_started)
             text = processor.batch_decode(generated, skip_special_tokens=True)[0]
