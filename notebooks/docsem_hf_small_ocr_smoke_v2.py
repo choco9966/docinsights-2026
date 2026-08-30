@@ -37,6 +37,10 @@ EXPECTED_PAGE_SHA256 = (
     "26644f2ecedd9ab14976d13f68e3103797058a06a2c10bebff03d8bad6cae2cd",
 )
 INPUT_CANDIDATES = (
+    Path(
+        "/kaggle/input/datasets/chocozzz/docsem-validation-ocr-input/"
+        "bundle/documents-root/val/documents/task_000909.pdf"
+    ),
     Path("/kaggle/input/docsem-validation-ocr-input/task_000909.pdf"),
     Path("/kaggle/input/docsem-validation-ocr-input/documents/task_000909.pdf"),
     Path("/kaggle/input/docsem-validation-ocr-input/val/documents/task_000909.pdf"),
