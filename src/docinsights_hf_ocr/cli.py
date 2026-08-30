@@ -11,7 +11,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="docinsights-hf-ocr")
     commands = parser.add_subparsers(dest="command", required=True)
     generate = commands.add_parser("generate", help="regenerate JSON/CSV/Markdown comparison")
-    for name in ("raw-results", "raw-dir", "candidates", "reference", "tasks", "out-dir"):
+    for name in (
+        "raw-results",
+        "raw-dir",
+        "candidates",
+        "reference",
+        "tasks",
+        "joined-tasks",
+        "environment",
+        "baselines",
+        "out-dir",
+    ):
         generate.add_argument(f"--{name}", type=Path, required=True)
     digest = commands.add_parser("hash", help="print stable SHA-256 values")
     digest.add_argument("paths", type=Path, nargs="+")
@@ -29,6 +39,9 @@ def main(argv: list[str] | None = None) -> int:
         args.candidates,
         args.reference,
         args.tasks,
+        args.joined_tasks,
+        args.environment,
+        args.baselines,
     )
     paths = write_outputs(report, args.out_dir)
     paths.append(write_raw_csv(args.raw_results, args.out_dir / "measured-raw.csv"))

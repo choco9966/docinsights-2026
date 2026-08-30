@@ -1,4 +1,5 @@
 from docinsights_hf_ocr.metrics import (
+    block_aligned_error_rates,
     block_fidelity,
     cer,
     extract_blocks,
@@ -31,3 +32,25 @@ def test_invalid_output_detection() -> None:
     assert is_valid_ocr(["!" * 512]) == (False, "degenerate_repeated_character")
     assert is_valid_ocr(["ordinary text without markers"])[0] is False
     assert is_valid_ocr(["b01: valid text"])[0] is True
+
+
+def test_block_aligned_rates_treat_missing_as_empty() -> None:
+    rates = block_aligned_error_rates([("b01", "alpha"), ("b02", "beta")], "b01: alpha")
+    assert rates == (4 / 9, 1 / 2)
+
+
+def test_block_aligned_rates_do_not_penalize_reordering() -> None:
+    rates = block_aligned_error_rates([("b01", "alpha"), ("b02", "beta")], "b02: beta\nb01: alpha")
+    assert rates == (0, 0)
+    fidelity = block_fidelity(["b01", "b02"], ["b02", "b01"])
+    assert fidelity["reordered"] is True
+
+
+def test_block_aligned_rates_charge_duplicate_and_unrecognized_extra_content() -> None:
+    reference = [("b01", "alpha")]
+    duplicate = block_aligned_error_rates(reference, "b01: alpha\nb01: extra")
+    unrecognized = block_aligned_error_rates(reference, "b01: alpha\nb99: extra")
+    unmarked = block_aligned_error_rates(reference, "preface\nb01: alpha")
+    assert duplicate == (1, 1)
+    assert unrecognized == (1, 1)
+    assert unmarked == (7 / 5, 1)

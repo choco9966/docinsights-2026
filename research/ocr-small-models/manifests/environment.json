@@ -17,6 +17,7 @@
   "cuda": "12.8",
   "gpu": "NVIDIA T4 x2 allocated; cuda:0 only used",
   "cost": "free Kaggle quota",
+  "raw_evidence_status": "historical/reconstructed preflight; no fresh-run provenance asserted",
   "max_new_tokens": 512,
   "input_policy": {
     "inference_inputs": ["rendered page PNG"],

@@ -11,6 +11,7 @@ from collections.abc import Sequence
 _BLOCK = re.compile(
     r"(?is)\bb(0[1-9]|1[0-9]|2[0-3])\s*:\s*(.*?)(?=\bb(?:0[1-9]|1[0-9]|2[0-3])\s*:|\Z)"
 )
+_ANY_BLOCK = re.compile(r"(?is)\bb([0-9]{2})\s*:\s*")
 _TAG = re.compile(r"<[^>]+>")
 _HORIZONTAL_SPACE = re.compile(r"[^\S\r\n]+")
 
@@ -62,6 +63,42 @@ def extract_blocks(text: str) -> list[tuple[str, str]]:
     return [
         (f"b{match.group(1)}", normalize_text(match.group(2))) for match in _BLOCK.finditer(cleaned)
     ]
+
+
+def block_aligned_error_rates(
+    reference_blocks: Sequence[tuple[str, str]], hypothesis: str
+) -> tuple[float, float]:
+    """Score text by block ID while charging all unmatched hypothesis text as insertions."""
+    cleaned = html.unescape(_TAG.sub(" ", hypothesis)).replace("<|user|>", "")
+    matches = list(_ANY_BLOCK.finditer(cleaned))
+    prefix = normalize_text(cleaned[: matches[0].start()] if matches else cleaned)
+    parsed: list[tuple[str, str]] = []
+    for index, match in enumerate(matches):
+        end = matches[index + 1].start() if index + 1 < len(matches) else len(cleaned)
+        parsed.append((f"b{match.group(1)}", normalize_text(cleaned[match.end() : end])))
+
+    first_by_id: dict[str, str] = {}
+    extras = [prefix] if prefix else []
+    reference_ids = {block_id for block_id, _ in reference_blocks}
+    for block_id, text in parsed:
+        if block_id in reference_ids and block_id not in first_by_id:
+            first_by_id[block_id] = text
+        elif text:
+            extras.append(text)
+
+    char_distance = word_distance = char_denominator = word_denominator = 0
+    for block_id, reference in reference_blocks:
+        reference_n = normalize_text(reference)
+        hypothesis_n = first_by_id.get(block_id, "")
+        char_distance += levenshtein(reference_n, hypothesis_n)
+        word_distance += levenshtein(reference_n.split(), hypothesis_n.split())
+        char_denominator += len(reference_n)
+        word_denominator += len(reference_n.split())
+    char_distance += sum(len(normalize_text(text)) for text in extras)
+    word_distance += sum(len(normalize_text(text).split()) for text in extras)
+    cer_value = char_distance / char_denominator if char_denominator else float(bool(char_distance))
+    wer_value = word_distance / word_denominator if word_denominator else float(bool(word_distance))
+    return cer_value, wer_value
 
 
 def is_valid_ocr(texts: Sequence[str]) -> tuple[bool, str | None]:

@@ -9,18 +9,23 @@ Surya는 호출 및 OCR 형식 검사를 통과했고 PaddleOCR-VL은 pinned Tra
 config 오류로 load에 실패했다. Granite Docling은 호출이 끝났으나 512개의 `!`만 반복해
 OCR 유효성 검사를 통과하지 못했다.
 
-이 결과는 `task_000909` 한 건뿐이다. GLM-OCR의 silver agreement CER 0.145579,
-WER 0.194690, block F1 0.954545와 Surya의 CER 0.803457, WER 0.799410, block F1
+이 결과는 `task_000909` 한 건뿐이다. GLM-OCR의 block-ID-aligned silver agreement
+CER 0.154754, WER 0.203540, block F1 0.954545와 Surya의 CER 0.812291, WER
+0.808260, block F1
 0.357143은 모델 정확도가 아니라 **Codex-assisted silver 전사와의 일치도**다. Codex
 전사는 human gold가 아니므로 이 수치로 품질 승자를 선언하지 않는다. GLM은 최대 512
 토큰에서 b12~b13을 누락했고, Surya는 b04~b13 및 b16~b23을 누락했다.
 
 ## 실행 결과와 자원
 
+현재 체크인된 raw 결과는 **historical/reconstructed preflight evidence**다. fresh runner
+실행에서 얻은 결과라고 주장하지 않는다. 수치와 출력은 내려받아 보존한 증거에 한정하며,
+새 Kaggle rerun이 들어오기 전까지 재현 실행 결과로 승격하지 않는다.
+
 - GLM-OCR: load 12.176 s, 55.580 s/doc, 1.080 docs/min, peak RSS 4,463,763,456 B,
-  peak VRAM 6,586,189,824 B, output 4,271 B.
+  peak VRAM 6,586,189,824 B, checked-in output 4,273 B.
 - Surya OCR 2: load 16.819 s, 47.771 s/doc, 1.256 docs/min, peak RSS
-  4,691,189,760 B, peak VRAM 2,901,400,064 B, output 1,333 B.
+  4,691,189,760 B, peak VRAM 2,901,400,064 B, checked-in output 1,335 B.
 - PaddleOCR-VL: `PaddleOCRVLConfig.text_config` 부재로 load 실패. 실패 시점 peak RSS는
   2,093,256,704 B이고 OCR 출력은 0 B다.
 - Granite Docling: 생성 호출은 성공했지만 두 페이지 모두 반복문자라 invalid다. 내려받은
@@ -35,8 +40,10 @@ Silicon 수치를 Kaggle GPU 수치로 추정하지 않는다.
 ## Query 및 Issue #8 의존성
 
 OCR inference에는 페이지 픽셀과 고정 OCR 지시만 들어갔다. `user_query`는 inference가
-끝난 뒤 tasks manifest에서 instance ID로 join한다. 원문·정규화·SHA-256 passthrough가
-각각 217/217이었다. 이는 데이터 계약 보존 검사이며, 문서 속 quantitative scenario와
+끝난 뒤 고정 사례 source query와 instance ID로 join하며, 결과는
+`generated/joined-queries.jsonl`에 별도 보존한다. 현재 고정 사례의 원문·정규화·SHA-256
+passthrough는 각각 1/1이다. query 분모는 OCR 품질 표본 수와 별도다. 이는 데이터 계약
+보존 검사이며, 문서 속 quantitative scenario와
 paraphrased `user_query`가 의미적으로 동일하다는 주장이 아니다.
 
 Issue #8의 현재 validated Codex reference는 217행이며, 고정 사례의 Codex 시간은
@@ -49,19 +56,23 @@ Issue #8의 현재 validated Codex reference는 217행이며, 고정 사례의 C
 
 ```bash
 ISSUE8=/path/to/issue-8-worktree
-DOCSEM=/path/to/data/raw/docsem
 PYTHONPATH=src python -m docinsights_hf_ocr generate \
   --raw-results research/ocr-small-models/raw/results.jsonl \
   --raw-dir research/ocr-small-models/raw \
   --candidates research/ocr-small-models/candidates.json \
   --reference "$ISSUE8/artifacts/ocr/codex-validation-reference.jsonl" \
-  --tasks "$DOCSEM/val/tasks.jsonl" \
+  --tasks research/ocr-small-models/manifests/source-queries.jsonl \
+  --joined-tasks research/ocr-small-models/generated/joined-queries.jsonl \
+  --environment research/ocr-small-models/manifests/environment.json \
+  --baselines research/ocr-small-models/baselines.json \
   --out-dir research/ocr-small-models/generated
 python -m pytest -q
 ruff check src tests notebooks
 ruff format --check src tests notebooks
 PYTHONPATH=src python -m docinsights_hf_ocr hash \
   research/ocr-small-models/raw/results.jsonl \
+  research/ocr-small-models/manifests/source-queries.jsonl \
+  research/ocr-small-models/generated/joined-queries.jsonl \
   research/ocr-small-models/generated/comparison.json \
   research/ocr-small-models/generated/comparison.csv \
   research/ocr-small-models/generated/comparison.md

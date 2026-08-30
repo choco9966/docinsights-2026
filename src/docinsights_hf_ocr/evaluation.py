@@ -8,7 +8,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .metrics import block_fidelity, cer, extract_blocks, is_valid_ocr, normalize_text, wer
+from .metrics import (
+    block_aligned_error_rates,
+    block_fidelity,
+    extract_blocks,
+    is_valid_ocr,
+    normalize_text,
+)
 
 NA_NO_VALID = "NA(no_valid_output)"
 NA_NO_REFERENCE = "NA(no_reference)"
@@ -16,28 +22,56 @@ NA_NOT_MEASURED = "NA(not_measured)"
 
 
 def read_jsonl(path: Path) -> list[dict[str, Any]]:
-    if not path.exists():
-        return []
-    return [
+    if not path.is_file():
+        raise FileNotFoundError(f"required JSONL file not found: {path}")
+    rows = [
         json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
+    if not rows:
+        raise ValueError(f"required JSONL file is empty: {path}")
+    if not all(isinstance(row, dict) for row in rows):
+        raise ValueError(f"JSONL rows must be objects: {path}")
+    return rows
 
 
 def sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
-def query_passthrough(tasks_path: Path) -> dict[str, int]:
-    rows = read_jsonl(tasks_path)
-    raw = normalized = digest = 0
+def _unique_index(rows: list[dict[str, Any]], key: str, label: str) -> dict[str, dict[str, Any]]:
+    index: dict[str, dict[str, Any]] = {}
     for row in rows:
+        value = row.get(key)
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"{label} row has no non-empty {key}")
+        if value in index:
+            raise ValueError(f"duplicate {key} in {label}: {value}")
+        index[value] = row
+    return index
+
+
+def query_passthrough(tasks_path: Path, joined_tasks_path: Path) -> dict[str, int]:
+    source_rows = read_jsonl(tasks_path)
+    joined_rows = read_jsonl(joined_tasks_path)
+    sources = _unique_index(source_rows, "instance_id", "tasks")
+    joined = _unique_index(joined_rows, "instance_id", "joined tasks")
+    missing = sorted(sources.keys() - joined.keys())
+    extra = sorted(joined.keys() - sources.keys())
+    if missing or extra:
+        raise ValueError(f"joined task keys differ: missing={missing}, extra={extra}")
+    raw = normalized = digest = 0
+    for instance_id, row in sources.items():
         source = row["user_query"]
-        joined = {"instance_id": row["instance_id"], "user_query": source}["user_query"]
-        raw += source == joined
-        normalized += normalize_text(source) == normalize_text(joined)
-        digest += sha256_text(source) == sha256_text(joined)
+        joined_query = joined[instance_id].get("user_query")
+        if not isinstance(source, str) or not isinstance(joined_query, str):
+            raise TypeError(f"user_query must be a string: {instance_id}")
+        raw += source == joined_query
+        normalized += normalize_text(source) == normalize_text(joined_query)
+        digest += sha256_text(source) == sha256_text(joined_query)
+    if raw != len(sources):
+        raise ValueError("post-inference joined user_query differs from source tasks")
     return {
-        "samples": len(rows),
+        "samples": len(sources),
         "raw_exact": raw,
         "normalized_exact": normalized,
         "sha256_exact": digest,
@@ -45,16 +79,27 @@ def query_passthrough(tasks_path: Path) -> dict[str, int]:
 
 
 def _reference_index(path: Path) -> dict[str, dict[str, Any]]:
-    return {row["instance_id"]: row for row in read_jsonl(path) if row.get("status") == "ok"}
+    all_references = _unique_index(read_jsonl(path), "instance_id", "references")
+    return {key: row for key, row in all_references.items() if row.get("status") == "ok"}
 
 
 def _raw_texts(raw_dir: Path, result: dict[str, Any]) -> list[str]:
     paths = result.get("raw_output_paths", [])
+    if result.get("success") and not paths:
+        raise ValueError(f"successful result has no declared raw output: {result['name']}")
     texts = []
+    byte_count = 0
     for raw_path in paths:
         candidate = raw_dir / Path(raw_path).name
-        if candidate.exists():
-            texts.append(candidate.read_text(encoding="utf-8"))
+        if not candidate.is_file():
+            raise FileNotFoundError(f"declared raw output not found: {candidate}")
+        byte_count += candidate.stat().st_size
+        texts.append(candidate.read_text(encoding="utf-8"))
+    if result.get("raw_output_bytes") != byte_count:
+        raise ValueError(
+            f"raw output byte mismatch for {result['name']}: "
+            f"declared={result.get('raw_output_bytes')}, actual={byte_count}"
+        )
     return texts
 
 
@@ -68,30 +113,53 @@ def evaluate(
     candidates_path: Path,
     reference_path: Path,
     tasks_path: Path,
+    joined_tasks_path: Path,
+    environment_path: Path,
+    baselines_path: Path,
     instance_id: str = "task_000909",
 ) -> dict[str, Any]:
-    candidates = {
-        row["model"].split("/")[-1]: row
-        for row in json.loads(candidates_path.read_text())["models"]
-    }
+    if (
+        not candidates_path.is_file()
+        or not environment_path.is_file()
+        or not baselines_path.is_file()
+    ):
+        raise FileNotFoundError("required JSON input file is absent")
+    candidates_data = json.loads(candidates_path.read_text(encoding="utf-8"))
+    candidate_rows = candidates_data["models"]
+    candidates = _unique_index(
+        [{**row, "name": row["model"].split("/")[-1]} for row in candidate_rows],
+        "name",
+        "candidates",
+    )
+    environment = json.loads(environment_path.read_text(encoding="utf-8"))
+    baselines = json.loads(baselines_path.read_text(encoding="utf-8"))
     references = _reference_index(reference_path)
     reference = references.get(instance_id)
-    query = query_passthrough(tasks_path)
+    if reference is None:
+        raise ValueError(f"fixed reference is missing or not validated: {instance_id}")
+    query = query_passthrough(tasks_path, joined_tasks_path)
     rows: list[dict[str, Any]] = []
-    for result in read_jsonl(raw_results):
+    result_rows = read_jsonl(raw_results)
+    _unique_index(result_rows, "name", "raw results")
+    for result in result_rows:
         name = result["name"]
+        if name not in candidates:
+            raise ValueError(f"raw result has no candidate: {name}")
         candidate = candidates[name]
+        if result.get("repo") != candidate["model"]:
+            raise ValueError(f"repository mismatch for {name}")
+        if result.get("revision") != candidate["revision"]:
+            raise ValueError(f"revision mismatch for {name}")
         texts = _raw_texts(raw_dir, result)
         valid, invalid_reason = (
             is_valid_ocr(texts) if result.get("success") else (False, "inference_failed")
         )
         hyp_blocks = extract_blocks("\n".join(texts)) if valid else []
         ref_blocks = reference.get("blocks", []) if reference else []
-        ref_text = "\n".join(block["text"] for block in ref_blocks)
-        hyp_text = "\n".join(text for _, text in hyp_blocks)
         if valid and reference:
-            cer_value: float | str = cer(ref_text, hyp_text)
-            wer_value: float | str = wer(ref_text, hyp_text)
+            cer_value, wer_value = block_aligned_error_rates(
+                [(block["block_id"], block["text"]) for block in ref_blocks], "\n".join(texts)
+            )
             fidelity: dict[str, object] | str = block_fidelity(
                 [block["block_id"] for block in ref_blocks],
                 [block_id for block_id, _ in hyp_blocks],
@@ -113,7 +181,10 @@ def evaluate(
                 "params": candidate["params"],
                 "weight_gib": candidate["weight_gib"],
                 "license": candidate["license"],
-                "device_runtime": "Kaggle NVIDIA T4 cuda:0 / transformers 5.12.1 fp16",
+                "device_runtime": result.get("device_runtime")
+                or environment.get("device_runtime")
+                or f"{environment['platform']}; {environment['gpu']}; "
+                f"transformers {environment['packages']['transformers']}",
                 "samples": 1,
                 "quality_samples": quality_samples,
                 "inference_success_rate": 1.0 if result.get("success") else 0.0,
@@ -132,7 +203,7 @@ def evaluate(
                 "peak_ram_bytes": result.get("peak_process_rss_bytes", NA_NOT_MEASURED),
                 "peak_vram_bytes": result.get("peak_cuda_allocated_bytes", NA_NOT_MEASURED),
                 "output_bytes": result.get("raw_output_bytes", 0),
-                "cost": "free Kaggle quota",
+                "cost": result.get("cost", environment.get("cost", NA_NOT_MEASURED)),
                 "notes": invalid_reason or "valid OCR; compared with Codex silver, not human gold",
                 "error": result.get("error"),
             }
@@ -143,6 +214,7 @@ def evaluate(
     return {
         "schema_version": "1.0",
         "comparison_scope": "one fixed DocSem validation case; no quality-winner claim",
+        "raw_evidence_status": environment.get("raw_evidence_status", NA_NOT_MEASURED),
         "reference": {
             "kind": "codex-assisted-silver",
             "human_gold": False,
@@ -154,7 +226,34 @@ def evaluate(
         },
         "query_passthrough": query,
         "rows": rows,
+        "baselines": _baseline_rows(baselines),
     }
+
+
+def _baseline_rows(baselines: dict[str, Any]) -> list[dict[str, Any]]:
+    existing = baselines["existing_ocr_operational_comparison"]
+    agreement = existing["engine_agreement_not_accuracy"]
+    rows = []
+    for key, label in (("apple_vision", "Apple Vision"), ("tesseract_psm6", "Tesseract PSM 6")):
+        value = existing[key]
+        rows.append(
+            {
+                "row_type": "operational_baseline",
+                "model": label,
+                "documents": existing["documents"],
+                "pages": existing["pages"],
+                "blocks": existing["blocks"],
+                "failures": existing["failures"],
+                "total_seconds": value["total_seconds"],
+                "sec_per_doc": value["seconds_per_document"],
+                "peak_ram_bytes": value["peak_rss_bytes"],
+                "engine_agreement_cer": agreement["cer"],
+                "engine_agreement_wer": agreement["wer"],
+                "engine_agreement_block_f1": agreement["block_f1"],
+                "notes": "217-document operational baseline; engine agreement is not accuracy",
+            }
+        )
+    return rows
 
 
 def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
@@ -166,16 +265,20 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     flat_rows = []
-    for row in report["rows"]:
+    for row in [*report["rows"], *report["baselines"]]:
         flat = dict(row)
-        flat["block_fidelity"] = json.dumps(
-            flat["block_fidelity"], ensure_ascii=False, sort_keys=True
-        )
+        flat.setdefault("row_type", "measured_fixed_case")
+        if "block_fidelity" in flat:
+            flat["block_fidelity"] = json.dumps(
+                flat["block_fidelity"], ensure_ascii=False, sort_keys=True
+            )
         flat_rows.append(flat)
     with csv_path.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.DictWriter(
             stream,
-            fieldnames=list(flat_rows[0]) if flat_rows else [],
+            fieldnames=list(dict.fromkeys(key for row in flat_rows for key in row))
+            if flat_rows
+            else [],
             lineterminator="\n",
         )
         if flat_rows:
@@ -223,6 +326,30 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
                 value = f"F1={value['f1']:.6f}; ordered={value['ordered_exact']}"
             cells.append(str(value).replace("|", "\\|"))
         lines.append("| " + " | ".join(cells) + " |")
+    lines.extend(
+        [
+            "",
+            "## 기존 OCR 운영 baseline (엔진 간 agreement이며 accuracy가 아님)",
+            "",
+            "| model | documents | pages | blocks | failures | total_seconds | sec_per_doc | peak_ram_bytes | engine_agreement_cer | engine_agreement_wer | engine_agreement_block_f1 |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
+    for row in report["baselines"]:
+        baseline_headers = [
+            "model",
+            "documents",
+            "pages",
+            "blocks",
+            "failures",
+            "total_seconds",
+            "sec_per_doc",
+            "peak_ram_bytes",
+            "engine_agreement_cer",
+            "engine_agreement_wer",
+            "engine_agreement_block_f1",
+        ]
+        lines.append("| " + " | ".join(str(row[key]) for key in baseline_headers) + " |")
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return [json_path, csv_path, md_path]
 
