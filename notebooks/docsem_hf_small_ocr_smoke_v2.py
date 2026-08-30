@@ -129,7 +129,7 @@ SPECS: tuple[dict[str, Any], ...] = (
         "trust_remote_code": False,
         "gate": "replacement_candidate",
         "selection_status": "replacement_candidate",
-        "model_class": "AutoModelForVision2Seq",
+        "model_class": "AutoModelForImageTextToText",
         "input_mode": "smoldocling_chat",
     },
 )
@@ -431,7 +431,7 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
     try:
         import torch
         from PIL import Image
-        from transformers import AutoModelForImageTextToText, AutoModelForVision2Seq, AutoProcessor
+        from transformers import AutoModelForImageTextToText, AutoProcessor
 
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is required; CPU fallback is prohibited")
@@ -454,11 +454,9 @@ def child_run(spec: dict[str, Any], model_index: int, pages: list[Path], result_
             revision=spec["revision"],
             trust_remote_code=spec["trust_remote_code"],
         )
-        model_factory = {
-            "AutoModelForImageTextToText": AutoModelForImageTextToText,
-            "AutoModelForVision2Seq": AutoModelForVision2Seq,
-        }[spec["model_class"]]
-        model = model_factory.from_pretrained(
+        if spec["model_class"] != "AutoModelForImageTextToText":
+            raise ValueError(f"unsupported model_class: {spec['model_class']}")
+        model = AutoModelForImageTextToText.from_pretrained(
             spec["repo"],
             revision=spec["revision"],
             trust_remote_code=spec["trust_remote_code"],
