@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0",
+  "observed_at": "2026-08-31T00:30:00+09:00",
+  "discovery": {
+    "method": "Hugging Face Hub API와 모델 카드의 조회 시점 스냅샷",
+    "official_sources": [
+      "https://huggingface.co/docs/huggingface_hub/en/package_reference/hf_api",
+      "https://huggingface.co/docs/hub/models-download-stats"
+    ],
+    "note": "downloads, likes, trending 신호는 조회 시점 이후 변할 수 있다. revision은 아래 commit SHA로 고정한다."
+  },
+  "hard_gates": {
+    "max_params": 1000000000,
+    "max_weight_gib": 2.5,
+    "clean_smoke_required": true,
+    "estimated_hours_for_217_max": 24,
+    "max_ram_or_vram_utilization_fraction": 0.8
+  },
+  "score_rubric": {
+    "freshness": 15,
+    "parameter_size": 15,
+    "weight_size": 10,
+    "clean_install": 10,
+    "smoke_success": 15,
+    "full_coverage_feasibility": 10,
+    "throughput": 10,
+    "memory": 5,
+    "determinism": 5,
+    "output_contract": 5,
+    "executable_threshold": 70,
+    "full_run_priority_threshold": 85
+  },
+  "models": [
+    {
+      "model": "PaddlePaddle/PaddleOCR-VL-1.6",
+      "revision": "c5630abae1d940eafe0697512a0325494b02ab42",
+      "created_at": "2026-05-27",
+      "last_modified": "2026-08-08",
+      "downloads": 37225,
+      "likes": 434,
+      "trend": 7,
+      "params": 900000000,
+      "weight_gib": 1.79,
+      "license": "Apache-2.0",
+      "languages": ["multilingual"],
+      "document_traits": ["document parsing", "layout", "tables", "formulae"],
+      "trust_remote_code": true,
+      "sources": [
+        "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/tree/c5630abae1d940eafe0697512a0325494b02ab42",
+        "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6"
+      ],
+      "feasibility": {
+        "cuda_gpu": "candidate; custom code and pinned dependency review required",
+        "cpu": "technically possible but full-run latency is unverified",
+        "apple_silicon": "unverified; remote code and operator compatibility risk"
+      }
+    },
+    {
+      "model": "zai-org/GLM-OCR",
+      "revision": "ca5d8b3e287e52589e37c28385d9655ee4372f9d",
+      "created_at": "2026-01-30",
+      "last_modified": "2026-05-19",
+      "downloads": 2194805,
+      "likes": 2007,
+      "trend": 9,
+      "params": 900000000,
+      "weight_gib": 2.47,
+      "license": "MIT",
+      "languages": ["English", "Chinese", "Korean", "Japanese", "multilingual"],
+      "document_traits": ["text recognition", "layout-aware OCR", "parallel OCR"],
+      "trust_remote_code": false,
+      "sources": [
+        "https://huggingface.co/zai-org/GLM-OCR/tree/ca5d8b3e287e52589e37c28385d9655ee4372f9d",
+        "https://huggingface.co/zai-org/GLM-OCR"
+      ],
+      "feasibility": {
+        "cuda_gpu": "verified on Kaggle T4 cuda:0 fixed-case smoke",
+        "cpu": "possible but 0.9B checkpoint is expected to be slow; unmeasured",
+        "apple_silicon": "possible in principle with MPS/CPU fallback; unmeasured"
+      }
+    },
+    {
+      "model": "datalab-to/surya-ocr-2",
+      "revision": "3b3d4cdf88d6928b0acdc75181b13206ea67c4a3",
+      "created_at": "2026-05-14",
+      "last_modified": "2026-05-27",
+      "downloads": 1346459,
+      "likes": 100,
+      "trend": 3,
+      "params": 650000000,
+      "weight_gib": 1.28,
+      "license": "modified AI Pubs Open RAIL-M (commercial restriction above USD 5M revenue)",
+      "languages": ["91 languages"],
+      "document_traits": ["OCR", "reading order", "layout", "tables", "HTML output"],
+      "trust_remote_code": false,
+      "sources": [
+        "https://huggingface.co/datalab-to/surya-ocr-2/tree/3b3d4cdf88d6928b0acdc75181b13206ea67c4a3",
+        "https://huggingface.co/datalab-to/surya-ocr-2"
+      ],
+      "feasibility": {
+        "cuda_gpu": "verified on Kaggle T4 cuda:0 fixed-case smoke",
+        "cpu": "upstream runtime supports CPU but latency is unmeasured",
+        "apple_silicon": "upstream runtime may use MPS; this experiment did not measure it"
+      }
+    },
+    {
+      "model": "ibm-granite/granite-docling-258M",
+      "revision": "982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
+      "created_at": "2025-05-19",
+      "last_modified": "2025-09-23",
+      "downloads": 266675,
+      "likes": 1257,
+      "trend": 5,
+      "params": 258000000,
+      "weight_gib": 0.48,
+      "license": "Apache-2.0",
+      "languages": ["English"],
+      "document_traits": ["document structure", "DocTags", "layout"],
+      "trust_remote_code": false,
+      "sources": [
+        "https://huggingface.co/ibm-granite/granite-docling-258M/tree/982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
+        "https://huggingface.co/ibm-granite/granite-docling-258M"
+      ],
+      "feasibility": {
+        "cuda_gpu": "generation ran on Kaggle T4 but output validity failed",
+        "cpu": "smallest checkpoint and plausible, but unmeasured",
+        "apple_silicon": "plausible through transformers MPS/CPU fallback, but unmeasured"
+      }
+    }
+  ],
+  "screened_out": [
+    {
+      "model": "docling-project/SmolDocling-256M-preview",
+      "reason": "preview model, superseded status and license-card ambiguity",
+      "source": "https://huggingface.co/docling-project/SmolDocling-256M-preview"
+    },
+    {
+      "model": "baidu/Unlimited-OCR",
+      "reason": "3B parameters and 6.22 GiB exceed both hard size gates; custom code",
+      "source": "https://huggingface.co/baidu/Unlimited-OCR"
+    },
+    {
+      "model": "stepfun-ai/GOT-OCR-2.0-hf",
+      "reason": "older candidate and remote-code execution requirement",
+      "source": "https://huggingface.co/stepfun-ai/GOT-OCR-2.0-hf"
+    },
+    {
+      "model": "microsoft/trocr-small-printed",
+      "reason": "line-level OCR control rather than full-document structure benchmark",
+      "source": "https://huggingface.co/microsoft/trocr-small-printed"
+    }
+  ]
+}
+

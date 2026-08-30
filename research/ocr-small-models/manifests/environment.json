@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "platform": "Kaggle Python 3.12.13 Linux",
+  "notebook": {
+    "url": "https://www.kaggle.com/code/chocozzz/notebooke3d56c2c4c/edit",
+    "version": 1,
+    "version_title": "DocSem fixed-sample smoke evidence"
+  },
+  "packages": {
+    "torch": "2.10.0+cu128",
+    "transformers": "5.12.1",
+    "accelerate": "1.10.1",
+    "huggingface-hub": "1.5.0",
+    "psutil": "7.0.0",
+    "pillow": "10.4.0"
+  },
+  "cuda": "12.8",
+  "gpu": "NVIDIA T4 x2 allocated; cuda:0 only used",
+  "cost": "free Kaggle quota",
+  "max_new_tokens": 512,
+  "input_policy": {
+    "inference_inputs": ["rendered page PNG"],
+    "post_inference_join_only": ["instance_id", "user_query"],
+    "forbidden_before_or_during_inference": ["labels", "answer", "evidence", "user_query"]
+  }
+}
+

@@ -13,6 +13,7 @@ dependencies = []
 
 [project.scripts]
 docinsights-ocr = "docinsights_ocr.cli:main"
+docinsights-hf-ocr = "docinsights_hf_ocr.cli:main"
 
 [dependency-groups]
 dev = [
