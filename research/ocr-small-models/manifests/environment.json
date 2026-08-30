@@ -24,4 +24,3 @@
     "forbidden_before_or_during_inference": ["labels", "answer", "evidence", "user_query"]
   }
 }
-

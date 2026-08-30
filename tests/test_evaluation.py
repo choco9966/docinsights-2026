@@ -1,7 +1,13 @@
 import json
 from pathlib import Path
 
-from docinsights_hf_ocr.evaluation import evaluate, hash_paths, query_passthrough, write_outputs
+from docinsights_hf_ocr.evaluation import (
+    evaluate,
+    hash_paths,
+    query_passthrough,
+    write_outputs,
+    write_raw_csv,
+)
 
 
 def _write(path: Path, value: str) -> Path:
@@ -74,6 +80,8 @@ def test_dynamic_reference_refresh_query_passthrough_and_determinism(tmp_path: P
     hashes_before = hash_paths(first)
     second = write_outputs(report, tmp_path / "out")
     assert hashes_before == hash_paths(second)
+    raw_csv = write_raw_csv(results, tmp_path / "out" / "measured-raw.csv")
+    assert "org/model" in raw_csv.read_text(encoding="utf-8")
 
 
 def test_query_passthrough_preserves_raw_source(tmp_path: Path) -> None:

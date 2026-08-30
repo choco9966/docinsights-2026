@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .evaluation import evaluate, hash_paths, write_outputs
+from .evaluation import evaluate, hash_paths, write_outputs, write_raw_csv
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,6 +30,8 @@ def main(argv: list[str] | None = None) -> int:
         args.reference,
         args.tasks,
     )
-    for path in write_outputs(report, args.out_dir):
+    paths = write_outputs(report, args.out_dir)
+    paths.append(write_raw_csv(args.raw_results, args.out_dir / "measured-raw.csv"))
+    for path in paths:
         print(path)
     return 0

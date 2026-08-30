@@ -1,0 +1,18 @@
+{
+  "algorithm": "sha256",
+  "research/ocr-small-models/candidates.json": "2808c9b79805065466f5ef9df4253659ea90e8fe18732e92988e2810f7b02d0b",
+  "research/ocr-small-models/generated/comparison.csv": "eb983abb91ce8dbce4f2e9449ce76c4804ba752241b6c0a3d1288049fb26a9c6",
+  "research/ocr-small-models/generated/comparison.json": "dff058d868a9a44600815510dcc2114192aeb5c79a132e663b7a181aab27a90a",
+  "research/ocr-small-models/generated/comparison.md": "dd16b623ad0c13a0fde9d5a1e97f8f9075ff7af92ea94c87607165c427e42e15",
+  "research/ocr-small-models/generated/measured-raw.csv": "babc18a63f4f934b677794e88474dbf33a29c3534f82e1445b38784266070f60",
+  "research/ocr-small-models/manifests/environment.json": "60f82b4e4c5af6459e78c6857098e4486409b5ea965c653fbbe9db730daf530e",
+  "research/ocr-small-models/manifests/fixed-sample.json": "6c02f9d3f4ffc97898c302c80f188fe8ad0b31796009746eea55fd6dd7192426",
+  "research/ocr-small-models/manifests/input-audit.json": "758485055876e967ebec4547571d8f5f1efae81ad9e0e3101cff87f575d265ed",
+  "research/ocr-small-models/raw/results.jsonl": "27ce8e35d29c1e062412e32c799fe36daeb3bd4407fbf94c9c21e779c17b58d8",
+  "research/ocr-small-models/raw/GLM-OCR-page-1.txt": "fb538ee93069568e03383ae023be9473e8d53893931f4fad36559822132ab68e",
+  "research/ocr-small-models/raw/GLM-OCR-page-2.txt": "70abc2a7cbbfaeb13c79ac0dc4fd169cdd49780e728ca576ede7d2e367a8801b",
+  "research/ocr-small-models/raw/granite-docling-258M-page-1.txt": "80a1febcaecf7a073ee1f5141bd0b26ac82e7245b192c67cf15ac76c0d2d4a90",
+  "research/ocr-small-models/raw/granite-docling-258M-page-2.txt": "80a1febcaecf7a073ee1f5141bd0b26ac82e7245b192c67cf15ac76c0d2d4a90",
+  "research/ocr-small-models/raw/surya-ocr-2-page-1.txt": "b18c07ca70527e2d55989a7d05cddd14522f48a6d550a22ab5aae7060ec75fb3",
+  "research/ocr-small-models/raw/surya-ocr-2-page-2.txt": "4dc8c817016c943b16d3535472349f138a48a5e988bc7b53a7f30db87256107a"
+}

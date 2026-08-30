@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "snapshot_at": "2026-08-31T01:30:00+09:00",
+  "issue_8": {
+    "url": "https://github.com/choco9966/docinsights-2026/issues/8",
+    "validated_codex_reference_rows": 217,
+    "reference_kind": "codex-assisted-silver",
+    "human_gold": false,
+    "fixed_case": {"instance_id": "task_000909", "total_seconds": 41.95216270798119},
+    "dynamic_refresh": "generate 명령은 reference JSONL의 status=ok 행 수와 timing 합계를 매번 다시 집계한다."
+  },
+  "existing_ocr_operational_comparison": {
+    "documents": 217,
+    "pages": 434,
+    "blocks": 4991,
+    "failures": 0,
+    "apple_vision": {"total_seconds": 842.06, "seconds_per_document": 3.878, "peak_rss_bytes": 224903168},
+    "tesseract_psm6": {"total_seconds": 1310.04, "seconds_per_document": 6.033, "peak_rss_bytes": 112754688},
+    "engine_agreement_not_accuracy": {
+      "cer": 0.00665542,
+      "wer": 0.01431542,
+      "block_f1": 1.0,
+      "ordered_exact": "217/217",
+      "critical_token_f1": 0.9802,
+      "quantity_f1": 0.9768
+    }
+  }
+}

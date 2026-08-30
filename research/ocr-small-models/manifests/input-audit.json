@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "instance_id": "task_000909",
+  "inference_input": {
+    "pdf_sha256": "fa54e0a898b530757c8419524552d00dcb60bb9449e92b78c3c8c6ce3d82b798",
+    "rendered_page_sha256": [
+      "8f6d64c96a7b7434ea95612b983e986838598f88d5fbf63c186b049727d9d12b",
+      "26644f2ecedd9ab14976d13f68e3103797058a06a2c10bebff03d8bad6cae2cd"
+    ],
+    "renderer": "Poppler pdftoppm 200 dpi PNG"
+  },
+  "model_visible_fields": ["rendered_page_pixels", "fixed_ocr_instruction"],
+  "model_hidden_fields": ["user_query", "labels", "answer", "evidence"],
+  "post_inference_join": ["instance_id", "user_query"],
+  "audit_result": "pass",
+  "note": "user_query passthrough는 OCR 이후 데이터 계약 검사이며 모델 입력이 아니다."
+}

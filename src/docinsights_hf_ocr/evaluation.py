@@ -173,7 +173,11 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         )
         flat_rows.append(flat)
     with csv_path.open("w", encoding="utf-8", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(flat_rows[0]) if flat_rows else [])
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=list(flat_rows[0]) if flat_rows else [],
+            lineterminator="\n",
+        )
         if flat_rows:
             writer.writeheader()
             writer.writerows(flat_rows)
@@ -185,17 +189,21 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         "license",
         "device_runtime",
         "samples",
+        "quality_samples",
         "inference_success_rate",
         "valid_ocr_rate",
         "silver_agreement_cer",
         "silver_agreement_wer",
         "query_raw_exact",
         "query_normalized_exact",
+        "query_sha256_exact",
         "block_fidelity",
+        "load_sec",
         "sec_per_doc",
         "docs_per_min",
         "peak_ram_bytes",
         "peak_vram_bytes",
+        "output_bytes",
         "cost",
         "notes",
     ]
@@ -217,6 +225,26 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         lines.append("| " + " | ".join(cells) + " |")
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return [json_path, csv_path, md_path]
+
+
+def write_raw_csv(raw_results: Path, output: Path) -> Path:
+    """Create a flat CSV view while retaining JSONL as canonical raw data."""
+    rows = read_jsonl(raw_results)
+    fields = sorted({key for row in rows for key in row})
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with output.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=fields, lineterminator="\n")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(
+                {
+                    key: json.dumps(value, ensure_ascii=False, sort_keys=True)
+                    if isinstance(value, (dict, list))
+                    else value
+                    for key, value in row.items()
+                }
+            )
+    return output
 
 
 def hash_paths(paths: list[Path]) -> dict[str, str]:
