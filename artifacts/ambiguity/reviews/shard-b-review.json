@@ -1,0 +1,370 @@
+{
+  "reviewer": "agent-b",
+  "first_instance_id": "task_000304",
+  "last_instance_id": "task_000606",
+  "expected_record_count": 303,
+  "expected_override_count": 85,
+  "pdf_visual_review_performed": false,
+  "source_note": "Independent agent text audit of the Codex-extracted training questions only; corrected boundary excludes task_000303 and includes task_000606 as a default clean record. No PDF visual review or human-gold adjudication was performed.",
+  "default_decision": {
+    "surface_integrity": "intact",
+    "semantic_determinacy": "unique_explicit",
+    "benchmark_alignment": "label_unverifiable",
+    "issue_tags": ["clean"],
+    "severity": "S0",
+    "review_required": false,
+    "rationale": "The question states a single quantitative target with sufficient explicit relations, but this text-only pass does not independently prove the benchmark label.",
+    "confidence": 0.98
+  },
+  "override_groups": [
+    {
+      "instance_ids": ["task_000306", "task_000311", "task_000312"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["cardinality_operand_gap", "distractor_operand_interference"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "The 40-fewer purchase can modify the new 60 items or the resulting current count.",
+      "confidence": 0.9
+    },
+    {
+      "instance_ids": ["task_000313"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["quantifier_scope_last_remaining"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "A 6-hour documentary on Monday and Tuesday can mean six hours each day or one item spanning both days.",
+      "confidence": 0.92
+    },
+    {
+      "instance_ids": ["task_000325", "task_000326", "task_000327"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_with_convention",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption"],
+      "severity": "S1",
+      "review_required": false,
+      "rationale": "Friend count assumes the host is also a paid participant.",
+      "confidence": 0.95
+    },
+    {
+      "instance_ids": ["task_000328"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_with_convention",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption"],
+      "severity": "S2",
+      "review_required": false,
+      "rationale": "Weekly total assumes seven days.",
+      "confidence": 0.94
+    },
+    {
+      "instance_ids": ["task_000331"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_with_convention",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption"],
+      "severity": "S2",
+      "review_required": false,
+      "rationale": "The result assumes 30 days per month.",
+      "confidence": 0.97
+    },
+    {
+      "instance_ids": ["task_000343"],
+      "surface_integrity": "awkward_but_parseable",
+      "semantic_determinacy": "unique_explicit",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["extraction_or_ocr_uncertain"],
+      "severity": "S1",
+      "review_required": false,
+      "rationale": "24.0=24 is malformed but unambiguously conveys 24.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000352", "task_000353", "task_000355", "task_000359"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_with_convention",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption"],
+      "severity": "S1",
+      "review_required": false,
+      "rationale": "Vacancy assumes one room per arrival and no departures.",
+      "confidence": 0.94
+    },
+    {
+      "instance_ids": ["task_000356"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["condition_insertion_or_deletion", "implicit_default_assumption"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "Being treated every day can mean new daily admissions or a recurring census.",
+      "confidence": 0.88
+    },
+    {
+      "instance_ids": ["task_000366"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_explicit",
+      "benchmark_alignment": "semantic_conflict",
+      "semantic_answer": {
+        "value": "1",
+        "method": "agent_text_arithmetic"
+      },
+      "issue_tags": ["label_template_carryover_suspected", "extraction_or_ocr_uncertain"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Visible operands give 1.0; label 68 matches the neighboring 82.3 and 22-item template.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000371"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "underdetermined",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["rate_unit_relation_corruption", "extraction_or_ocr_uncertain"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Pound inputs request euros without an exchange rate.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000408", "task_000461", "task_000462", "task_000469"],
+      "surface_integrity": "awkward_but_parseable",
+      "semantic_determinacy": "unique_explicit",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["extraction_or_ocr_uncertain"],
+      "severity": "S1",
+      "review_required": false,
+      "rationale": "A square replaces the currency symbol; numeric semantics remain clear.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000419"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_explicit",
+      "benchmark_alignment": "semantic_conflict",
+      "semantic_answer": {
+        "value": "120",
+        "method": "agent_text_arithmetic"
+      },
+      "issue_tags": ["condition_insertion_or_deletion", "label_template_carryover_suspected", "distractor_operand_interference"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Literal funds leave 120; label 360 ignores the stated 240 own-pocket contribution.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000426", "task_000427"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["comparison_polarity_or_sign"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "Five times more can mean 5x or 6x.",
+      "confidence": 0.96
+    },
+    {
+      "instance_ids": ["task_000444"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "underdetermined",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["cardinality_operand_gap", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Cleaning days are omitted; label 70 needs a hidden 10-day divisor.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000447"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "underdetermined",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["rate_unit_relation_corruption", "cardinality_operand_gap", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Five floors/hour conflicts with 15 minutes/floor and no allocation supports label 20.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000452"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "underdetermined",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["target_or_subquestion_drift", "label_template_carryover_suspected", "cardinality_operand_gap"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "The prompt requests multiple outputs, but days and work allocation are missing, so the scalar benchmark label cannot be verified from the text.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000454", "task_000455"],
+      "surface_integrity": "awkward_but_parseable",
+      "semantic_determinacy": "underdetermined",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["cardinality_operand_gap", "condition_insertion_or_deletion", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Needed days/workers are absent and 8 versus 10 hours is inconsistent.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000482"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["comparison_polarity_or_sign"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "Ten times more can mean 10x or 11x.",
+      "confidence": 0.96
+    },
+    {
+      "instance_ids": ["task_000487"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["ordinal_or_count_mismatch", "implicit_default_assumption"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "Endpoint convention changes plant count.",
+      "confidence": 0.93
+    },
+    {
+      "instance_ids": ["task_000488", "task_000489", "task_000490", "task_000491", "task_000492"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["cardinality_operand_gap", "rate_unit_relation_corruption", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Object width plus 15.5-meter gap conflicts with treating 15.5 as total pitch.",
+      "confidence": 0.98
+    },
+    {
+      "instance_ids": ["task_000493"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["target_or_subquestion_drift", "ordinal_or_count_mismatch"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "Endpoint convention changes the plant count, and the prompt requests both count and cost while the benchmark is scalar, so label agreement cannot be verified.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000494", "task_000495", "task_000496", "task_000497"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["cardinality_operand_gap", "rate_unit_relation_corruption", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Five-foot width plus 13.5-foot gap conflicts with treating 13.5 as total pitch.",
+      "confidence": 0.98
+    },
+    {
+      "instance_ids": ["task_000499", "task_000500", "task_000501", "task_000502", "task_000503", "task_000504", "task_000505", "task_000506", "task_000507", "task_000508"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["cardinality_operand_gap", "rate_unit_relation_corruption", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Object width, between-object spacing, and endpoints permit different counts.",
+      "confidence": 0.97
+    },
+    {
+      "instance_ids": ["task_000510"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "underdetermined",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["rate_unit_relation_corruption"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "Square-foot area cannot be divided by linear spacing without another dimension.",
+      "confidence": 0.99
+    },
+    {
+      "instance_ids": ["task_000513", "task_000514", "task_000515", "task_000516"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["cardinality_operand_gap", "rate_unit_relation_corruption", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Seven-unit width plus 12-unit gap conflicts with treating 12 as total pitch.",
+      "confidence": 0.98
+    },
+    {
+      "instance_ids": ["task_000524"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_with_convention",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption", "cardinality_operand_gap"],
+      "severity": "S2",
+      "review_required": false,
+      "rationale": "Equal division among 900 graduates is implied, not stated.",
+      "confidence": 0.91
+    },
+    {
+      "instance_ids": ["task_000525"],
+      "surface_integrity": "awkward_but_parseable",
+      "semantic_determinacy": "underdetermined",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["role_or_subject_attribution", "cardinality_operand_gap", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "The sentence assigns 300 reserved seats to faculty and graduates despite 900 graduates.",
+      "confidence": 0.98
+    },
+    {
+      "instance_ids": ["task_000557", "task_000559", "task_000560", "task_000561", "task_000562", "task_000563", "task_000564", "task_000565", "task_000566", "task_000567", "task_000568", "task_000569", "task_000570", "task_000571", "task_000572", "task_000573", "task_000576", "task_000577", "task_000578", "task_000579", "task_000580", "task_000581", "task_000583", "task_000584"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "unique_with_convention",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption"],
+      "severity": "S2",
+      "review_required": false,
+      "rationale": "Total preparation time uses additive stage time; overlap is not explicitly ruled out.",
+      "confidence": 0.9
+    },
+    {
+      "instance_ids": ["task_000558"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption"],
+      "severity": "S3",
+      "review_required": true,
+      "rationale": "Cooking batches cannot overlap, but peeling-cooking overlap is unstated.",
+      "confidence": 0.92
+    },
+    {
+      "instance_ids": ["task_000574"],
+      "surface_integrity": "awkward_but_parseable",
+      "semantic_determinacy": "unique_with_convention",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["implicit_default_assumption"],
+      "severity": "S2",
+      "review_required": false,
+      "rationale": "A garbled correction still directs use of 7 clams/minute plus sequential cooking time.",
+      "confidence": 0.94
+    },
+    {
+      "instance_ids": ["task_000575"],
+      "surface_integrity": "intact",
+      "semantic_determinacy": "multiple_plausible",
+      "benchmark_alignment": "label_unverifiable",
+      "issue_tags": ["condition_insertion_or_deletion", "implicit_default_assumption", "label_template_carryover_suspected"],
+      "severity": "S4",
+      "review_required": true,
+      "rationale": "Starting cooking after 20 clams and continuing batches permits stage overlap, unlike label 132.",
+      "confidence": 0.99
+    }
+  ]
+}

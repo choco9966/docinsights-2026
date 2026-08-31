@@ -1,0 +1,116 @@
+{
+  "adjudication_status": "automated_screened_agent_text_audited_human_adjudication_pending",
+  "audit_kind": "docsem-train-ambiguity-screen",
+  "counts": {
+    "benchmark_alignment": {
+      "aligned": 41,
+      "label_unverifiable": 855,
+      "semantic_conflict": 12
+    },
+    "issue_tags": {
+      "answer_normalization_abs_sign": 7,
+      "cardinality_operand_gap": 50,
+      "clean": 635,
+      "comparison_polarity_or_sign": 22,
+      "condition_insertion_or_deletion": 55,
+      "distractor_operand_interference": 7,
+      "extraction_or_ocr_uncertain": 23,
+      "implicit_default_assumption": 104,
+      "label_template_carryover_suspected": 77,
+      "ordinal_or_count_mismatch": 13,
+      "quantifier_scope_last_remaining": 30,
+      "rate_unit_relation_corruption": 55,
+      "role_or_subject_attribution": 27,
+      "target_or_subquestion_drift": 28
+    },
+    "review_required": {
+      "False": 738,
+      "True": 170
+    },
+    "screening_classification": {
+      "clean_candidate": 635,
+      "flagged": 273
+    },
+    "semantic_determinacy": {
+      "multiple_plausible": 95,
+      "underdetermined": 50,
+      "unique_explicit": 660,
+      "unique_with_convention": 103
+    },
+    "severity": {
+      "S0": 635,
+      "S1": 67,
+      "S2": 56,
+      "S3": 56,
+      "S4": 94
+    },
+    "surface_integrity": {
+      "awkward_but_parseable": 80,
+      "corrupted": 44,
+      "intact": 784
+    }
+  },
+  "output": {
+    "path": "artifacts/ambiguity/train-ambiguity-tags.jsonl",
+    "sha256": "e8ac328a7ccaf2b02664387512740f8c0da6b5257f6edd65bc0f1df5e6d28594"
+  },
+  "record_count": 908,
+  "review_sources": [
+    {
+      "override_count": 86,
+      "path": "artifacts/ambiguity/reviews/shard-a-review.json",
+      "record_count": 303,
+      "sha256": "51c942bcfe6b0f8f874c6fa7fdf1d1ec4b838e47ab5c21240d6c7157ad1e7b82"
+    },
+    {
+      "override_count": 85,
+      "path": "artifacts/ambiguity/reviews/shard-b-review.json",
+      "record_count": 303,
+      "sha256": "a61b9174b26549945ba3a1b4773e3d40ea59f060551e1676f8ee5721c8c8a399"
+    },
+    {
+      "override_count": 102,
+      "path": "artifacts/ambiguity/reviews/shard-c-review.json",
+      "record_count": 302,
+      "sha256": "eb79755d6ad9c8853dc749de043f3bab4e9706ad9b269cad0f34b43bfe38d3e7"
+    }
+  ],
+  "schema_version": "1.0",
+  "scope": {
+    "agent_text_audited": 908,
+    "automated_screened": 908,
+    "human_adjudicated": 0,
+    "pdf_visual_audited": 0
+  },
+  "screening_statement": "Automated screening and agent text audit; not completed human adjudication.",
+  "sources": {
+    "blind_screen": {
+      "path": "artifacts/ambiguity/train-ambiguity-blind.jsonl",
+      "sha256": "c21856b6a8aa160dd05d6d70c3ae0b760192bdcb44a26de31616093b2f1af5a1"
+    },
+    "labels": {
+      "path": "artifacts/ambiguity/inputs/train-labels.jsonl",
+      "sha256": "3e39dfb708cccc7999676d23aae8342fb0e71a94a8e1b5629339c6f0209dc33f"
+    },
+    "query_comparison": {
+      "path": "artifacts/ambiguity/inputs/codex-train-query-comparison.jsonl",
+      "sha256": "99d642ace2e5080222c75ca6b5b1d6ea78707ea9261ab267a7d67c655e2f4628"
+    },
+    "reference": {
+      "path": "artifacts/ambiguity/inputs/codex-train-reference.jsonl",
+      "sha256": "2e06fb6bac61601776049c03e3c20f3dcf905feee77510342f67cf19bc1f0558"
+    },
+    "tasks": {
+      "path": "artifacts/ambiguity/inputs/train-tasks.jsonl",
+      "sha256": "6d9cd9087d0c5e30bfc17c83aec30752403d4109fb93d8357f534da425969489"
+    }
+  },
+  "validation": {
+    "errors": [],
+    "passed": true,
+    "record_count": 908,
+    "schema_error_count": 0,
+    "status": "passed",
+    "unique_instance_count": 908
+  }
+}

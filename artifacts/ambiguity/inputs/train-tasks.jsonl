@@ -1,0 +1,908 @@
+{"document_pdf": "train/documents/task_000001.pdf", "instance_id": "task_000001", "user_query": "According to the brief's quantitative scenario concerning percentage and foot, what final value is required?"}
+{"document_pdf": "train/documents/task_000002.pdf", "instance_id": "task_000002", "user_query": "According to the brief's quantitative scenario concerning percentage and foot, what final value is required?"}
+{"document_pdf": "train/documents/task_000003.pdf", "instance_id": "task_000003", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rolling and city."}
+{"document_pdf": "train/documents/task_000004.pdf", "instance_id": "task_000004", "user_query": "What is the requested result for the report's scenario about dense and starts?"}
+{"document_pdf": "train/documents/task_000005.pdf", "instance_id": "task_000005", "user_query": "According to the brief's quantitative scenario concerning whale and feet, what final value is required?"}
+{"document_pdf": "train/documents/task_000006.pdf", "instance_id": "task_000006", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning difference and probability."}
+{"document_pdf": "train/documents/task_000007.pdf", "instance_id": "task_000007", "user_query": "According to the brief's quantitative scenario concerning difference and probability, what final value is required?"}
+{"document_pdf": "train/documents/task_000008.pdf", "instance_id": "task_000008", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning tossing and six-sided."}
+{"document_pdf": "train/documents/task_000009.pdf", "instance_id": "task_000009", "user_query": "What is the requested result for the report's scenario about whale and measuring?"}
+{"document_pdf": "train/documents/task_000010.pdf", "instance_id": "task_000010", "user_query": "What is the requested result for the report's scenario about company and employees?"}
+{"document_pdf": "train/documents/task_000011.pdf", "instance_id": "task_000011", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning university and clubs."}
+{"document_pdf": "train/documents/task_000012.pdf", "instance_id": "task_000012", "user_query": "According to the brief's quantitative scenario concerning group and employees, what final value is required?"}
+{"document_pdf": "train/documents/task_000013.pdf", "instance_id": "task_000013", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning group and employees."}
+{"document_pdf": "train/documents/task_000014.pdf", "instance_id": "task_000014", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning woman and uses."}
+{"document_pdf": "train/documents/task_000015.pdf", "instance_id": "task_000015", "user_query": "What is the requested result for the report's scenario about woman and used?"}
+{"document_pdf": "train/documents/task_000016.pdf", "instance_id": "task_000016", "user_query": "What is the requested result for the report's scenario about city and long?"}
+{"document_pdf": "train/documents/task_000017.pdf", "instance_id": "task_000017", "user_query": "What is the requested result for the report's scenario about factory and produces?"}
+{"document_pdf": "train/documents/task_000018.pdf", "instance_id": "task_000018", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning cloud and smoke."}
+{"document_pdf": "train/documents/task_000019.pdf", "instance_id": "task_000019", "user_query": "What is the requested result for the report's scenario about dust and storm?"}
+{"document_pdf": "train/documents/task_000020.pdf", "instance_id": "task_000020", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning watercolor and paint."}
+{"document_pdf": "train/documents/task_000021.pdf", "instance_id": "task_000021", "user_query": "According to the brief's quantitative scenario concerning difference and probability, what final value is required?"}
+{"document_pdf": "train/documents/task_000022.pdf", "instance_id": "task_000022", "user_query": "What is the requested result for the report's scenario about difference and between?"}
+{"document_pdf": "train/documents/task_000023.pdf", "instance_id": "task_000023", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning difference and probability."}
+{"document_pdf": "train/documents/task_000024.pdf", "instance_id": "task_000024", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and spinning."}
+{"document_pdf": "train/documents/task_000025.pdf", "instance_id": "task_000025", "user_query": "What is the requested result for the report's scenario about priya and spinning?"}
+{"document_pdf": "train/documents/task_000026.pdf", "instance_id": "task_000026", "user_query": "What is the requested result for the report's scenario about sided and fair?"}
+{"document_pdf": "train/documents/task_000027.pdf", "instance_id": "task_000027", "user_query": "According to the brief's quantitative scenario concerning rolling and eight-sided, what final value is required?"}
+{"document_pdf": "train/documents/task_000028.pdf", "instance_id": "task_000028", "user_query": "What is the requested result for the report's scenario about aisha and spinning?"}
+{"document_pdf": "train/documents/task_000029.pdf", "instance_id": "task_000029", "user_query": "According to the brief's quantitative scenario concerning roll and sided, what final value is required?"}
+{"document_pdf": "train/documents/task_000030.pdf", "instance_id": "task_000030", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning difference and probability."}
+{"document_pdf": "train/documents/task_000031.pdf", "instance_id": "task_000031", "user_query": "What is the requested result for the report's scenario about sophie and bought?"}
+{"document_pdf": "train/documents/task_000032.pdf", "instance_id": "task_000032", "user_query": "According to the brief's quantitative scenario concerning lena and rolling, what final value is required?"}
+{"document_pdf": "train/documents/task_000033.pdf", "instance_id": "task_000033", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lila and spinning."}
+{"document_pdf": "train/documents/task_000034.pdf", "instance_id": "task_000034", "user_query": "According to the brief's quantitative scenario concerning school and students, what final value is required?"}
+{"document_pdf": "train/documents/task_000035.pdf", "instance_id": "task_000035", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning bookshelf and fiction."}
+{"document_pdf": "train/documents/task_000036.pdf", "instance_id": "task_000036", "user_query": "According to the brief's quantitative scenario concerning employees and enjoy, what final value is required?"}
+{"document_pdf": "train/documents/task_000037.pdf", "instance_id": "task_000037", "user_query": "According to the brief's quantitative scenario concerning emily and collection, what final value is required?"}
+{"document_pdf": "train/documents/task_000038.pdf", "instance_id": "task_000038", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning james and babysits."}
+{"document_pdf": "train/documents/task_000039.pdf", "instance_id": "task_000039", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and cost."}
+{"document_pdf": "train/documents/task_000040.pdf", "instance_id": "task_000040", "user_query": "According to the brief's quantitative scenario concerning total and cost, what final value is required?"}
+{"document_pdf": "train/documents/task_000041.pdf", "instance_id": "task_000041", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning send and package."}
+{"document_pdf": "train/documents/task_000042.pdf", "instance_id": "task_000042", "user_query": "According to the brief's quantitative scenario concerning class and children, what final value is required?"}
+{"document_pdf": "train/documents/task_000043.pdf", "instance_id": "task_000043", "user_query": "According to the brief's quantitative scenario concerning phone and company, what final value is required?"}
+{"document_pdf": "train/documents/task_000044.pdf", "instance_id": "task_000044", "user_query": "What is the requested result for the report's scenario about club and members?"}
+{"document_pdf": "train/documents/task_000045.pdf", "instance_id": "task_000045", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and students."}
+{"document_pdf": "train/documents/task_000046.pdf", "instance_id": "task_000046", "user_query": "What is the requested result for the report's scenario about liters and juice?"}
+{"document_pdf": "train/documents/task_000047.pdf", "instance_id": "task_000047", "user_query": "What is the requested result for the report's scenario about alex and ounces?"}
+{"document_pdf": "train/documents/task_000048.pdf", "instance_id": "task_000048", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning group and tourists."}
+{"document_pdf": "train/documents/task_000049.pdf", "instance_id": "task_000049", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning linda and preparing."}
+{"document_pdf": "train/documents/task_000050.pdf", "instance_id": "task_000050", "user_query": "According to the brief's quantitative scenario concerning group and people, what final value is required?"}
+{"document_pdf": "train/documents/task_000051.pdf", "instance_id": "task_000051", "user_query": "According to the brief's quantitative scenario concerning school and students, what final value is required?"}
+{"document_pdf": "train/documents/task_000052.pdf", "instance_id": "task_000052", "user_query": "What is the requested result for the report's scenario about yesterday and mary?"}
+{"document_pdf": "train/documents/task_000053.pdf", "instance_id": "task_000053", "user_query": "According to the brief's quantitative scenario concerning group and employees, what final value is required?"}
+{"document_pdf": "train/documents/task_000054.pdf", "instance_id": "task_000054", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning plant and enthusiast."}
+{"document_pdf": "train/documents/task_000055.pdf", "instance_id": "task_000055", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lucas and passionate."}
+{"document_pdf": "train/documents/task_000056.pdf", "instance_id": "task_000056", "user_query": "According to the brief's quantitative scenario concerning woman and uses, what final value is required?"}
+{"document_pdf": "train/documents/task_000057.pdf", "instance_id": "task_000057", "user_query": "What is the requested result for the report's scenario about barista and used?"}
+{"document_pdf": "train/documents/task_000058.pdf", "instance_id": "task_000058", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning coffee and recipe."}
+{"document_pdf": "train/documents/task_000059.pdf", "instance_id": "task_000059", "user_query": "According to the brief's quantitative scenario concerning many and teaspoons, what final value is required?"}
+{"document_pdf": "train/documents/task_000060.pdf", "instance_id": "task_000060", "user_query": "What is the requested result for the report's scenario about woman and makes?"}
+{"document_pdf": "train/documents/task_000061.pdf", "instance_id": "task_000061", "user_query": "According to the brief's quantitative scenario concerning alex and mixes, what final value is required?"}
+{"document_pdf": "train/documents/task_000062.pdf", "instance_id": "task_000062", "user_query": "According to the brief's quantitative scenario concerning emma and prepares, what final value is required?"}
+{"document_pdf": "train/documents/task_000063.pdf", "instance_id": "task_000063", "user_query": "What is the requested result for the report's scenario about woman and preparing?"}
+{"document_pdf": "train/documents/task_000064.pdf", "instance_id": "task_000064", "user_query": "What is the requested result for the report's scenario about long and take?"}
+{"document_pdf": "train/documents/task_000065.pdf", "instance_id": "task_000065", "user_query": "What is the requested result for the report's scenario about recipe and requires?"}
+{"document_pdf": "train/documents/task_000066.pdf", "instance_id": "task_000066", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning every and morning."}
+{"document_pdf": "train/documents/task_000067.pdf", "instance_id": "task_000067", "user_query": "What is the requested result for the report's scenario about woman and making?"}
+{"document_pdf": "train/documents/task_000068.pdf", "instance_id": "task_000068", "user_query": "According to the brief's quantitative scenario concerning carlos and jogs, what final value is required?"}
+{"document_pdf": "train/documents/task_000069.pdf", "instance_id": "task_000069", "user_query": "What is the requested result for the report's scenario about vendor and mixes?"}
+{"document_pdf": "train/documents/task_000070.pdf", "instance_id": "task_000070", "user_query": "According to the brief's quantitative scenario concerning woman and makes, what final value is required?"}
+{"document_pdf": "train/documents/task_000071.pdf", "instance_id": "task_000071", "user_query": "According to the brief's quantitative scenario concerning item and exam, what final value is required?"}
+{"document_pdf": "train/documents/task_000072.pdf", "instance_id": "task_000072", "user_query": "According to the brief's quantitative scenario concerning chef and prepares, what final value is required?"}
+{"document_pdf": "train/documents/task_000073.pdf", "instance_id": "task_000073", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning problem and test."}
+{"document_pdf": "train/documents/task_000074.pdf", "instance_id": "task_000074", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning coffee and recipe."}
+{"document_pdf": "train/documents/task_000075.pdf", "instance_id": "task_000075", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning woman and makes."}
+{"document_pdf": "train/documents/task_000076.pdf", "instance_id": "task_000076", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning person and hours."}
+{"document_pdf": "train/documents/task_000077.pdf", "instance_id": "task_000077", "user_query": "According to the brief's quantitative scenario concerning emily and listens, what final value is required?"}
+{"document_pdf": "train/documents/task_000078.pdf", "instance_id": "task_000078", "user_query": "What is the requested result for the report's scenario about ashley and chores?"}
+{"document_pdf": "train/documents/task_000079.pdf", "instance_id": "task_000079", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning jamie and likes."}
+{"document_pdf": "train/documents/task_000080.pdf", "instance_id": "task_000080", "user_query": "According to the brief's quantitative scenario concerning lila and enjoys, what final value is required?"}
+{"document_pdf": "train/documents/task_000081.pdf", "instance_id": "task_000081", "user_query": "According to the brief's quantitative scenario concerning number and students, what final value is required?"}
+{"document_pdf": "train/documents/task_000082.pdf", "instance_id": "task_000082", "user_query": "What is the requested result for the report's scenario about springdale and high?"}
+{"document_pdf": "train/documents/task_000083.pdf", "instance_id": "task_000083", "user_query": "According to the brief's quantitative scenario concerning total and number, what final value is required?"}
+{"document_pdf": "train/documents/task_000084.pdf", "instance_id": "task_000084", "user_query": "According to the brief's quantitative scenario concerning hospital and total, what final value is required?"}
+{"document_pdf": "train/documents/task_000085.pdf", "instance_id": "task_000085", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning university and parking."}
+{"document_pdf": "train/documents/task_000086.pdf", "instance_id": "task_000086", "user_query": "According to the brief's quantitative scenario concerning university and dormitory, what final value is required?"}
+{"document_pdf": "train/documents/task_000087.pdf", "instance_id": "task_000087", "user_query": "According to the brief's quantitative scenario concerning toby and currently, what final value is required?"}
+{"document_pdf": "train/documents/task_000088.pdf", "instance_id": "task_000088", "user_query": "According to the brief's quantitative scenario concerning david and bought, what final value is required?"}
+{"document_pdf": "train/documents/task_000089.pdf", "instance_id": "task_000089", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning spend and pencils."}
+{"document_pdf": "train/documents/task_000090.pdf", "instance_id": "task_000090", "user_query": "What is the requested result for the report's scenario about emily and plans?"}
+{"document_pdf": "train/documents/task_000091.pdf", "instance_id": "task_000091", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning linda and wants."}
+{"document_pdf": "train/documents/task_000092.pdf", "instance_id": "task_000092", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning colleagues and rachel."}
+{"document_pdf": "train/documents/task_000093.pdf", "instance_id": "task_000093", "user_query": "According to the brief's quantitative scenario concerning emily and sarah, what final value is required?"}
+{"document_pdf": "train/documents/task_000094.pdf", "instance_id": "task_000094", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning maya and emily."}
+{"document_pdf": "train/documents/task_000095.pdf", "instance_id": "task_000095", "user_query": "According to the brief's quantitative scenario concerning brothers and mike, what final value is required?"}
+{"document_pdf": "train/documents/task_000096.pdf", "instance_id": "task_000096", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning alex and jamie."}
+{"document_pdf": "train/documents/task_000097.pdf", "instance_id": "task_000097", "user_query": "According to the brief's quantitative scenario concerning emily and saving, what final value is required?"}
+{"document_pdf": "train/documents/task_000098.pdf", "instance_id": "task_000098", "user_query": "What is the requested result for the report's scenario about emily and saving?"}
+{"document_pdf": "train/documents/task_000099.pdf", "instance_id": "task_000099", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning emily and collecting."}
+{"document_pdf": "train/documents/task_000100.pdf", "instance_id": "task_000100", "user_query": "According to the brief's quantitative scenario concerning alex and saving, what final value is required?"}
+{"document_pdf": "train/documents/task_000101.pdf", "instance_id": "task_000101", "user_query": "What is the requested result for the report's scenario about liam and collection?"}
+{"document_pdf": "train/documents/task_000102.pdf", "instance_id": "task_000102", "user_query": "What is the requested result for the report's scenario about tina and accumulated?"}
+{"document_pdf": "train/documents/task_000103.pdf", "instance_id": "task_000103", "user_query": "According to the brief's quantitative scenario concerning liam and collection, what final value is required?"}
+{"document_pdf": "train/documents/task_000104.pdf", "instance_id": "task_000104", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning liam and sets."}
+{"document_pdf": "train/documents/task_000105.pdf", "instance_id": "task_000105", "user_query": "According to the brief's quantitative scenario concerning wants and give, what final value is required?"}
+{"document_pdf": "train/documents/task_000106.pdf", "instance_id": "task_000106", "user_query": "What is the requested result for the report's scenario about liam and collection?"}
+{"document_pdf": "train/documents/task_000107.pdf", "instance_id": "task_000107", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning bookshelf and fiction."}
+{"document_pdf": "train/documents/task_000108.pdf", "instance_id": "task_000108", "user_query": "What is the requested result for the report's scenario about liam and sets?"}
+{"document_pdf": "train/documents/task_000109.pdf", "instance_id": "task_000109", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning packet and crackers."}
+{"document_pdf": "train/documents/task_000110.pdf", "instance_id": "task_000110", "user_query": "According to the brief's quantitative scenario concerning pack and crackers, what final value is required?"}
+{"document_pdf": "train/documents/task_000111.pdf", "instance_id": "task_000111", "user_query": "According to the brief's quantitative scenario concerning difference and cost, what final value is required?"}
+{"document_pdf": "train/documents/task_000112.pdf", "instance_id": "task_000112", "user_query": "What is the requested result for the report's scenario about liam and prepares?"}
+{"document_pdf": "train/documents/task_000113.pdf", "instance_id": "task_000113", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning difference and cost."}
+{"document_pdf": "train/documents/task_000114.pdf", "instance_id": "task_000114", "user_query": "According to the brief's quantitative scenario concerning liam and sets, what final value is required?"}
+{"document_pdf": "train/documents/task_000115.pdf", "instance_id": "task_000115", "user_query": "What is the requested result for the report's scenario about aisha and buys?"}
+{"document_pdf": "train/documents/task_000116.pdf", "instance_id": "task_000116", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning book and store."}
+{"document_pdf": "train/documents/task_000117.pdf", "instance_id": "task_000117", "user_query": "According to the brief's quantitative scenario concerning pack and donuts, what final value is required?"}
+{"document_pdf": "train/documents/task_000118.pdf", "instance_id": "task_000118", "user_query": "According to the brief's quantitative scenario concerning tommy and action, what final value is required?"}
+{"document_pdf": "train/documents/task_000119.pdf", "instance_id": "task_000119", "user_query": "What is the requested result for the report's scenario about carlos and loves?"}
+{"document_pdf": "train/documents/task_000120.pdf", "instance_id": "task_000120", "user_query": "According to the brief's quantitative scenario concerning carton and milk, what final value is required?"}
+{"document_pdf": "train/documents/task_000121.pdf", "instance_id": "task_000121", "user_query": "According to the brief's quantitative scenario concerning carlos and looks, what final value is required?"}
+{"document_pdf": "train/documents/task_000122.pdf", "instance_id": "task_000122", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and hours."}
+{"document_pdf": "train/documents/task_000123.pdf", "instance_id": "task_000123", "user_query": "What is the requested result for the report's scenario about school and cleaning?"}
+{"document_pdf": "train/documents/task_000124.pdf", "instance_id": "task_000124", "user_query": "According to the brief's quantitative scenario concerning classrooms and need, what final value is required?"}
+{"document_pdf": "train/documents/task_000125.pdf", "instance_id": "task_000125", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and janitor."}
+{"document_pdf": "train/documents/task_000126.pdf", "instance_id": "task_000126", "user_query": "What is the requested result for the report's scenario about jackson and visits?"}
+{"document_pdf": "train/documents/task_000127.pdf", "instance_id": "task_000127", "user_query": "According to the brief's quantitative scenario concerning ella and playroom, what final value is required?"}
+{"document_pdf": "train/documents/task_000128.pdf", "instance_id": "task_000128", "user_query": "According to the brief's quantitative scenario concerning total and cost, what final value is required?"}
+{"document_pdf": "train/documents/task_000129.pdf", "instance_id": "task_000129", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning cost and long."}
+{"document_pdf": "train/documents/task_000130.pdf", "instance_id": "task_000130", "user_query": "What is the requested result for the report's scenario about painter and needs?"}
+{"document_pdf": "train/documents/task_000131.pdf", "instance_id": "task_000131", "user_query": "According to the brief's quantitative scenario concerning call and costs, what final value is required?"}
+{"document_pdf": "train/documents/task_000132.pdf", "instance_id": "task_000132", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning send and package."}
+{"document_pdf": "train/documents/task_000133.pdf", "instance_id": "task_000133", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning make and international."}
+{"document_pdf": "train/documents/task_000134.pdf", "instance_id": "task_000134", "user_query": "What is the requested result for the report's scenario about long-distance and call?"}
+{"document_pdf": "train/documents/task_000135.pdf", "instance_id": "task_000135", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning conference and center."}
+{"document_pdf": "train/documents/task_000136.pdf", "instance_id": "task_000136", "user_query": "What is the requested result for the report's scenario about internet and cafe?"}
+{"document_pdf": "train/documents/task_000137.pdf", "instance_id": "task_000137", "user_query": "According to the brief's quantitative scenario concerning total and cost, what final value is required?"}
+{"document_pdf": "train/documents/task_000138.pdf", "instance_id": "task_000138", "user_query": "What is the requested result for the report's scenario about phone and company?"}
+{"document_pdf": "train/documents/task_000139.pdf", "instance_id": "task_000139", "user_query": "What is the requested result for the report's scenario about cost and minute?"}
+{"document_pdf": "train/documents/task_000140.pdf", "instance_id": "task_000140", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning much and minute."}
+{"document_pdf": "train/documents/task_000141.pdf", "instance_id": "task_000141", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning make and overseas."}
+{"document_pdf": "train/documents/task_000142.pdf", "instance_id": "task_000142", "user_query": "According to the brief's quantitative scenario concerning total and amount, what final value is required?"}
+{"document_pdf": "train/documents/task_000143.pdf", "instance_id": "task_000143", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rent and bicycle."}
+{"document_pdf": "train/documents/task_000144.pdf", "instance_id": "task_000144", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning normally and buys."}
+{"document_pdf": "train/documents/task_000145.pdf", "instance_id": "task_000145", "user_query": "According to the brief's quantitative scenario concerning local and internet, what final value is required?"}
+{"document_pdf": "train/documents/task_000146.pdf", "instance_id": "task_000146", "user_query": "What is the requested result for the report's scenario about john and usually?"}
+{"document_pdf": "train/documents/task_000147.pdf", "instance_id": "task_000147", "user_query": "What is the requested result for the report's scenario about telephone and company?"}
+{"document_pdf": "train/documents/task_000148.pdf", "instance_id": "task_000148", "user_query": "According to the brief's quantitative scenario concerning send and package, what final value is required?"}
+{"document_pdf": "train/documents/task_000149.pdf", "instance_id": "task_000149", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning park and city."}
+{"document_pdf": "train/documents/task_000150.pdf", "instance_id": "task_000150", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning luna and visited."}
+{"document_pdf": "train/documents/task_000151.pdf", "instance_id": "task_000151", "user_query": "According to the brief's quantitative scenario concerning visited and orchard, what final value is required?"}
+{"document_pdf": "train/documents/task_000152.pdf", "instance_id": "task_000152", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning phone and company."}
+{"document_pdf": "train/documents/task_000153.pdf", "instance_id": "task_000153", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning garden and ladybugs."}
+{"document_pdf": "train/documents/task_000154.pdf", "instance_id": "task_000154", "user_query": "According to the brief's quantitative scenario concerning send and package, what final value is required?"}
+{"document_pdf": "train/documents/task_000155.pdf", "instance_id": "task_000155", "user_query": "What is the requested result for the report's scenario about make and international?"}
+{"document_pdf": "train/documents/task_000156.pdf", "instance_id": "task_000156", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rent and bike."}
+{"document_pdf": "train/documents/task_000157.pdf", "instance_id": "task_000157", "user_query": "What is the requested result for the report's scenario about internet and minute?"}
+{"document_pdf": "train/documents/task_000158.pdf", "instance_id": "task_000158", "user_query": "What is the requested result for the report's scenario about access and internet?"}
+{"document_pdf": "train/documents/task_000159.pdf", "instance_id": "task_000159", "user_query": "According to the brief's quantitative scenario concerning alex and garden, what final value is required?"}
+{"document_pdf": "train/documents/task_000160.pdf", "instance_id": "task_000160", "user_query": "What is the requested result for the report's scenario about tina and garden?"}
+{"document_pdf": "train/documents/task_000161.pdf", "instance_id": "task_000161", "user_query": "What is the requested result for the report's scenario about liam and wants?"}
+{"document_pdf": "train/documents/task_000162.pdf", "instance_id": "task_000162", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning alex and vegetable."}
+{"document_pdf": "train/documents/task_000163.pdf", "instance_id": "task_000163", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and juice."}
+{"document_pdf": "train/documents/task_000164.pdf", "instance_id": "task_000164", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning jorge and vegetable."}
+{"document_pdf": "train/documents/task_000165.pdf", "instance_id": "task_000165", "user_query": "According to the brief's quantitative scenario concerning university and total, what final value is required?"}
+{"document_pdf": "train/documents/task_000166.pdf", "instance_id": "task_000166", "user_query": "According to the brief's quantitative scenario concerning lena and plans, what final value is required?"}
+{"document_pdf": "train/documents/task_000167.pdf", "instance_id": "task_000167", "user_query": "According to the brief's quantitative scenario concerning university and graduation, what final value is required?"}
+{"document_pdf": "train/documents/task_000168.pdf", "instance_id": "task_000168", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lina and plans."}
+{"document_pdf": "train/documents/task_000169.pdf", "instance_id": "task_000169", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and college."}
+{"document_pdf": "train/documents/task_000170.pdf", "instance_id": "task_000170", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and high."}
+{"document_pdf": "train/documents/task_000171.pdf", "instance_id": "task_000171", "user_query": "What is the requested result for the report's scenario about liam and doing?"}
+{"document_pdf": "train/documents/task_000172.pdf", "instance_id": "task_000172", "user_query": "What is the requested result for the report's scenario about lincoln and high?"}
+{"document_pdf": "train/documents/task_000173.pdf", "instance_id": "task_000173", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ethan and wants."}
+{"document_pdf": "train/documents/task_000174.pdf", "instance_id": "task_000174", "user_query": "What is the requested result for the report's scenario about oliver and plans?"}
+{"document_pdf": "train/documents/task_000175.pdf", "instance_id": "task_000175", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ryan and placed."}
+{"document_pdf": "train/documents/task_000176.pdf", "instance_id": "task_000176", "user_query": "What is the requested result for the report's scenario about viktor and making?"}
+{"document_pdf": "train/documents/task_000177.pdf", "instance_id": "task_000177", "user_query": "What is the requested result for the report's scenario about jenna and placed?"}
+{"document_pdf": "train/documents/task_000178.pdf", "instance_id": "task_000178", "user_query": "According to the brief's quantitative scenario concerning emily and peel, what final value is required?"}
+{"document_pdf": "train/documents/task_000179.pdf", "instance_id": "task_000179", "user_query": "What is the requested result for the report's scenario about long and take?"}
+{"document_pdf": "train/documents/task_000180.pdf", "instance_id": "task_000180", "user_query": "What is the requested result for the report's scenario about lena and plans?"}
+{"document_pdf": "train/documents/task_000181.pdf", "instance_id": "task_000181", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning david and shuck."}
+{"document_pdf": "train/documents/task_000182.pdf", "instance_id": "task_000182", "user_query": "What is the requested result for the report's scenario about jenna and preparing?"}
+{"document_pdf": "train/documents/task_000183.pdf", "instance_id": "task_000183", "user_query": "What is the requested result for the report's scenario about chef and chop?"}
+{"document_pdf": "train/documents/task_000184.pdf", "instance_id": "task_000184", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning james and chop."}
+{"document_pdf": "train/documents/task_000185.pdf", "instance_id": "task_000185", "user_query": "According to the brief's quantitative scenario concerning emily and cleans, what final value is required?"}
+{"document_pdf": "train/documents/task_000186.pdf", "instance_id": "task_000186", "user_query": "According to the brief's quantitative scenario concerning delivers and newspapers, what final value is required?"}
+{"document_pdf": "train/documents/task_000187.pdf", "instance_id": "task_000187", "user_query": "According to the brief's quantitative scenario concerning jenna and ounces, what final value is required?"}
+{"document_pdf": "train/documents/task_000188.pdf", "instance_id": "task_000188", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning sarah and provides."}
+{"document_pdf": "train/documents/task_000189.pdf", "instance_id": "task_000189", "user_query": "What is the requested result for the report's scenario about liam and pounds?"}
+{"document_pdf": "train/documents/task_000190.pdf", "instance_id": "task_000190", "user_query": "According to the brief's quantitative scenario concerning lily and ounces, what final value is required?"}
+{"document_pdf": "train/documents/task_000191.pdf", "instance_id": "task_000191", "user_query": "What is the requested result for the report's scenario about carlos and plans?"}
+{"document_pdf": "train/documents/task_000192.pdf", "instance_id": "task_000192", "user_query": "According to the brief's quantitative scenario concerning ravi and crackers, what final value is required?"}
+{"document_pdf": "train/documents/task_000193.pdf", "instance_id": "task_000193", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning liam and puts."}
+{"document_pdf": "train/documents/task_000194.pdf", "instance_id": "task_000194", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning pierson and scored."}
+{"document_pdf": "train/documents/task_000195.pdf", "instance_id": "task_000195", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning darts and competition."}
+{"document_pdf": "train/documents/task_000196.pdf", "instance_id": "task_000196", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning kaito and pizza."}
+{"document_pdf": "train/documents/task_000197.pdf", "instance_id": "task_000197", "user_query": "What is the requested result for the report's scenario about elise and writes?"}
+{"document_pdf": "train/documents/task_000198.pdf", "instance_id": "task_000198", "user_query": "According to the brief's quantitative scenario concerning elise and writes, what final value is required?"}
+{"document_pdf": "train/documents/task_000199.pdf", "instance_id": "task_000199", "user_query": "What is the requested result for the report's scenario about sanjay and peanuts?"}
+{"document_pdf": "train/documents/task_000200.pdf", "instance_id": "task_000200", "user_query": "What is the requested result for the report's scenario about elise and writes?"}
+{"document_pdf": "train/documents/task_000201.pdf", "instance_id": "task_000201", "user_query": "According to the brief's quantitative scenario concerning practicing and guitar, what final value is required?"}
+{"document_pdf": "train/documents/task_000202.pdf", "instance_id": "task_000202", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning camila and currently."}
+{"document_pdf": "train/documents/task_000203.pdf", "instance_id": "task_000203", "user_query": "According to the brief's quantitative scenario concerning ethan and passionate, what final value is required?"}
+{"document_pdf": "train/documents/task_000204.pdf", "instance_id": "task_000204", "user_query": "According to the brief's quantitative scenario concerning ramesh and plant, what final value is required?"}
+{"document_pdf": "train/documents/task_000205.pdf", "instance_id": "task_000205", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning bottle and juice."}
+{"document_pdf": "train/documents/task_000206.pdf", "instance_id": "task_000206", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning yesterday and olivia."}
+{"document_pdf": "train/documents/task_000207.pdf", "instance_id": "task_000207", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning soda and ounces."}
+{"document_pdf": "train/documents/task_000208.pdf", "instance_id": "task_000208", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ethan and boxes."}
+{"document_pdf": "train/documents/task_000209.pdf", "instance_id": "task_000209", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning boxes and crayons."}
+{"document_pdf": "train/documents/task_000210.pdf", "instance_id": "task_000210", "user_query": "What is the requested result for the report's scenario about lila and owns?"}
+{"document_pdf": "train/documents/task_000211.pdf", "instance_id": "task_000211", "user_query": "According to the brief's quantitative scenario concerning rohan and passionate, what final value is required?"}
+{"document_pdf": "train/documents/task_000212.pdf", "instance_id": "task_000212", "user_query": "According to the brief's quantitative scenario concerning miner and extract, what final value is required?"}
+{"document_pdf": "train/documents/task_000213.pdf", "instance_id": "task_000213", "user_query": "What is the requested result for the report's scenario about oliver and passionate?"}
+{"document_pdf": "train/documents/task_000214.pdf", "instance_id": "task_000214", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning worker and harvest."}
+{"document_pdf": "train/documents/task_000215.pdf", "instance_id": "task_000215", "user_query": "According to the brief's quantitative scenario concerning single and worker, what final value is required?"}
+{"document_pdf": "train/documents/task_000216.pdf", "instance_id": "task_000216", "user_query": "What is the requested result for the report's scenario about rohan and plant?"}
+{"document_pdf": "train/documents/task_000217.pdf", "instance_id": "task_000217", "user_query": "What is the requested result for the report's scenario about jane and liters?"}
+{"document_pdf": "train/documents/task_000218.pdf", "instance_id": "task_000218", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning container and liters."}
+{"document_pdf": "train/documents/task_000219.pdf", "instance_id": "task_000219", "user_query": "According to the brief's quantitative scenario concerning passionate and about, what final value is required?"}
+{"document_pdf": "train/documents/task_000220.pdf", "instance_id": "task_000220", "user_query": "What is the requested result for the report's scenario about liters and grapefruit?"}
+{"document_pdf": "train/documents/task_000221.pdf", "instance_id": "task_000221", "user_query": "What is the requested result for the report's scenario about tank and contains?"}
+{"document_pdf": "train/documents/task_000222.pdf", "instance_id": "task_000222", "user_query": "According to the brief's quantitative scenario concerning lucy and plant, what final value is required?"}
+{"document_pdf": "train/documents/task_000223.pdf", "instance_id": "task_000223", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning eleanor and enthusiastic."}
+{"document_pdf": "train/documents/task_000224.pdf", "instance_id": "task_000224", "user_query": "What is the requested result for the report's scenario about brendan and some?"}
+{"document_pdf": "train/documents/task_000225.pdf", "instance_id": "task_000225", "user_query": "What is the requested result for the report's scenario about emily and loves?"}
+{"document_pdf": "train/documents/task_000226.pdf", "instance_id": "task_000226", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning crayons and inside."}
+{"document_pdf": "train/documents/task_000227.pdf", "instance_id": "task_000227", "user_query": "What is the requested result for the report's scenario about pouch and containing?"}
+{"document_pdf": "train/documents/task_000228.pdf", "instance_id": "task_000228", "user_query": "According to the brief's quantitative scenario concerning collection and seashells, what final value is required?"}
+{"document_pdf": "train/documents/task_000229.pdf", "instance_id": "task_000229", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning collection and painters."}
+{"document_pdf": "train/documents/task_000230.pdf", "instance_id": "task_000230", "user_query": "What is the requested result for the report's scenario about collection and artist?"}
+{"document_pdf": "train/documents/task_000231.pdf", "instance_id": "task_000231", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning many and pans."}
+{"document_pdf": "train/documents/task_000232.pdf", "instance_id": "task_000232", "user_query": "What is the requested result for the report's scenario about rahul and boxes?"}
+{"document_pdf": "train/documents/task_000233.pdf", "instance_id": "task_000233", "user_query": "What is the requested result for the report's scenario about emma and containers?"}
+{"document_pdf": "train/documents/task_000234.pdf", "instance_id": "task_000234", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning containers and sparkles."}
+{"document_pdf": "train/documents/task_000235.pdf", "instance_id": "task_000235", "user_query": "What is the requested result for the report's scenario about bottles and syrup?"}
+{"document_pdf": "train/documents/task_000236.pdf", "instance_id": "task_000236", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning jorge and owns."}
+{"document_pdf": "train/documents/task_000237.pdf", "instance_id": "task_000237", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning percentage and total."}
+{"document_pdf": "train/documents/task_000238.pdf", "instance_id": "task_000238", "user_query": "What is the requested result for the report's scenario about emma and boat?"}
+{"document_pdf": "train/documents/task_000239.pdf", "instance_id": "task_000239", "user_query": "What is the requested result for the report's scenario about worker and employed?"}
+{"document_pdf": "train/documents/task_000240.pdf", "instance_id": "task_000240", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning gardener and works."}
+{"document_pdf": "train/documents/task_000241.pdf", "instance_id": "task_000241", "user_query": "What is the requested result for the report's scenario about gardener and works?"}
+{"document_pdf": "train/documents/task_000242.pdf", "instance_id": "task_000242", "user_query": "What is the requested result for the report's scenario about farmer and sheep?"}
+{"document_pdf": "train/documents/task_000243.pdf", "instance_id": "task_000243", "user_query": "According to the brief's quantitative scenario concerning farmer and feeding, what final value is required?"}
+{"document_pdf": "train/documents/task_000244.pdf", "instance_id": "task_000244", "user_query": "According to the brief's quantitative scenario concerning jenny and preparing, what final value is required?"}
+{"document_pdf": "train/documents/task_000245.pdf", "instance_id": "task_000245", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning travels and kilometers."}
+{"document_pdf": "train/documents/task_000246.pdf", "instance_id": "task_000246", "user_query": "What is the requested result for the report's scenario about alex and cycles?"}
+{"document_pdf": "train/documents/task_000247.pdf", "instance_id": "task_000247", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning eleanor and jogs."}
+{"document_pdf": "train/documents/task_000248.pdf", "instance_id": "task_000248", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lily and drives."}
+{"document_pdf": "train/documents/task_000249.pdf", "instance_id": "task_000249", "user_query": "According to the brief's quantitative scenario concerning tessa and runs, what final value is required?"}
+{"document_pdf": "train/documents/task_000250.pdf", "instance_id": "task_000250", "user_query": "What is the requested result for the report's scenario about rare and flower?"}
+{"document_pdf": "train/documents/task_000251.pdf", "instance_id": "task_000251", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and cycles."}
+{"document_pdf": "train/documents/task_000252.pdf", "instance_id": "task_000252", "user_query": "What is the requested result for the report's scenario about gabrielle and walks?"}
+{"document_pdf": "train/documents/task_000253.pdf", "instance_id": "task_000253", "user_query": "What is the requested result for the report's scenario about teresa and cycles?"}
+{"document_pdf": "train/documents/task_000254.pdf", "instance_id": "task_000254", "user_query": "According to the brief's quantitative scenario concerning ethan and jogs, what final value is required?"}
+{"document_pdf": "train/documents/task_000255.pdf", "instance_id": "task_000255", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and cycles."}
+{"document_pdf": "train/documents/task_000256.pdf", "instance_id": "task_000256", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and cycles."}
+{"document_pdf": "train/documents/task_000257.pdf", "instance_id": "task_000257", "user_query": "According to the brief's quantitative scenario concerning many and more, what final value is required?"}
+{"document_pdf": "train/documents/task_000258.pdf", "instance_id": "task_000258", "user_query": "According to the brief's quantitative scenario concerning leela and needs, what final value is required?"}
+{"document_pdf": "train/documents/task_000259.pdf", "instance_id": "task_000259", "user_query": "What is the requested result for the report's scenario about rahul and write?"}
+{"document_pdf": "train/documents/task_000260.pdf", "instance_id": "task_000260", "user_query": "According to the brief's quantitative scenario concerning david and needs, what final value is required?"}
+{"document_pdf": "train/documents/task_000261.pdf", "instance_id": "task_000261", "user_query": "According to the brief's quantitative scenario concerning periods and normal, what final value is required?"}
+{"document_pdf": "train/documents/task_000262.pdf", "instance_id": "task_000262", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning typical and school."}
+{"document_pdf": "train/documents/task_000263.pdf", "instance_id": "task_000263", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning typical and school."}
+{"document_pdf": "train/documents/task_000264.pdf", "instance_id": "task_000264", "user_query": "What is the requested result for the report's scenario about regular and school?"}
+{"document_pdf": "train/documents/task_000265.pdf", "instance_id": "task_000265", "user_query": "What is the requested result for the report's scenario about teddy and completed?"}
+{"document_pdf": "train/documents/task_000266.pdf", "instance_id": "task_000266", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning liam and completed."}
+{"document_pdf": "train/documents/task_000267.pdf", "instance_id": "task_000267", "user_query": "According to the brief's quantitative scenario concerning rahul and completed, what final value is required?"}
+{"document_pdf": "train/documents/task_000268.pdf", "instance_id": "task_000268", "user_query": "What is the requested result for the report's scenario about alex and completed?"}
+{"document_pdf": "train/documents/task_000269.pdf", "instance_id": "task_000269", "user_query": "According to the brief's quantitative scenario concerning lila and completed, what final value is required?"}
+{"document_pdf": "train/documents/task_000270.pdf", "instance_id": "task_000270", "user_query": "What is the requested result for the report's scenario about george and spend?"}
+{"document_pdf": "train/documents/task_000271.pdf", "instance_id": "task_000271", "user_query": "What is the requested result for the report's scenario about george and went?"}
+{"document_pdf": "train/documents/task_000272.pdf", "instance_id": "task_000272", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning snack and dispensers."}
+{"document_pdf": "train/documents/task_000273.pdf", "instance_id": "task_000273", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning snack and machines."}
+{"document_pdf": "train/documents/task_000274.pdf", "instance_id": "task_000274", "user_query": "According to the brief's quantitative scenario concerning cafeteria and sandwiches, what final value is required?"}
+{"document_pdf": "train/documents/task_000275.pdf", "instance_id": "task_000275", "user_query": "What is the requested result for the report's scenario about soda and cans?"}
+{"document_pdf": "train/documents/task_000276.pdf", "instance_id": "task_000276", "user_query": "According to the brief's quantitative scenario concerning summer and camp, what final value is required?"}
+{"document_pdf": "train/documents/task_000277.pdf", "instance_id": "task_000277", "user_query": "What is the requested result for the report's scenario about treasure and hunt?"}
+{"document_pdf": "train/documents/task_000278.pdf", "instance_id": "task_000278", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and fundraiser."}
+{"document_pdf": "train/documents/task_000279.pdf", "instance_id": "task_000279", "user_query": "According to the brief's quantitative scenario concerning group and volunteers, what final value is required?"}
+{"document_pdf": "train/documents/task_000280.pdf", "instance_id": "task_000280", "user_query": "According to the brief's quantitative scenario concerning apples and oranges, what final value is required?"}
+{"document_pdf": "train/documents/task_000281.pdf", "instance_id": "task_000281", "user_query": "According to the brief's quantitative scenario concerning question and test, what final value is required?"}
+{"document_pdf": "train/documents/task_000282.pdf", "instance_id": "task_000282", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning patel and family."}
+{"document_pdf": "train/documents/task_000283.pdf", "instance_id": "task_000283", "user_query": "According to the brief's quantitative scenario concerning smith and family, what final value is required?"}
+{"document_pdf": "train/documents/task_000284.pdf", "instance_id": "task_000284", "user_query": "According to the brief's quantitative scenario concerning question and exam, what final value is required?"}
+{"document_pdf": "train/documents/task_000285.pdf", "instance_id": "task_000285", "user_query": "According to the brief's quantitative scenario concerning patel and family, what final value is required?"}
+{"document_pdf": "train/documents/task_000286.pdf", "instance_id": "task_000286", "user_query": "According to the brief's quantitative scenario concerning question and test, what final value is required?"}
+{"document_pdf": "train/documents/task_000287.pdf", "instance_id": "task_000287", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning item and test."}
+{"document_pdf": "train/documents/task_000288.pdf", "instance_id": "task_000288", "user_query": "What is the requested result for the report's scenario about question and exam?"}
+{"document_pdf": "train/documents/task_000289.pdf", "instance_id": "task_000289", "user_query": "According to the brief's quantitative scenario concerning furnishing and purchased, what final value is required?"}
+{"document_pdf": "train/documents/task_000290.pdf", "instance_id": "task_000290", "user_query": "According to the brief's quantitative scenario concerning carlos and made, what final value is required?"}
+{"document_pdf": "train/documents/task_000291.pdf", "instance_id": "task_000291", "user_query": "What is the requested result for the report's scenario about difference and ride?"}
+{"document_pdf": "train/documents/task_000292.pdf", "instance_id": "task_000292", "user_query": "What is the requested result for the report's scenario about difference and ride?"}
+{"document_pdf": "train/documents/task_000293.pdf", "instance_id": "task_000293", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning difference and ride."}
+{"document_pdf": "train/documents/task_000294.pdf", "instance_id": "task_000294", "user_query": "According to the brief's quantitative scenario concerning longest and line, what final value is required?"}
+{"document_pdf": "train/documents/task_000295.pdf", "instance_id": "task_000295", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning tallest and roller."}
+{"document_pdf": "train/documents/task_000296.pdf", "instance_id": "task_000296", "user_query": "What is the requested result for the report's scenario about splash and kingdom?"}
+{"document_pdf": "train/documents/task_000297.pdf", "instance_id": "task_000297", "user_query": "What is the requested result for the report's scenario about tina and ride?"}
+{"document_pdf": "train/documents/task_000298.pdf", "instance_id": "task_000298", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ethan and plays."}
+{"document_pdf": "train/documents/task_000299.pdf", "instance_id": "task_000299", "user_query": "What is the requested result for the report's scenario about emily and books?"}
+{"document_pdf": "train/documents/task_000300.pdf", "instance_id": "task_000300", "user_query": "According to the brief's quantitative scenario concerning ashley and plays, what final value is required?"}
+{"document_pdf": "train/documents/task_000301.pdf", "instance_id": "task_000301", "user_query": "According to the brief's quantitative scenario concerning ella and reads, what final value is required?"}
+{"document_pdf": "train/documents/task_000302.pdf", "instance_id": "task_000302", "user_query": "What is the requested result for the report's scenario about person and hours?"}
+{"document_pdf": "train/documents/task_000303.pdf", "instance_id": "task_000303", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning hours and allowed."}
+{"document_pdf": "train/documents/task_000304.pdf", "instance_id": "task_000304", "user_query": "According to the brief's quantitative scenario concerning practices and violin, what final value is required?"}
+{"document_pdf": "train/documents/task_000305.pdf", "instance_id": "task_000305", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning listens and audiobooks."}
+{"document_pdf": "train/documents/task_000306.pdf", "instance_id": "task_000306", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning maya and house."}
+{"document_pdf": "train/documents/task_000307.pdf", "instance_id": "task_000307", "user_query": "What is the requested result for the report's scenario about priya and reads?"}
+{"document_pdf": "train/documents/task_000308.pdf", "instance_id": "task_000308", "user_query": "What is the requested result for the report's scenario about bookstore and twice?"}
+{"document_pdf": "train/documents/task_000309.pdf", "instance_id": "task_000309", "user_query": "According to the brief's quantitative scenario concerning pies and store, what final value is required?"}
+{"document_pdf": "train/documents/task_000310.pdf", "instance_id": "task_000310", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning person and total."}
+{"document_pdf": "train/documents/task_000311.pdf", "instance_id": "task_000311", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning emma and pantry."}
+{"document_pdf": "train/documents/task_000312.pdf", "instance_id": "task_000312", "user_query": "What is the requested result for the report's scenario about priya and house?"}
+{"document_pdf": "train/documents/task_000313.pdf", "instance_id": "task_000313", "user_query": "According to the brief's quantitative scenario concerning kaito and spends, what final value is required?"}
+{"document_pdf": "train/documents/task_000314.pdf", "instance_id": "task_000314", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning kaito and reading."}
+{"document_pdf": "train/documents/task_000315.pdf", "instance_id": "task_000315", "user_query": "What is the requested result for the report's scenario about maria and reads?"}
+{"document_pdf": "train/documents/task_000316.pdf", "instance_id": "task_000316", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lucas and spends."}
+{"document_pdf": "train/documents/task_000317.pdf", "instance_id": "task_000317", "user_query": "What is the requested result for the report's scenario about ashley and reading?"}
+{"document_pdf": "train/documents/task_000318.pdf", "instance_id": "task_000318", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning person and total."}
+{"document_pdf": "train/documents/task_000319.pdf", "instance_id": "task_000319", "user_query": "According to the brief's quantitative scenario concerning rahul and attends, what final value is required?"}
+{"document_pdf": "train/documents/task_000320.pdf", "instance_id": "task_000320", "user_query": "What is the requested result for the report's scenario about weather and chilly?"}
+{"document_pdf": "train/documents/task_000321.pdf", "instance_id": "task_000321", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning weather and chilly."}
+{"document_pdf": "train/documents/task_000322.pdf", "instance_id": "task_000322", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning students and enroll."}
+{"document_pdf": "train/documents/task_000323.pdf", "instance_id": "task_000323", "user_query": "What is the requested result for the report's scenario about candidates and applied?"}
+{"document_pdf": "train/documents/task_000324.pdf", "instance_id": "task_000324", "user_query": "According to the brief's quantitative scenario concerning students and apply, what final value is required?"}
+{"document_pdf": "train/documents/task_000325.pdf", "instance_id": "task_000325", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning maximum and number."}
+{"document_pdf": "train/documents/task_000326.pdf", "instance_id": "task_000326", "user_query": "What is the requested result for the report's scenario about allocated and school?"}
+{"document_pdf": "train/documents/task_000327.pdf", "instance_id": "task_000327", "user_query": "According to the brief's quantitative scenario concerning lily and spend, what final value is required?"}
+{"document_pdf": "train/documents/task_000328.pdf", "instance_id": "task_000328", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and number."}
+{"document_pdf": "train/documents/task_000329.pdf", "instance_id": "task_000329", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning twice and efficient."}
+{"document_pdf": "train/documents/task_000330.pdf", "instance_id": "task_000330", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning types and documents."}
+{"document_pdf": "train/documents/task_000331.pdf", "instance_id": "task_000331", "user_query": "According to the brief's quantitative scenario concerning john and trying, what final value is required?"}
+{"document_pdf": "train/documents/task_000332.pdf", "instance_id": "task_000332", "user_query": "What is the requested result for the report's scenario about lisa and consumes?"}
+{"document_pdf": "train/documents/task_000333.pdf", "instance_id": "task_000333", "user_query": "What is the requested result for the report's scenario about priya and drinks?"}
+{"document_pdf": "train/documents/task_000334.pdf", "instance_id": "task_000334", "user_query": "According to the brief's quantitative scenario concerning total and number, what final value is required?"}
+{"document_pdf": "train/documents/task_000335.pdf", "instance_id": "task_000335", "user_query": "According to the brief's quantitative scenario concerning school and students, what final value is required?"}
+{"document_pdf": "train/documents/task_000336.pdf", "instance_id": "task_000336", "user_query": "According to the brief's quantitative scenario concerning student and class, what final value is required?"}
+{"document_pdf": "train/documents/task_000337.pdf", "instance_id": "task_000337", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and gets."}
+{"document_pdf": "train/documents/task_000338.pdf", "instance_id": "task_000338", "user_query": "What is the requested result for the report's scenario about priya and gets?"}
+{"document_pdf": "train/documents/task_000339.pdf", "instance_id": "task_000339", "user_query": "According to the brief's quantitative scenario concerning receives and letters, what final value is required?"}
+{"document_pdf": "train/documents/task_000340.pdf", "instance_id": "task_000340", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning journalist and gets."}
+{"document_pdf": "train/documents/task_000341.pdf", "instance_id": "task_000341", "user_query": "What is the requested result for the report's scenario about alex and gets?"}
+{"document_pdf": "train/documents/task_000342.pdf", "instance_id": "task_000342", "user_query": "According to the brief's quantitative scenario concerning jacob and receives, what final value is required?"}
+{"document_pdf": "train/documents/task_000343.pdf", "instance_id": "task_000343", "user_query": "What is the requested result for the report's scenario about fatima and receives?"}
+{"document_pdf": "train/documents/task_000344.pdf", "instance_id": "task_000344", "user_query": "According to the brief's quantitative scenario concerning leila and receives, what final value is required?"}
+{"document_pdf": "train/documents/task_000345.pdf", "instance_id": "task_000345", "user_query": "What is the requested result for the report's scenario about rohan and gets?"}
+{"document_pdf": "train/documents/task_000346.pdf", "instance_id": "task_000346", "user_query": "According to the brief's quantitative scenario concerning rahul and gets, what final value is required?"}
+{"document_pdf": "train/documents/task_000347.pdf", "instance_id": "task_000347", "user_query": "What is the requested result for the report's scenario about gets and messages?"}
+{"document_pdf": "train/documents/task_000348.pdf", "instance_id": "task_000348", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning samantha and gets."}
+{"document_pdf": "train/documents/task_000349.pdf", "instance_id": "task_000349", "user_query": "According to the brief's quantitative scenario concerning jordan and receives, what final value is required?"}
+{"document_pdf": "train/documents/task_000350.pdf", "instance_id": "task_000350", "user_query": "What is the requested result for the report's scenario about liam and gets?"}
+{"document_pdf": "train/documents/task_000351.pdf", "instance_id": "task_000351", "user_query": "According to the brief's quantitative scenario concerning clinic and total, what final value is required?"}
+{"document_pdf": "train/documents/task_000352.pdf", "instance_id": "task_000352", "user_query": "What is the requested result for the report's scenario about hospital and beds?"}
+{"document_pdf": "train/documents/task_000353.pdf", "instance_id": "task_000353", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning hotel and total."}
+{"document_pdf": "train/documents/task_000354.pdf", "instance_id": "task_000354", "user_query": "What is the requested result for the report's scenario about care and facility?"}
+{"document_pdf": "train/documents/task_000355.pdf", "instance_id": "task_000355", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning hotel and rooms."}
+{"document_pdf": "train/documents/task_000356.pdf", "instance_id": "task_000356", "user_query": "What is the requested result for the report's scenario about hospital and rooms?"}
+{"document_pdf": "train/documents/task_000357.pdf", "instance_id": "task_000357", "user_query": "What is the requested result for the report's scenario about university and dormitory?"}
+{"document_pdf": "train/documents/task_000358.pdf", "instance_id": "task_000358", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning clinic and total."}
+{"document_pdf": "train/documents/task_000359.pdf", "instance_id": "task_000359", "user_query": "According to the brief's quantitative scenario concerning hotel and capacity, what final value is required?"}
+{"document_pdf": "train/documents/task_000360.pdf", "instance_id": "task_000360", "user_query": "According to the brief's quantitative scenario concerning rahim and spend, what final value is required?"}
+{"document_pdf": "train/documents/task_000361.pdf", "instance_id": "task_000361", "user_query": "According to the brief's quantitative scenario concerning lena and plans, what final value is required?"}
+{"document_pdf": "train/documents/task_000362.pdf", "instance_id": "task_000362", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning priya and wants."}
+{"document_pdf": "train/documents/task_000363.pdf", "instance_id": "task_000363", "user_query": "What is the requested result for the report's scenario about winnie and buys?"}
+{"document_pdf": "train/documents/task_000364.pdf", "instance_id": "task_000364", "user_query": "What is the requested result for the report's scenario about winnie and bought?"}
+{"document_pdf": "train/documents/task_000365.pdf", "instance_id": "task_000365", "user_query": "According to the brief's quantitative scenario concerning winnie and bought, what final value is required?"}
+{"document_pdf": "train/documents/task_000366.pdf", "instance_id": "task_000366", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rohan and wants."}
+{"document_pdf": "train/documents/task_000367.pdf", "instance_id": "task_000367", "user_query": "According to the brief's quantitative scenario concerning lily and carrying, what final value is required?"}
+{"document_pdf": "train/documents/task_000368.pdf", "instance_id": "task_000368", "user_query": "What is the requested result for the report's scenario about tara and wants?"}
+{"document_pdf": "train/documents/task_000369.pdf", "instance_id": "task_000369", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning oliver and plans."}
+{"document_pdf": "train/documents/task_000370.pdf", "instance_id": "task_000370", "user_query": "According to the brief's quantitative scenario concerning carlos and wants, what final value is required?"}
+{"document_pdf": "train/documents/task_000371.pdf", "instance_id": "task_000371", "user_query": "What is the requested result for the report's scenario about luca and spend?"}
+{"document_pdf": "train/documents/task_000372.pdf", "instance_id": "task_000372", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning luca and bought."}
+{"document_pdf": "train/documents/task_000373.pdf", "instance_id": "task_000373", "user_query": "According to the brief's quantitative scenario concerning luca and went, what final value is required?"}
+{"document_pdf": "train/documents/task_000374.pdf", "instance_id": "task_000374", "user_query": "According to the brief's quantitative scenario concerning wants and pencils, what final value is required?"}
+{"document_pdf": "train/documents/task_000375.pdf", "instance_id": "task_000375", "user_query": "What is the requested result for the report's scenario about spend and boxes?"}
+{"document_pdf": "train/documents/task_000376.pdf", "instance_id": "task_000376", "user_query": "What is the requested result for the report's scenario about giovanni and wants?"}
+{"document_pdf": "train/documents/task_000377.pdf", "instance_id": "task_000377", "user_query": "According to the brief's quantitative scenario concerning ella and plans, what final value is required?"}
+{"document_pdf": "train/documents/task_000378.pdf", "instance_id": "task_000378", "user_query": "According to the brief's quantitative scenario concerning priya and wants, what final value is required?"}
+{"document_pdf": "train/documents/task_000379.pdf", "instance_id": "task_000379", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ravi and plans."}
+{"document_pdf": "train/documents/task_000380.pdf", "instance_id": "task_000380", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and wants."}
+{"document_pdf": "train/documents/task_000381.pdf", "instance_id": "task_000381", "user_query": "What is the requested result for the report's scenario about ahmed and carrying?"}
+{"document_pdf": "train/documents/task_000382.pdf", "instance_id": "task_000382", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning kofi and wants."}
+{"document_pdf": "train/documents/task_000383.pdf", "instance_id": "task_000383", "user_query": "What is the requested result for the report's scenario about lena and plans?"}
+{"document_pdf": "train/documents/task_000384.pdf", "instance_id": "task_000384", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lila and wants."}
+{"document_pdf": "train/documents/task_000385.pdf", "instance_id": "task_000385", "user_query": "According to the brief's quantitative scenario concerning tanya and sister, what final value is required?"}
+{"document_pdf": "train/documents/task_000386.pdf", "instance_id": "task_000386", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lily and rose."}
+{"document_pdf": "train/documents/task_000387.pdf", "instance_id": "task_000387", "user_query": "What is the requested result for the report's scenario about aiden and liam?"}
+{"document_pdf": "train/documents/task_000388.pdf", "instance_id": "task_000388", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and mateo."}
+{"document_pdf": "train/documents/task_000389.pdf", "instance_id": "task_000389", "user_query": "What is the requested result for the report's scenario about collected and signatures?"}
+{"document_pdf": "train/documents/task_000390.pdf", "instance_id": "task_000390", "user_query": "According to the brief's quantitative scenario concerning lily and emily, what final value is required?"}
+{"document_pdf": "train/documents/task_000391.pdf", "instance_id": "task_000391", "user_query": "According to the brief's quantitative scenario concerning alex and friends, what final value is required?"}
+{"document_pdf": "train/documents/task_000392.pdf", "instance_id": "task_000392", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning liam and noah."}
+{"document_pdf": "train/documents/task_000393.pdf", "instance_id": "task_000393", "user_query": "What is the requested result for the report's scenario about david and kevin?"}
+{"document_pdf": "train/documents/task_000394.pdf", "instance_id": "task_000394", "user_query": "According to the brief's quantitative scenario concerning lily and rose, what final value is required?"}
+{"document_pdf": "train/documents/task_000395.pdf", "instance_id": "task_000395", "user_query": "What is the requested result for the report's scenario about carlos and diego?"}
+{"document_pdf": "train/documents/task_000396.pdf", "instance_id": "task_000396", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning david and lucas."}
+{"document_pdf": "train/documents/task_000397.pdf", "instance_id": "task_000397", "user_query": "According to the brief's quantitative scenario concerning sofia and siblings, what final value is required?"}
+{"document_pdf": "train/documents/task_000398.pdf", "instance_id": "task_000398", "user_query": "What is the requested result for the report's scenario about maya and rachel?"}
+{"document_pdf": "train/documents/task_000399.pdf", "instance_id": "task_000399", "user_query": "What is the requested result for the report's scenario about jerry and best?"}
+{"document_pdf": "train/documents/task_000400.pdf", "instance_id": "task_000400", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning james and oliver."}
+{"document_pdf": "train/documents/task_000401.pdf", "instance_id": "task_000401", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lily and friend."}
+{"document_pdf": "train/documents/task_000402.pdf", "instance_id": "task_000402", "user_query": "According to the brief's quantitative scenario concerning lily and friends, what final value is required?"}
+{"document_pdf": "train/documents/task_000403.pdf", "instance_id": "task_000403", "user_query": "What is the requested result for the report's scenario about carlos and diego?"}
+{"document_pdf": "train/documents/task_000404.pdf", "instance_id": "task_000404", "user_query": "According to the brief's quantitative scenario concerning leila and saving, what final value is required?"}
+{"document_pdf": "train/documents/task_000405.pdf", "instance_id": "task_000405", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ling and organizing."}
+{"document_pdf": "train/documents/task_000406.pdf", "instance_id": "task_000406", "user_query": "According to the brief's quantitative scenario concerning emma and fundraising, what final value is required?"}
+{"document_pdf": "train/documents/task_000407.pdf", "instance_id": "task_000407", "user_query": "What is the requested result for the report's scenario about lina and saving?"}
+{"document_pdf": "train/documents/task_000408.pdf", "instance_id": "task_000408", "user_query": "According to the brief's quantitative scenario concerning rahul and saving, what final value is required?"}
+{"document_pdf": "train/documents/task_000409.pdf", "instance_id": "task_000409", "user_query": "What is the requested result for the report's scenario about luna and organizing?"}
+{"document_pdf": "train/documents/task_000410.pdf", "instance_id": "task_000410", "user_query": "According to the brief's quantitative scenario concerning lila and organizing, what final value is required?"}
+{"document_pdf": "train/documents/task_000411.pdf", "instance_id": "task_000411", "user_query": "According to the brief's quantitative scenario concerning priya and organizing, what final value is required?"}
+{"document_pdf": "train/documents/task_000412.pdf", "instance_id": "task_000412", "user_query": "What is the requested result for the report's scenario about leela and saving?"}
+{"document_pdf": "train/documents/task_000413.pdf", "instance_id": "task_000413", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning saving and festival."}
+{"document_pdf": "train/documents/task_000414.pdf", "instance_id": "task_000414", "user_query": "According to the brief's quantitative scenario concerning lila and fundraising, what final value is required?"}
+{"document_pdf": "train/documents/task_000415.pdf", "instance_id": "task_000415", "user_query": "What is the requested result for the report's scenario about jenna and saving?"}
+{"document_pdf": "train/documents/task_000416.pdf", "instance_id": "task_000416", "user_query": "What is the requested result for the report's scenario about ramesh and saving?"}
+{"document_pdf": "train/documents/task_000417.pdf", "instance_id": "task_000417", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and organizing."}
+{"document_pdf": "train/documents/task_000418.pdf", "instance_id": "task_000418", "user_query": "What is the requested result for the report's scenario about priya and organizing?"}
+{"document_pdf": "train/documents/task_000419.pdf", "instance_id": "task_000419", "user_query": "What is the requested result for the report's scenario about amount and money?"}
+{"document_pdf": "train/documents/task_000420.pdf", "instance_id": "task_000420", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lena and saving."}
+{"document_pdf": "train/documents/task_000421.pdf", "instance_id": "task_000421", "user_query": "What is the requested result for the report's scenario about organizing and charity?"}
+{"document_pdf": "train/documents/task_000422.pdf", "instance_id": "task_000422", "user_query": "According to the brief's quantitative scenario concerning liam and organizing, what final value is required?"}
+{"document_pdf": "train/documents/task_000423.pdf", "instance_id": "task_000423", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning priya and organizing."}
+{"document_pdf": "train/documents/task_000424.pdf", "instance_id": "task_000424", "user_query": "According to the brief's quantitative scenario concerning cake and slices, what final value is required?"}
+{"document_pdf": "train/documents/task_000425.pdf", "instance_id": "task_000425", "user_query": "What is the requested result for the report's scenario about pizza and slices?"}
+{"document_pdf": "train/documents/task_000426.pdf", "instance_id": "task_000426", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning cake and slices."}
+{"document_pdf": "train/documents/task_000427.pdf", "instance_id": "task_000427", "user_query": "According to the brief's quantitative scenario concerning cake and slices, what final value is required?"}
+{"document_pdf": "train/documents/task_000428.pdf", "instance_id": "task_000428", "user_query": "According to the brief's quantitative scenario concerning divided and slices, what final value is required?"}
+{"document_pdf": "train/documents/task_000429.pdf", "instance_id": "task_000429", "user_query": "What is the requested result for the report's scenario about slices and alex?"}
+{"document_pdf": "train/documents/task_000430.pdf", "instance_id": "task_000430", "user_query": "What is the requested result for the report's scenario about pizza and slices?"}
+{"document_pdf": "train/documents/task_000431.pdf", "instance_id": "task_000431", "user_query": "What is the requested result for the report's scenario about large and cake?"}
+{"document_pdf": "train/documents/task_000432.pdf", "instance_id": "task_000432", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning cake and slices."}
+{"document_pdf": "train/documents/task_000433.pdf", "instance_id": "task_000433", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning difference and cost."}
+{"document_pdf": "train/documents/task_000434.pdf", "instance_id": "task_000434", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning price and difference."}
+{"document_pdf": "train/documents/task_000435.pdf", "instance_id": "task_000435", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning book and store."}
+{"document_pdf": "train/documents/task_000436.pdf", "instance_id": "task_000436", "user_query": "According to the brief's quantitative scenario concerning artisanal and bread, what final value is required?"}
+{"document_pdf": "train/documents/task_000437.pdf", "instance_id": "task_000437", "user_query": "What is the requested result for the report's scenario about baguette and bakery?"}
+{"document_pdf": "train/documents/task_000438.pdf", "instance_id": "task_000438", "user_query": "What is the requested result for the report's scenario about book and store?"}
+{"document_pdf": "train/documents/task_000439.pdf", "instance_id": "task_000439", "user_query": "According to the brief's quantitative scenario concerning kilogram and apples, what final value is required?"}
+{"document_pdf": "train/documents/task_000440.pdf", "instance_id": "task_000440", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning sandwich and deli."}
+{"document_pdf": "train/documents/task_000441.pdf", "instance_id": "task_000441", "user_query": "What is the requested result for the report's scenario about carton and milk?"}
+{"document_pdf": "train/documents/task_000442.pdf", "instance_id": "task_000442", "user_query": "According to the brief's quantitative scenario concerning pack and donuts, what final value is required?"}
+{"document_pdf": "train/documents/task_000443.pdf", "instance_id": "task_000443", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning cereal and supermarket."}
+{"document_pdf": "train/documents/task_000444.pdf", "instance_id": "task_000444", "user_query": "What is the requested result for the report's scenario about percentage and hour?"}
+{"document_pdf": "train/documents/task_000445.pdf", "instance_id": "task_000445", "user_query": "According to the brief's quantitative scenario concerning janitor and tasked, what final value is required?"}
+{"document_pdf": "train/documents/task_000446.pdf", "instance_id": "task_000446", "user_query": "According to the brief's quantitative scenario concerning maintenance and worker, what final value is required?"}
+{"document_pdf": "train/documents/task_000447.pdf", "instance_id": "task_000447", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning building and floors."}
+{"document_pdf": "train/documents/task_000448.pdf", "instance_id": "task_000448", "user_query": "According to the brief's quantitative scenario concerning building and floors, what final value is required?"}
+{"document_pdf": "train/documents/task_000449.pdf", "instance_id": "task_000449", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning janitor and tasked."}
+{"document_pdf": "train/documents/task_000450.pdf", "instance_id": "task_000450", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning janitor and tasked."}
+{"document_pdf": "train/documents/task_000451.pdf", "instance_id": "task_000451", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning janitor and needs."}
+{"document_pdf": "train/documents/task_000452.pdf", "instance_id": "task_000452", "user_query": "What is the requested result for the report's scenario about many and floors?"}
+{"document_pdf": "train/documents/task_000453.pdf", "instance_id": "task_000453", "user_query": "What is the requested result for the report's scenario about janitorial and team?"}
+{"document_pdf": "train/documents/task_000454.pdf", "instance_id": "task_000454", "user_query": "What is the requested result for the report's scenario about housekeeping and staff?"}
+{"document_pdf": "train/documents/task_000455.pdf", "instance_id": "task_000455", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning hotel and maintenance."}
+{"document_pdf": "train/documents/task_000456.pdf", "instance_id": "task_000456", "user_query": "What is the requested result for the report's scenario about hotel and rooms?"}
+{"document_pdf": "train/documents/task_000457.pdf", "instance_id": "task_000457", "user_query": "According to the brief's quantitative scenario concerning painter and assigned, what final value is required?"}
+{"document_pdf": "train/documents/task_000458.pdf", "instance_id": "task_000458", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning normally and buys."}
+{"document_pdf": "train/documents/task_000459.pdf", "instance_id": "task_000459", "user_query": "What is the requested result for the report's scenario about john and normally?"}
+{"document_pdf": "train/documents/task_000460.pdf", "instance_id": "task_000460", "user_query": "According to the brief's quantitative scenario concerning normally and buys, what final value is required?"}
+{"document_pdf": "train/documents/task_000461.pdf", "instance_id": "task_000461", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning amira and visits."}
+{"document_pdf": "train/documents/task_000462.pdf", "instance_id": "task_000462", "user_query": "What is the requested result for the report's scenario about amira and visits?"}
+{"document_pdf": "train/documents/task_000463.pdf", "instance_id": "task_000463", "user_query": "According to the brief's quantitative scenario concerning john and buys, what final value is required?"}
+{"document_pdf": "train/documents/task_000464.pdf", "instance_id": "task_000464", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning john and normally."}
+{"document_pdf": "train/documents/task_000465.pdf", "instance_id": "task_000465", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and visits."}
+{"document_pdf": "train/documents/task_000466.pdf", "instance_id": "task_000466", "user_query": "According to the brief's quantitative scenario concerning normally and buys, what final value is required?"}
+{"document_pdf": "train/documents/task_000467.pdf", "instance_id": "task_000467", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning normally and buys."}
+{"document_pdf": "train/documents/task_000468.pdf", "instance_id": "task_000468", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning usually and buys."}
+{"document_pdf": "train/documents/task_000469.pdf", "instance_id": "task_000469", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning tina and goes."}
+{"document_pdf": "train/documents/task_000470.pdf", "instance_id": "task_000470", "user_query": "According to the brief's quantitative scenario concerning normally and buys, what final value is required?"}
+{"document_pdf": "train/documents/task_000471.pdf", "instance_id": "task_000471", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning baker and normally."}
+{"document_pdf": "train/documents/task_000472.pdf", "instance_id": "task_000472", "user_query": "According to the brief's quantitative scenario concerning baker and usually, what final value is required?"}
+{"document_pdf": "train/documents/task_000473.pdf", "instance_id": "task_000473", "user_query": "According to the brief's quantitative scenario concerning alex and needs, what final value is required?"}
+{"document_pdf": "train/documents/task_000474.pdf", "instance_id": "task_000474", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning nearby and farm."}
+{"document_pdf": "train/documents/task_000475.pdf", "instance_id": "task_000475", "user_query": "What is the requested result for the report's scenario about rahul and observed?"}
+{"document_pdf": "train/documents/task_000476.pdf", "instance_id": "task_000476", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning arjun and visited."}
+{"document_pdf": "train/documents/task_000477.pdf", "instance_id": "task_000477", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and number."}
+{"document_pdf": "train/documents/task_000478.pdf", "instance_id": "task_000478", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and visited."}
+{"document_pdf": "train/documents/task_000479.pdf", "instance_id": "task_000479", "user_query": "What is the requested result for the report's scenario about carlos and visited?"}
+{"document_pdf": "train/documents/task_000480.pdf", "instance_id": "task_000480", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and number."}
+{"document_pdf": "train/documents/task_000481.pdf", "instance_id": "task_000481", "user_query": "What is the requested result for the report's scenario about diana and visited?"}
+{"document_pdf": "train/documents/task_000482.pdf", "instance_id": "task_000482", "user_query": "According to the brief's quantitative scenario concerning vegetable and patch, what final value is required?"}
+{"document_pdf": "train/documents/task_000483.pdf", "instance_id": "task_000483", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning visited and backyard."}
+{"document_pdf": "train/documents/task_000484.pdf", "instance_id": "task_000484", "user_query": "What is the requested result for the report's scenario about garden and priya?"}
+{"document_pdf": "train/documents/task_000485.pdf", "instance_id": "task_000485", "user_query": "According to the brief's quantitative scenario concerning garden and priya, what final value is required?"}
+{"document_pdf": "train/documents/task_000486.pdf", "instance_id": "task_000486", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning valentina and plants."}
+{"document_pdf": "train/documents/task_000487.pdf", "instance_id": "task_000487", "user_query": "According to the brief's quantitative scenario concerning valentina and wants, what final value is required?"}
+{"document_pdf": "train/documents/task_000488.pdf", "instance_id": "task_000488", "user_query": "What is the requested result for the report's scenario about leonardo and garden?"}
+{"document_pdf": "train/documents/task_000489.pdf", "instance_id": "task_000489", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ramesh and garden."}
+{"document_pdf": "train/documents/task_000490.pdf", "instance_id": "task_000490", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning elena and garden."}
+{"document_pdf": "train/documents/task_000491.pdf", "instance_id": "task_000491", "user_query": "What is the requested result for the report's scenario about carlos and vegetable?"}
+{"document_pdf": "train/documents/task_000492.pdf", "instance_id": "task_000492", "user_query": "According to the brief's quantitative scenario concerning carlos and vegetable, what final value is required?"}
+{"document_pdf": "train/documents/task_000493.pdf", "instance_id": "task_000493", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning keisha and flower."}
+{"document_pdf": "train/documents/task_000494.pdf", "instance_id": "task_000494", "user_query": "According to the brief's quantitative scenario concerning rohan and garden, what final value is required?"}
+{"document_pdf": "train/documents/task_000495.pdf", "instance_id": "task_000495", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning tessa and planning."}
+{"document_pdf": "train/documents/task_000496.pdf", "instance_id": "task_000496", "user_query": "What is the requested result for the report's scenario about jamal and garden?"}
+{"document_pdf": "train/documents/task_000497.pdf", "instance_id": "task_000497", "user_query": "According to the brief's quantitative scenario concerning martin and vegetable, what final value is required?"}
+{"document_pdf": "train/documents/task_000498.pdf", "instance_id": "task_000498", "user_query": "According to the brief's quantitative scenario concerning yara and plants, what final value is required?"}
+{"document_pdf": "train/documents/task_000499.pdf", "instance_id": "task_000499", "user_query": "What is the requested result for the report's scenario about kaito and garden?"}
+{"document_pdf": "train/documents/task_000500.pdf", "instance_id": "task_000500", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lily and garden."}
+{"document_pdf": "train/documents/task_000501.pdf", "instance_id": "task_000501", "user_query": "According to the brief's quantitative scenario concerning tara and garden, what final value is required?"}
+{"document_pdf": "train/documents/task_000502.pdf", "instance_id": "task_000502", "user_query": "What is the requested result for the report's scenario about liam and garden?"}
+{"document_pdf": "train/documents/task_000503.pdf", "instance_id": "task_000503", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ravi and vegetable."}
+{"document_pdf": "train/documents/task_000504.pdf", "instance_id": "task_000504", "user_query": "According to the brief's quantitative scenario concerning liam and garden, what final value is required?"}
+{"document_pdf": "train/documents/task_000505.pdf", "instance_id": "task_000505", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning landscaper and designing."}
+{"document_pdf": "train/documents/task_000506.pdf", "instance_id": "task_000506", "user_query": "According to the brief's quantitative scenario concerning lena and garden, what final value is required?"}
+{"document_pdf": "train/documents/task_000507.pdf", "instance_id": "task_000507", "user_query": "According to the brief's quantitative scenario concerning liam and vegetable, what final value is required?"}
+{"document_pdf": "train/documents/task_000508.pdf", "instance_id": "task_000508", "user_query": "What is the requested result for the report's scenario about liam and vegetable?"}
+{"document_pdf": "train/documents/task_000509.pdf", "instance_id": "task_000509", "user_query": "According to the brief's quantitative scenario concerning total and amount, what final value is required?"}
+{"document_pdf": "train/documents/task_000510.pdf", "instance_id": "task_000510", "user_query": "What is the requested result for the report's scenario about kimia and square?"}
+{"document_pdf": "train/documents/task_000511.pdf", "instance_id": "task_000511", "user_query": "What is the requested result for the report's scenario about kimia and wants?"}
+{"document_pdf": "train/documents/task_000512.pdf", "instance_id": "task_000512", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning much and kimia."}
+{"document_pdf": "train/documents/task_000513.pdf", "instance_id": "task_000513", "user_query": "What is the requested result for the report's scenario about jaden and garden?"}
+{"document_pdf": "train/documents/task_000514.pdf", "instance_id": "task_000514", "user_query": "According to the brief's quantitative scenario concerning ramesh and garden, what final value is required?"}
+{"document_pdf": "train/documents/task_000515.pdf", "instance_id": "task_000515", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning tahir and garden."}
+{"document_pdf": "train/documents/task_000516.pdf", "instance_id": "task_000516", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning vegetable and patch."}
+{"document_pdf": "train/documents/task_000517.pdf", "instance_id": "task_000517", "user_query": "According to the brief's quantitative scenario concerning university and allocating, what final value is required?"}
+{"document_pdf": "train/documents/task_000518.pdf", "instance_id": "task_000518", "user_query": "According to the brief's quantitative scenario concerning university and commencement, what final value is required?"}
+{"document_pdf": "train/documents/task_000519.pdf", "instance_id": "task_000519", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and university."}
+{"document_pdf": "train/documents/task_000520.pdf", "instance_id": "task_000520", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and high."}
+{"document_pdf": "train/documents/task_000521.pdf", "instance_id": "task_000521", "user_query": "What is the requested result for the report's scenario about lincoln and high?"}
+{"document_pdf": "train/documents/task_000522.pdf", "instance_id": "task_000522", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning riverdale and college."}
+{"document_pdf": "train/documents/task_000523.pdf", "instance_id": "task_000523", "user_query": "According to the brief's quantitative scenario concerning university and total, what final value is required?"}
+{"document_pdf": "train/documents/task_000524.pdf", "instance_id": "task_000524", "user_query": "What is the requested result for the report's scenario about many and tickets?"}
+{"document_pdf": "train/documents/task_000525.pdf", "instance_id": "task_000525", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning university and commencement."}
+{"document_pdf": "train/documents/task_000526.pdf", "instance_id": "task_000526", "user_query": "According to the brief's quantitative scenario concerning lincoln and university, what final value is required?"}
+{"document_pdf": "train/documents/task_000527.pdf", "instance_id": "task_000527", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and high."}
+{"document_pdf": "train/documents/task_000528.pdf", "instance_id": "task_000528", "user_query": "What is the requested result for the report's scenario about riverside and college?"}
+{"document_pdf": "train/documents/task_000529.pdf", "instance_id": "task_000529", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning university and total."}
+{"document_pdf": "train/documents/task_000530.pdf", "instance_id": "task_000530", "user_query": "What is the requested result for the report's scenario about many and tickets?"}
+{"document_pdf": "train/documents/task_000531.pdf", "instance_id": "task_000531", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning university and graduation."}
+{"document_pdf": "train/documents/task_000532.pdf", "instance_id": "task_000532", "user_query": "According to the brief's quantitative scenario concerning city and high, what final value is required?"}
+{"document_pdf": "train/documents/task_000533.pdf", "instance_id": "task_000533", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and high."}
+{"document_pdf": "train/documents/task_000534.pdf", "instance_id": "task_000534", "user_query": "What is the requested result for the report's scenario about greenwood and high?"}
+{"document_pdf": "train/documents/task_000535.pdf", "instance_id": "task_000535", "user_query": "According to the brief's quantitative scenario concerning city and theater, what final value is required?"}
+{"document_pdf": "train/documents/task_000536.pdf", "instance_id": "task_000536", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning academic and conference."}
+{"document_pdf": "train/documents/task_000537.pdf", "instance_id": "task_000537", "user_query": "What is the requested result for the report's scenario about university and graduation?"}
+{"document_pdf": "train/documents/task_000538.pdf", "instance_id": "task_000538", "user_query": "According to the brief's quantitative scenario concerning lincoln and college, what final value is required?"}
+{"document_pdf": "train/documents/task_000539.pdf", "instance_id": "task_000539", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and high."}
+{"document_pdf": "train/documents/task_000540.pdf", "instance_id": "task_000540", "user_query": "According to the brief's quantitative scenario concerning greenfield and university, what final value is required?"}
+{"document_pdf": "train/documents/task_000541.pdf", "instance_id": "task_000541", "user_query": "What is the requested result for the report's scenario about university and allocating?"}
+{"document_pdf": "train/documents/task_000542.pdf", "instance_id": "task_000542", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning auditorium and total."}
+{"document_pdf": "train/documents/task_000543.pdf", "instance_id": "task_000543", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lincoln and high."}
+{"document_pdf": "train/documents/task_000544.pdf", "instance_id": "task_000544", "user_query": "What is the requested result for the report's scenario about city and theater?"}
+{"document_pdf": "train/documents/task_000545.pdf", "instance_id": "task_000545", "user_query": "According to the brief's quantitative scenario concerning carlos and placed, what final value is required?"}
+{"document_pdf": "train/documents/task_000546.pdf", "instance_id": "task_000546", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and placed."}
+{"document_pdf": "train/documents/task_000547.pdf", "instance_id": "task_000547", "user_query": "What is the requested result for the report's scenario about leila and placed?"}
+{"document_pdf": "train/documents/task_000548.pdf", "instance_id": "task_000548", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning teacher and placed."}
+{"document_pdf": "train/documents/task_000549.pdf", "instance_id": "task_000549", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning concealed and dozen."}
+{"document_pdf": "train/documents/task_000550.pdf", "instance_id": "task_000550", "user_query": "What is the requested result for the report's scenario about carlos and placed?"}
+{"document_pdf": "train/documents/task_000551.pdf", "instance_id": "task_000551", "user_query": "What is the requested result for the report's scenario about carlos and placed?"}
+{"document_pdf": "train/documents/task_000552.pdf", "instance_id": "task_000552", "user_query": "According to the brief's quantitative scenario concerning andre and boxes, what final value is required?"}
+{"document_pdf": "train/documents/task_000553.pdf", "instance_id": "task_000553", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning leia and placed."}
+{"document_pdf": "train/documents/task_000554.pdf", "instance_id": "task_000554", "user_query": "What is the requested result for the report's scenario about carlos and placed?"}
+{"document_pdf": "train/documents/task_000555.pdf", "instance_id": "task_000555", "user_query": "According to the brief's quantitative scenario concerning teacher and dozen, what final value is required?"}
+{"document_pdf": "train/documents/task_000556.pdf", "instance_id": "task_000556", "user_query": "What is the requested result for the report's scenario about carlos and placed?"}
+{"document_pdf": "train/documents/task_000557.pdf", "instance_id": "task_000557", "user_query": "According to the brief's quantitative scenario concerning much and total, what final value is required?"}
+{"document_pdf": "train/documents/task_000558.pdf", "instance_id": "task_000558", "user_query": "What is the requested result for the report's scenario about kayla and needs?"}
+{"document_pdf": "train/documents/task_000559.pdf", "instance_id": "task_000559", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning liam and chop."}
+{"document_pdf": "train/documents/task_000560.pdf", "instance_id": "task_000560", "user_query": "What is the requested result for the report's scenario about chef and chop?"}
+{"document_pdf": "train/documents/task_000561.pdf", "instance_id": "task_000561", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning emily and chop."}
+{"document_pdf": "train/documents/task_000562.pdf", "instance_id": "task_000562", "user_query": "What is the requested result for the report's scenario about valentina and preparing?"}
+{"document_pdf": "train/documents/task_000563.pdf", "instance_id": "task_000563", "user_query": "According to the brief's quantitative scenario concerning long and take, what final value is required?"}
+{"document_pdf": "train/documents/task_000564.pdf", "instance_id": "task_000564", "user_query": "According to the brief's quantitative scenario concerning ramesh and sort, what final value is required?"}
+{"document_pdf": "train/documents/task_000565.pdf", "instance_id": "task_000565", "user_query": "According to the brief's quantitative scenario concerning ramesh and clean, what final value is required?"}
+{"document_pdf": "train/documents/task_000566.pdf", "instance_id": "task_000566", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning yolanda and clean."}
+{"document_pdf": "train/documents/task_000567.pdf", "instance_id": "task_000567", "user_query": "What is the requested result for the report's scenario about carlos and chop?"}
+{"document_pdf": "train/documents/task_000568.pdf", "instance_id": "task_000568", "user_query": "According to the brief's quantitative scenario concerning carlos and shell, what final value is required?"}
+{"document_pdf": "train/documents/task_000569.pdf", "instance_id": "task_000569", "user_query": "What is the requested result for the report's scenario about chen and needs?"}
+{"document_pdf": "train/documents/task_000570.pdf", "instance_id": "task_000570", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning chen and peel."}
+{"document_pdf": "train/documents/task_000571.pdf", "instance_id": "task_000571", "user_query": "According to the brief's quantitative scenario concerning leila and chop, what final value is required?"}
+{"document_pdf": "train/documents/task_000572.pdf", "instance_id": "task_000572", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and chop."}
+{"document_pdf": "train/documents/task_000573.pdf", "instance_id": "task_000573", "user_query": "According to the brief's quantitative scenario concerning ling and clean, what final value is required?"}
+{"document_pdf": "train/documents/task_000574.pdf", "instance_id": "task_000574", "user_query": "According to the brief's quantitative scenario concerning needs and prepare, what final value is required?"}
+{"document_pdf": "train/documents/task_000575.pdf", "instance_id": "task_000575", "user_query": "According to the brief's quantitative scenario concerning needs and prepare, what final value is required?"}
+{"document_pdf": "train/documents/task_000576.pdf", "instance_id": "task_000576", "user_query": "What is the requested result for the report's scenario about liam and shuck?"}
+{"document_pdf": "train/documents/task_000577.pdf", "instance_id": "task_000577", "user_query": "What is the requested result for the report's scenario about rahul and clean?"}
+{"document_pdf": "train/documents/task_000578.pdf", "instance_id": "task_000578", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and clean."}
+{"document_pdf": "train/documents/task_000579.pdf", "instance_id": "task_000579", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning alex and chop."}
+{"document_pdf": "train/documents/task_000580.pdf", "instance_id": "task_000580", "user_query": "According to the brief's quantitative scenario concerning roya and peel, what final value is required?"}
+{"document_pdf": "train/documents/task_000581.pdf", "instance_id": "task_000581", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning roya and preparing."}
+{"document_pdf": "train/documents/task_000582.pdf", "instance_id": "task_000582", "user_query": "What is the requested result for the report's scenario about roya and needs?"}
+{"document_pdf": "train/documents/task_000583.pdf", "instance_id": "task_000583", "user_query": "According to the brief's quantitative scenario concerning roya and chop, what final value is required?"}
+{"document_pdf": "train/documents/task_000584.pdf", "instance_id": "task_000584", "user_query": "What is the requested result for the report's scenario about sasha and chop?"}
+{"document_pdf": "train/documents/task_000585.pdf", "instance_id": "task_000585", "user_query": "What is the requested result for the report's scenario about total and weekly?"}
+{"document_pdf": "train/documents/task_000586.pdf", "instance_id": "task_000586", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning leila and collects."}
+{"document_pdf": "train/documents/task_000587.pdf", "instance_id": "task_000587", "user_query": "According to the brief's quantitative scenario concerning logistics and company, what final value is required?"}
+{"document_pdf": "train/documents/task_000588.pdf", "instance_id": "task_000588", "user_query": "What is the requested result for the report's scenario about rashid and collects?"}
+{"document_pdf": "train/documents/task_000589.pdf", "instance_id": "task_000589", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lila and provides."}
+{"document_pdf": "train/documents/task_000590.pdf", "instance_id": "task_000590", "user_query": "According to the brief's quantitative scenario concerning priya and delivers, what final value is required?"}
+{"document_pdf": "train/documents/task_000591.pdf", "instance_id": "task_000591", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lila and delivers."}
+{"document_pdf": "train/documents/task_000592.pdf", "instance_id": "task_000592", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning priya and delivers."}
+{"document_pdf": "train/documents/task_000593.pdf", "instance_id": "task_000593", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning real and estate."}
+{"document_pdf": "train/documents/task_000594.pdf", "instance_id": "task_000594", "user_query": "What is the requested result for the report's scenario about ramesh and picks?"}
+{"document_pdf": "train/documents/task_000595.pdf", "instance_id": "task_000595", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning delivery and driver."}
+{"document_pdf": "train/documents/task_000596.pdf", "instance_id": "task_000596", "user_query": "What is the requested result for the report's scenario about aisha and manages?"}
+{"document_pdf": "train/documents/task_000597.pdf", "instance_id": "task_000597", "user_query": "What is the requested result for the report's scenario about logistics and company?"}
+{"document_pdf": "train/documents/task_000598.pdf", "instance_id": "task_000598", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning david and earned."}
+{"document_pdf": "train/documents/task_000599.pdf", "instance_id": "task_000599", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning earned and badges."}
+{"document_pdf": "train/documents/task_000600.pdf", "instance_id": "task_000600", "user_query": "According to the brief's quantitative scenario concerning achieved and points, what final value is required?"}
+{"document_pdf": "train/documents/task_000601.pdf", "instance_id": "task_000601", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning basketball and tournament."}
+{"document_pdf": "train/documents/task_000602.pdf", "instance_id": "task_000602", "user_query": "According to the brief's quantitative scenario concerning math and competition, what final value is required?"}
+{"document_pdf": "train/documents/task_000603.pdf", "instance_id": "task_000603", "user_query": "According to the brief's quantitative scenario concerning jamal and achieved, what final value is required?"}
+{"document_pdf": "train/documents/task_000604.pdf", "instance_id": "task_000604", "user_query": "According to the brief's quantitative scenario concerning lila and earned, what final value is required?"}
+{"document_pdf": "train/documents/task_000605.pdf", "instance_id": "task_000605", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and watermelon."}
+{"document_pdf": "train/documents/task_000606.pdf", "instance_id": "task_000606", "user_query": "According to the brief's quantitative scenario concerning chef and pizza, what final value is required?"}
+{"document_pdf": "train/documents/task_000607.pdf", "instance_id": "task_000607", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rohan and chopped."}
+{"document_pdf": "train/documents/task_000608.pdf", "instance_id": "task_000608", "user_query": "According to the brief's quantitative scenario concerning oliver and whole, what final value is required?"}
+{"document_pdf": "train/documents/task_000609.pdf", "instance_id": "task_000609", "user_query": "What is the requested result for the report's scenario about jacob and cake?"}
+{"document_pdf": "train/documents/task_000610.pdf", "instance_id": "task_000610", "user_query": "What is the requested result for the report's scenario about chef and pizza?"}
+{"document_pdf": "train/documents/task_000611.pdf", "instance_id": "task_000611", "user_query": "According to the brief's quantitative scenario concerning alex and large, what final value is required?"}
+{"document_pdf": "train/documents/task_000612.pdf", "instance_id": "task_000612", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning david and chocolate."}
+{"document_pdf": "train/documents/task_000613.pdf", "instance_id": "task_000613", "user_query": "What is the requested result for the report's scenario about gabrielle and practicing?"}
+{"document_pdf": "train/documents/task_000614.pdf", "instance_id": "task_000614", "user_query": "According to the brief's quantitative scenario concerning total and number, what final value is required?"}
+{"document_pdf": "train/documents/task_000615.pdf", "instance_id": "task_000615", "user_query": "What is the requested result for the report's scenario about gabrielle and writes?"}
+{"document_pdf": "train/documents/task_000616.pdf", "instance_id": "task_000616", "user_query": "According to the brief's quantitative scenario concerning thomas and practicing, what final value is required?"}
+{"document_pdf": "train/documents/task_000617.pdf", "instance_id": "task_000617", "user_query": "According to the brief's quantitative scenario concerning liam and practicing, what final value is required?"}
+{"document_pdf": "train/documents/task_000618.pdf", "instance_id": "task_000618", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning writes and entire."}
+{"document_pdf": "train/documents/task_000619.pdf", "instance_id": "task_000619", "user_query": "According to the brief's quantitative scenario concerning writes and letters, what final value is required?"}
+{"document_pdf": "train/documents/task_000620.pdf", "instance_id": "task_000620", "user_query": "What is the requested result for the report's scenario about writes and alphabets?"}
+{"document_pdf": "train/documents/task_000621.pdf", "instance_id": "task_000621", "user_query": "According to the brief's quantitative scenario concerning daphne and writes, what final value is required?"}
+{"document_pdf": "train/documents/task_000622.pdf", "instance_id": "task_000622", "user_query": "What is the requested result for the report's scenario about daphne and wrote?"}
+{"document_pdf": "train/documents/task_000623.pdf", "instance_id": "task_000623", "user_query": "What is the requested result for the report's scenario about quincy and practicing?"}
+{"document_pdf": "train/documents/task_000624.pdf", "instance_id": "task_000624", "user_query": "According to the brief's quantitative scenario concerning xena and wrote, what final value is required?"}
+{"document_pdf": "train/documents/task_000625.pdf", "instance_id": "task_000625", "user_query": "What is the requested result for the report's scenario about practicing and greek?"}
+{"document_pdf": "train/documents/task_000626.pdf", "instance_id": "task_000626", "user_query": "According to the brief's quantitative scenario concerning many and calories, what final value is required?"}
+{"document_pdf": "train/documents/task_000627.pdf", "instance_id": "task_000627", "user_query": "What is the requested result for the report's scenario about bottle and juice?"}
+{"document_pdf": "train/documents/task_000628.pdf", "instance_id": "task_000628", "user_query": "According to the brief's quantitative scenario concerning bottle and juice, what final value is required?"}
+{"document_pdf": "train/documents/task_000629.pdf", "instance_id": "task_000629", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning bottle and orange."}
+{"document_pdf": "train/documents/task_000630.pdf", "instance_id": "task_000630", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning bottle and soda."}
+{"document_pdf": "train/documents/task_000631.pdf", "instance_id": "task_000631", "user_query": "What is the requested result for the report's scenario about bottle and apple?"}
+{"document_pdf": "train/documents/task_000632.pdf", "instance_id": "task_000632", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and number."}
+{"document_pdf": "train/documents/task_000633.pdf", "instance_id": "task_000633", "user_query": "What is the requested result for the report's scenario about glass and juice?"}
+{"document_pdf": "train/documents/task_000634.pdf", "instance_id": "task_000634", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning bottle and soda."}
+{"document_pdf": "train/documents/task_000635.pdf", "instance_id": "task_000635", "user_query": "What is the requested result for the report's scenario about bottle and soda?"}
+{"document_pdf": "train/documents/task_000636.pdf", "instance_id": "task_000636", "user_query": "What is the requested result for the report's scenario about bottle and contains?"}
+{"document_pdf": "train/documents/task_000637.pdf", "instance_id": "task_000637", "user_query": "What is the requested result for the report's scenario about liam and boxes?"}
+{"document_pdf": "train/documents/task_000638.pdf", "instance_id": "task_000638", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lily and boxes."}
+{"document_pdf": "train/documents/task_000639.pdf", "instance_id": "task_000639", "user_query": "According to the brief's quantitative scenario concerning julia and owns, what final value is required?"}
+{"document_pdf": "train/documents/task_000640.pdf", "instance_id": "task_000640", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning lily and owns."}
+{"document_pdf": "train/documents/task_000641.pdf", "instance_id": "task_000641", "user_query": "According to the brief's quantitative scenario concerning rohan and boxes, what final value is required?"}
+{"document_pdf": "train/documents/task_000642.pdf", "instance_id": "task_000642", "user_query": "What is the requested result for the report's scenario about lila and owns?"}
+{"document_pdf": "train/documents/task_000643.pdf", "instance_id": "task_000643", "user_query": "What is the requested result for the report's scenario about boxes and pencils?"}
+{"document_pdf": "train/documents/task_000644.pdf", "instance_id": "task_000644", "user_query": "What is the requested result for the report's scenario about jasmine and owns?"}
+{"document_pdf": "train/documents/task_000645.pdf", "instance_id": "task_000645", "user_query": "According to the brief's quantitative scenario concerning loggers and trees, what final value is required?"}
+{"document_pdf": "train/documents/task_000646.pdf", "instance_id": "task_000646", "user_query": "What is the requested result for the report's scenario about single and worker?"}
+{"document_pdf": "train/documents/task_000647.pdf", "instance_id": "task_000647", "user_query": "What is the requested result for the report's scenario about dwarves and titanium?"}
+{"document_pdf": "train/documents/task_000648.pdf", "instance_id": "task_000648", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning single and worker."}
+{"document_pdf": "train/documents/task_000649.pdf", "instance_id": "task_000649", "user_query": "What is the requested result for the report's scenario about single and robot?"}
+{"document_pdf": "train/documents/task_000650.pdf", "instance_id": "task_000650", "user_query": "According to the brief's quantitative scenario concerning worker and harvest, what final value is required?"}
+{"document_pdf": "train/documents/task_000651.pdf", "instance_id": "task_000651", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning farmer and harvest."}
+{"document_pdf": "train/documents/task_000652.pdf", "instance_id": "task_000652", "user_query": "According to the brief's quantitative scenario concerning excavators and equipped, what final value is required?"}
+{"document_pdf": "train/documents/task_000653.pdf", "instance_id": "task_000653", "user_query": "According to the brief's quantitative scenario concerning worker and harvest, what final value is required?"}
+{"document_pdf": "train/documents/task_000654.pdf", "instance_id": "task_000654", "user_query": "What is the requested result for the report's scenario about gardener and plant?"}
+{"document_pdf": "train/documents/task_000655.pdf", "instance_id": "task_000655", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning robotic and extract."}
+{"document_pdf": "train/documents/task_000656.pdf", "instance_id": "task_000656", "user_query": "What is the requested result for the report's scenario about miner and extract?"}
+{"document_pdf": "train/documents/task_000657.pdf", "instance_id": "task_000657", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning single and robot."}
+{"document_pdf": "train/documents/task_000658.pdf", "instance_id": "task_000658", "user_query": "According to the brief's quantitative scenario concerning single and dwarf, what final value is required?"}
+{"document_pdf": "train/documents/task_000659.pdf", "instance_id": "task_000659", "user_query": "What is the requested result for the report's scenario about mixture and drinks?"}
+{"document_pdf": "train/documents/task_000660.pdf", "instance_id": "task_000660", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning gallons and orange."}
+{"document_pdf": "train/documents/task_000661.pdf", "instance_id": "task_000661", "user_query": "According to the brief's quantitative scenario concerning total and amount, what final value is required?"}
+{"document_pdf": "train/documents/task_000662.pdf", "instance_id": "task_000662", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning mohammed and pebbles."}
+{"document_pdf": "train/documents/task_000663.pdf", "instance_id": "task_000663", "user_query": "According to the brief's quantitative scenario concerning container and marbles, what final value is required?"}
+{"document_pdf": "train/documents/task_000664.pdf", "instance_id": "task_000664", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning containing and marbles."}
+{"document_pdf": "train/documents/task_000665.pdf", "instance_id": "task_000665", "user_query": "According to the brief's quantitative scenario concerning pavel and buttons, what final value is required?"}
+{"document_pdf": "train/documents/task_000666.pdf", "instance_id": "task_000666", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning pavel and originally."}
+{"document_pdf": "train/documents/task_000667.pdf", "instance_id": "task_000667", "user_query": "According to the brief's quantitative scenario concerning tanya and marbles, what final value is required?"}
+{"document_pdf": "train/documents/task_000668.pdf", "instance_id": "task_000668", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and carrying."}
+{"document_pdf": "train/documents/task_000669.pdf", "instance_id": "task_000669", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning benjamin and initially."}
+{"document_pdf": "train/documents/task_000670.pdf", "instance_id": "task_000670", "user_query": "According to the brief's quantitative scenario concerning benjamin and some, what final value is required?"}
+{"document_pdf": "train/documents/task_000671.pdf", "instance_id": "task_000671", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning oscar and initially."}
+{"document_pdf": "train/documents/task_000672.pdf", "instance_id": "task_000672", "user_query": "According to the brief's quantitative scenario concerning lila and collected, what final value is required?"}
+{"document_pdf": "train/documents/task_000673.pdf", "instance_id": "task_000673", "user_query": "According to the brief's quantitative scenario concerning collection and rare, what final value is required?"}
+{"document_pdf": "train/documents/task_000674.pdf", "instance_id": "task_000674", "user_query": "What is the requested result for the report's scenario about bundle and painter?"}
+{"document_pdf": "train/documents/task_000675.pdf", "instance_id": "task_000675", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning painting and collection."}
+{"document_pdf": "train/documents/task_000676.pdf", "instance_id": "task_000676", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning colored and pencils."}
+{"document_pdf": "train/documents/task_000677.pdf", "instance_id": "task_000677", "user_query": "According to the brief's quantitative scenario concerning collection and artist, what final value is required?"}
+{"document_pdf": "train/documents/task_000678.pdf", "instance_id": "task_000678", "user_query": "What is the requested result for the report's scenario about collection and artist?"}
+{"document_pdf": "train/documents/task_000679.pdf", "instance_id": "task_000679", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning collection and artist."}
+{"document_pdf": "train/documents/task_000680.pdf", "instance_id": "task_000680", "user_query": "What is the requested result for the report's scenario about artist and paints?"}
+{"document_pdf": "train/documents/task_000681.pdf", "instance_id": "task_000681", "user_query": "According to the brief's quantitative scenario concerning many and racks, what final value is required?"}
+{"document_pdf": "train/documents/task_000682.pdf", "instance_id": "task_000682", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ramesh and boxes."}
+{"document_pdf": "train/documents/task_000683.pdf", "instance_id": "task_000683", "user_query": "According to the brief's quantitative scenario concerning lily and containers, what final value is required?"}
+{"document_pdf": "train/documents/task_000684.pdf", "instance_id": "task_000684", "user_query": "What is the requested result for the report's scenario about carlos and containers?"}
+{"document_pdf": "train/documents/task_000685.pdf", "instance_id": "task_000685", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ramesh and boxes."}
+{"document_pdf": "train/documents/task_000686.pdf", "instance_id": "task_000686", "user_query": "What is the requested result for the report's scenario about camila and containers?"}
+{"document_pdf": "train/documents/task_000687.pdf", "instance_id": "task_000687", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ashley and containers."}
+{"document_pdf": "train/documents/task_000688.pdf", "instance_id": "task_000688", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning many and baking."}
+{"document_pdf": "train/documents/task_000689.pdf", "instance_id": "task_000689", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning kaito and boxes."}
+{"document_pdf": "train/documents/task_000690.pdf", "instance_id": "task_000690", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning tina and containers."}
+{"document_pdf": "train/documents/task_000691.pdf", "instance_id": "task_000691", "user_query": "According to the brief's quantitative scenario concerning jordan and bottles, what final value is required?"}
+{"document_pdf": "train/documents/task_000692.pdf", "instance_id": "task_000692", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carlos and bottles."}
+{"document_pdf": "train/documents/task_000693.pdf", "instance_id": "task_000693", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning leila and boxes."}
+{"document_pdf": "train/documents/task_000694.pdf", "instance_id": "task_000694", "user_query": "What is the requested result for the report's scenario about containers and candy?"}
+{"document_pdf": "train/documents/task_000695.pdf", "instance_id": "task_000695", "user_query": "According to the brief's quantitative scenario concerning enough and frosting, what final value is required?"}
+{"document_pdf": "train/documents/task_000696.pdf", "instance_id": "task_000696", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning many and trays."}
+{"document_pdf": "train/documents/task_000697.pdf", "instance_id": "task_000697", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and containers."}
+{"document_pdf": "train/documents/task_000698.pdf", "instance_id": "task_000698", "user_query": "According to the brief's quantitative scenario concerning liam and cans, what final value is required?"}
+{"document_pdf": "train/documents/task_000699.pdf", "instance_id": "task_000699", "user_query": "What is the requested result for the report's scenario about carlos and cans?"}
+{"document_pdf": "train/documents/task_000700.pdf", "instance_id": "task_000700", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning percentage and total."}
+{"document_pdf": "train/documents/task_000701.pdf", "instance_id": "task_000701", "user_query": "According to the brief's quantitative scenario concerning leila and light, what final value is required?"}
+{"document_pdf": "train/documents/task_000702.pdf", "instance_id": "task_000702", "user_query": "What is the requested result for the report's scenario about crafts and shop?"}
+{"document_pdf": "train/documents/task_000703.pdf", "instance_id": "task_000703", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning percentage and total."}
+{"document_pdf": "train/documents/task_000704.pdf", "instance_id": "task_000704", "user_query": "According to the brief's quantitative scenario concerning ethan and light, what final value is required?"}
+{"document_pdf": "train/documents/task_000705.pdf", "instance_id": "task_000705", "user_query": "According to the brief's quantitative scenario concerning lily and dark, what final value is required?"}
+{"document_pdf": "train/documents/task_000706.pdf", "instance_id": "task_000706", "user_query": "According to the brief's quantitative scenario concerning percentage and total, what final value is required?"}
+{"document_pdf": "train/documents/task_000707.pdf", "instance_id": "task_000707", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning craft and store."}
+{"document_pdf": "train/documents/task_000708.pdf", "instance_id": "task_000708", "user_query": "What is the requested result for the report's scenario about bright and pink?"}
+{"document_pdf": "train/documents/task_000709.pdf", "instance_id": "task_000709", "user_query": "According to the brief's quantitative scenario concerning ethan and light, what final value is required?"}
+{"document_pdf": "train/documents/task_000710.pdf", "instance_id": "task_000710", "user_query": "What is the requested result for the report's scenario about bookstore and romance?"}
+{"document_pdf": "train/documents/task_000711.pdf", "instance_id": "task_000711", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning truck and weighs."}
+{"document_pdf": "train/documents/task_000712.pdf", "instance_id": "task_000712", "user_query": "According to the brief's quantitative scenario concerning large and container, what final value is required?"}
+{"document_pdf": "train/documents/task_000713.pdf", "instance_id": "task_000713", "user_query": "According to the brief's quantitative scenario concerning minimum and amount, what final value is required?"}
+{"document_pdf": "train/documents/task_000714.pdf", "instance_id": "task_000714", "user_query": "What is the requested result for the report's scenario about linda and truck?"}
+{"document_pdf": "train/documents/task_000715.pdf", "instance_id": "task_000715", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning force and kilograms."}
+{"document_pdf": "train/documents/task_000716.pdf", "instance_id": "task_000716", "user_query": "According to the brief's quantitative scenario concerning trying and lift, what final value is required?"}
+{"document_pdf": "train/documents/task_000717.pdf", "instance_id": "task_000717", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ethan and truck."}
+{"document_pdf": "train/documents/task_000718.pdf", "instance_id": "task_000718", "user_query": "According to the brief's quantitative scenario concerning emily and truck, what final value is required?"}
+{"document_pdf": "train/documents/task_000719.pdf", "instance_id": "task_000719", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning painter and yearly."}
+{"document_pdf": "train/documents/task_000720.pdf", "instance_id": "task_000720", "user_query": "What is the requested result for the report's scenario about gardener and tends?"}
+{"document_pdf": "train/documents/task_000721.pdf", "instance_id": "task_000721", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning mason and labours."}
+{"document_pdf": "train/documents/task_000722.pdf", "instance_id": "task_000722", "user_query": "What is the requested result for the report's scenario about annual and salary?"}
+{"document_pdf": "train/documents/task_000723.pdf", "instance_id": "task_000723", "user_query": "What is the requested result for the report's scenario about electrician and paid?"}
+{"document_pdf": "train/documents/task_000724.pdf", "instance_id": "task_000724", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning carpenter and employed."}
+{"document_pdf": "train/documents/task_000725.pdf", "instance_id": "task_000725", "user_query": "What is the requested result for the report's scenario about gardener and works?"}
+{"document_pdf": "train/documents/task_000726.pdf", "instance_id": "task_000726", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and yearly."}
+{"document_pdf": "train/documents/task_000727.pdf", "instance_id": "task_000727", "user_query": "What is the requested result for the report's scenario about laborer and employed?"}
+{"document_pdf": "train/documents/task_000728.pdf", "instance_id": "task_000728", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and amount."}
+{"document_pdf": "train/documents/task_000729.pdf", "instance_id": "task_000729", "user_query": "According to the brief's quantitative scenario concerning construction and worker, what final value is required?"}
+{"document_pdf": "train/documents/task_000730.pdf", "instance_id": "task_000730", "user_query": "What is the requested result for the report's scenario about gardener and works?"}
+{"document_pdf": "train/documents/task_000731.pdf", "instance_id": "task_000731", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and amount."}
+{"document_pdf": "train/documents/task_000732.pdf", "instance_id": "task_000732", "user_query": "According to the brief's quantitative scenario concerning farm and horses, what final value is required?"}
+{"document_pdf": "train/documents/task_000733.pdf", "instance_id": "task_000733", "user_query": "What is the requested result for the report's scenario about much and total?"}
+{"document_pdf": "train/documents/task_000734.pdf", "instance_id": "task_000734", "user_query": "According to the brief's quantitative scenario concerning farmer and cows, what final value is required?"}
+{"document_pdf": "train/documents/task_000735.pdf", "instance_id": "task_000735", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning farmer and cows."}
+{"document_pdf": "train/documents/task_000736.pdf", "instance_id": "task_000736", "user_query": "According to the brief's quantitative scenario concerning priya and preparing, what final value is required?"}
+{"document_pdf": "train/documents/task_000737.pdf", "instance_id": "task_000737", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning farmer and cows."}
+{"document_pdf": "train/documents/task_000738.pdf", "instance_id": "task_000738", "user_query": "What is the requested result for the report's scenario about leila and preparing?"}
+{"document_pdf": "train/documents/task_000739.pdf", "instance_id": "task_000739", "user_query": "What is the requested result for the report's scenario about total and amount?"}
+{"document_pdf": "train/documents/task_000740.pdf", "instance_id": "task_000740", "user_query": "According to the brief's quantitative scenario concerning farmer and turkeys, what final value is required?"}
+{"document_pdf": "train/documents/task_000741.pdf", "instance_id": "task_000741", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning leila and preparing."}
+{"document_pdf": "train/documents/task_000742.pdf", "instance_id": "task_000742", "user_query": "What is the requested result for the report's scenario about halley and comet?"}
+{"document_pdf": "train/documents/task_000743.pdf", "instance_id": "task_000743", "user_query": "What is the requested result for the report's scenario about halley and comet?"}
+{"document_pdf": "train/documents/task_000744.pdf", "instance_id": "task_000744", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning halley and comet."}
+{"document_pdf": "train/documents/task_000745.pdf", "instance_id": "task_000745", "user_query": "According to the brief's quantitative scenario concerning halley and comet, what final value is required?"}
+{"document_pdf": "train/documents/task_000746.pdf", "instance_id": "task_000746", "user_query": "What is the requested result for the report's scenario about halley and comet?"}
+{"document_pdf": "train/documents/task_000747.pdf", "instance_id": "task_000747", "user_query": "What is the requested result for the report's scenario about kaito and needs?"}
+{"document_pdf": "train/documents/task_000748.pdf", "instance_id": "task_000748", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ramesh and type."}
+{"document_pdf": "train/documents/task_000749.pdf", "instance_id": "task_000749", "user_query": "According to the brief's quantitative scenario concerning carlos and tasked, what final value is required?"}
+{"document_pdf": "train/documents/task_000750.pdf", "instance_id": "task_000750", "user_query": "What is the requested result for the report's scenario about carlos and needs?"}
+{"document_pdf": "train/documents/task_000751.pdf", "instance_id": "task_000751", "user_query": "What is the requested result for the report's scenario about elena and writing?"}
+{"document_pdf": "train/documents/task_000752.pdf", "instance_id": "task_000752", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rohan and needs."}
+{"document_pdf": "train/documents/task_000753.pdf", "instance_id": "task_000753", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ashley and needs."}
+{"document_pdf": "train/documents/task_000754.pdf", "instance_id": "task_000754", "user_query": "What is the requested result for the report's scenario about david and needs?"}
+{"document_pdf": "train/documents/task_000755.pdf", "instance_id": "task_000755", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning ethan and needs."}
+{"document_pdf": "train/documents/task_000756.pdf", "instance_id": "task_000756", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and needs."}
+{"document_pdf": "train/documents/task_000757.pdf", "instance_id": "task_000757", "user_query": "What is the requested result for the report's scenario about liam and needs?"}
+{"document_pdf": "train/documents/task_000758.pdf", "instance_id": "task_000758", "user_query": "What is the requested result for the report's scenario about rohan and needs?"}
+{"document_pdf": "train/documents/task_000759.pdf", "instance_id": "task_000759", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahul and write."}
+{"document_pdf": "train/documents/task_000760.pdf", "instance_id": "task_000760", "user_query": "What is the requested result for the report's scenario about needs and complete?"}
+{"document_pdf": "train/documents/task_000761.pdf", "instance_id": "task_000761", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning jacob and needs."}
+{"document_pdf": "train/documents/task_000762.pdf", "instance_id": "task_000762", "user_query": "What is the requested result for the report's scenario about alex and needs?"}
+{"document_pdf": "train/documents/task_000763.pdf", "instance_id": "task_000763", "user_query": "What is the requested result for the report's scenario about shifts and normal?"}
+{"document_pdf": "train/documents/task_000764.pdf", "instance_id": "task_000764", "user_query": "What is the requested result for the report's scenario about typical and school?"}
+{"document_pdf": "train/documents/task_000765.pdf", "instance_id": "task_000765", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and periods."}
+{"document_pdf": "train/documents/task_000766.pdf", "instance_id": "task_000766", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning typical and employee."}
+{"document_pdf": "train/documents/task_000767.pdf", "instance_id": "task_000767", "user_query": "According to the brief's quantitative scenario concerning typical and student, what final value is required?"}
+{"document_pdf": "train/documents/task_000768.pdf", "instance_id": "task_000768", "user_query": "According to the brief's quantitative scenario concerning student and regular, what final value is required?"}
+{"document_pdf": "train/documents/task_000769.pdf", "instance_id": "task_000769", "user_query": "What is the requested result for the report's scenario about student and takes?"}
+{"document_pdf": "train/documents/task_000770.pdf", "instance_id": "task_000770", "user_query": "What is the requested result for the report's scenario about periods and normal?"}
+{"document_pdf": "train/documents/task_000771.pdf", "instance_id": "task_000771", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning typical and school."}
+{"document_pdf": "train/documents/task_000772.pdf", "instance_id": "task_000772", "user_query": "What is the requested result for the report's scenario about school and periods?"}
+{"document_pdf": "train/documents/task_000773.pdf", "instance_id": "task_000773", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning typical and employee."}
+{"document_pdf": "train/documents/task_000774.pdf", "instance_id": "task_000774", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning regular and employee."}
+{"document_pdf": "train/documents/task_000775.pdf", "instance_id": "task_000775", "user_query": "According to the brief's quantitative scenario concerning student and attends, what final value is required?"}
+{"document_pdf": "train/documents/task_000776.pdf", "instance_id": "task_000776", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and periods."}
+{"document_pdf": "train/documents/task_000777.pdf", "instance_id": "task_000777", "user_query": "According to the brief's quantitative scenario concerning school and periods, what final value is required?"}
+{"document_pdf": "train/documents/task_000778.pdf", "instance_id": "task_000778", "user_query": "According to the brief's quantitative scenario concerning regular and employee, what final value is required?"}
+{"document_pdf": "train/documents/task_000779.pdf", "instance_id": "task_000779", "user_query": "What is the requested result for the report's scenario about regular and school?"}
+{"document_pdf": "train/documents/task_000780.pdf", "instance_id": "task_000780", "user_query": "According to the brief's quantitative scenario concerning takes and math, what final value is required?"}
+{"document_pdf": "train/documents/task_000781.pdf", "instance_id": "task_000781", "user_query": "What is the requested result for the report's scenario about student and takes?"}
+{"document_pdf": "train/documents/task_000782.pdf", "instance_id": "task_000782", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning student and takes."}
+{"document_pdf": "train/documents/task_000783.pdf", "instance_id": "task_000783", "user_query": "What is the requested result for the report's scenario about typical and school?"}
+{"document_pdf": "train/documents/task_000784.pdf", "instance_id": "task_000784", "user_query": "What is the requested result for the report's scenario about typical and student?"}
+{"document_pdf": "train/documents/task_000785.pdf", "instance_id": "task_000785", "user_query": "According to the brief's quantitative scenario concerning regular and schedule, what final value is required?"}
+{"document_pdf": "train/documents/task_000786.pdf", "instance_id": "task_000786", "user_query": "What is the requested result for the report's scenario about student and takes?"}
+{"document_pdf": "train/documents/task_000787.pdf", "instance_id": "task_000787", "user_query": "According to the brief's quantitative scenario concerning typical and workday, what final value is required?"}
+{"document_pdf": "train/documents/task_000788.pdf", "instance_id": "task_000788", "user_query": "According to the brief's quantitative scenario concerning typical and student, what final value is required?"}
+{"document_pdf": "train/documents/task_000789.pdf", "instance_id": "task_000789", "user_query": "What is the requested result for the report's scenario about elena and completed?"}
+{"document_pdf": "train/documents/task_000790.pdf", "instance_id": "task_000790", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning elena and team."}
+{"document_pdf": "train/documents/task_000791.pdf", "instance_id": "task_000791", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning completed and piece."}
+{"document_pdf": "train/documents/task_000792.pdf", "instance_id": "task_000792", "user_query": "What is the requested result for the report's scenario about hour and rachel?"}
+{"document_pdf": "train/documents/task_000793.pdf", "instance_id": "task_000793", "user_query": "What is the requested result for the report's scenario about rohan and completed?"}
+{"document_pdf": "train/documents/task_000794.pdf", "instance_id": "task_000794", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rohan and completed."}
+{"document_pdf": "train/documents/task_000795.pdf", "instance_id": "task_000795", "user_query": "What is the requested result for the report's scenario about aria and completed?"}
+{"document_pdf": "train/documents/task_000796.pdf", "instance_id": "task_000796", "user_query": "What is the requested result for the report's scenario about gabrielle and completed?"}
+{"document_pdf": "train/documents/task_000797.pdf", "instance_id": "task_000797", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning many and pieces."}
+{"document_pdf": "train/documents/task_000798.pdf", "instance_id": "task_000798", "user_query": "According to the brief's quantitative scenario concerning gabrielle and friend, what final value is required?"}
+{"document_pdf": "train/documents/task_000799.pdf", "instance_id": "task_000799", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning katrina and completed."}
+{"document_pdf": "train/documents/task_000800.pdf", "instance_id": "task_000800", "user_query": "What is the requested result for the report's scenario about jordan and completed?"}
+{"document_pdf": "train/documents/task_000801.pdf", "instance_id": "task_000801", "user_query": "What is the requested result for the report's scenario about many and total?"}
+{"document_pdf": "train/documents/task_000802.pdf", "instance_id": "task_000802", "user_query": "According to the brief's quantitative scenario concerning yara and completed, what final value is required?"}
+{"document_pdf": "train/documents/task_000803.pdf", "instance_id": "task_000803", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning rahim and completed."}
+{"document_pdf": "train/documents/task_000804.pdf", "instance_id": "task_000804", "user_query": "According to the brief's quantitative scenario concerning thiago and completed, what final value is required?"}
+{"document_pdf": "train/documents/task_000805.pdf", "instance_id": "task_000805", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning thiago and tasked."}
+{"document_pdf": "train/documents/task_000806.pdf", "instance_id": "task_000806", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning many and pieces."}
+{"document_pdf": "train/documents/task_000807.pdf", "instance_id": "task_000807", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning thiago and friend."}
+{"document_pdf": "train/documents/task_000808.pdf", "instance_id": "task_000808", "user_query": "According to the brief's quantitative scenario concerning lucas and completed, what final value is required?"}
+{"document_pdf": "train/documents/task_000809.pdf", "instance_id": "task_000809", "user_query": "What is the requested result for the report's scenario about priya and completed?"}
+{"document_pdf": "train/documents/task_000810.pdf", "instance_id": "task_000810", "user_query": "What is the requested result for the report's scenario about many and pretzels?"}
+{"document_pdf": "train/documents/task_000811.pdf", "instance_id": "task_000811", "user_query": "What is the requested result for the report's scenario about jamal and went?"}
+{"document_pdf": "train/documents/task_000812.pdf", "instance_id": "task_000812", "user_query": "According to the brief's quantitative scenario concerning jamal and went, what final value is required?"}
+{"document_pdf": "train/documents/task_000813.pdf", "instance_id": "task_000813", "user_query": "According to the brief's quantitative scenario concerning store and sells, what final value is required?"}
+{"document_pdf": "train/documents/task_000814.pdf", "instance_id": "task_000814", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning arcade and sells."}
+{"document_pdf": "train/documents/task_000815.pdf", "instance_id": "task_000815", "user_query": "According to the brief's quantitative scenario concerning carnival and lemonade, what final value is required?"}
+{"document_pdf": "train/documents/task_000816.pdf", "instance_id": "task_000816", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning mateo and went."}
+{"document_pdf": "train/documents/task_000817.pdf", "instance_id": "task_000817", "user_query": "According to the brief's quantitative scenario concerning mateo and spent, what final value is required?"}
+{"document_pdf": "train/documents/task_000818.pdf", "instance_id": "task_000818", "user_query": "What is the requested result for the report's scenario about mateo and went?"}
+{"document_pdf": "train/documents/task_000819.pdf", "instance_id": "task_000819", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning mateo and went."}
+{"document_pdf": "train/documents/task_000820.pdf", "instance_id": "task_000820", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning coffee and shop."}
+{"document_pdf": "train/documents/task_000821.pdf", "instance_id": "task_000821", "user_query": "According to the brief's quantitative scenario concerning snack and machines, what final value is required?"}
+{"document_pdf": "train/documents/task_000822.pdf", "instance_id": "task_000822", "user_query": "What is the requested result for the report's scenario about arcade and sells?"}
+{"document_pdf": "train/documents/task_000823.pdf", "instance_id": "task_000823", "user_query": "According to the brief's quantitative scenario concerning cafeteria and sells, what final value is required?"}
+{"document_pdf": "train/documents/task_000824.pdf", "instance_id": "task_000824", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning arjun and went."}
+{"document_pdf": "train/documents/task_000825.pdf", "instance_id": "task_000825", "user_query": "According to the brief's quantitative scenario concerning arjun and went, what final value is required?"}
+{"document_pdf": "train/documents/task_000826.pdf", "instance_id": "task_000826", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning snack and dispensers."}
+{"document_pdf": "train/documents/task_000827.pdf", "instance_id": "task_000827", "user_query": "What is the requested result for the report's scenario about market and fruit?"}
+{"document_pdf": "train/documents/task_000828.pdf", "instance_id": "task_000828", "user_query": "According to the brief's quantitative scenario concerning cafeteria and sells, what final value is required?"}
+{"document_pdf": "train/documents/task_000829.pdf", "instance_id": "task_000829", "user_query": "According to the brief's quantitative scenario concerning snack and shop, what final value is required?"}
+{"document_pdf": "train/documents/task_000830.pdf", "instance_id": "task_000830", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning arcade and machines."}
+{"document_pdf": "train/documents/task_000831.pdf", "instance_id": "task_000831", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning bookstore and sells."}
+{"document_pdf": "train/documents/task_000832.pdf", "instance_id": "task_000832", "user_query": "According to the brief's quantitative scenario concerning mohammed and went, what final value is required?"}
+{"document_pdf": "train/documents/task_000833.pdf", "instance_id": "task_000833", "user_query": "What is the requested result for the report's scenario about snack and machines?"}
+{"document_pdf": "train/documents/task_000834.pdf", "instance_id": "task_000834", "user_query": "According to the brief's quantitative scenario concerning candy and store, what final value is required?"}
+{"document_pdf": "train/documents/task_000835.pdf", "instance_id": "task_000835", "user_query": "What is the requested result for the report's scenario about arcade and sells?"}
+{"document_pdf": "train/documents/task_000836.pdf", "instance_id": "task_000836", "user_query": "What is the requested result for the report's scenario about cafeteria and sells?"}
+{"document_pdf": "train/documents/task_000837.pdf", "instance_id": "task_000837", "user_query": "According to the brief's quantitative scenario concerning lopez and twins, what final value is required?"}
+{"document_pdf": "train/documents/task_000838.pdf", "instance_id": "task_000838", "user_query": "What is the requested result for the report's scenario about store and boxes?"}
+{"document_pdf": "train/documents/task_000839.pdf", "instance_id": "task_000839", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and bake."}
+{"document_pdf": "train/documents/task_000840.pdf", "instance_id": "task_000840", "user_query": "According to the brief's quantitative scenario concerning treasure and hunt, what final value is required?"}
+{"document_pdf": "train/documents/task_000841.pdf", "instance_id": "task_000841", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning group and volunteers."}
+{"document_pdf": "train/documents/task_000842.pdf", "instance_id": "task_000842", "user_query": "According to the brief's quantitative scenario concerning initially and balls, what final value is required?"}
+{"document_pdf": "train/documents/task_000843.pdf", "instance_id": "task_000843", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and club."}
+{"document_pdf": "train/documents/task_000844.pdf", "instance_id": "task_000844", "user_query": "According to the brief's quantitative scenario concerning school and play, what final value is required?"}
+{"document_pdf": "train/documents/task_000845.pdf", "instance_id": "task_000845", "user_query": "According to the brief's quantitative scenario concerning easter and hunt, what final value is required?"}
+{"document_pdf": "train/documents/task_000846.pdf", "instance_id": "task_000846", "user_query": "What is the requested result for the report's scenario about science and club?"}
+{"document_pdf": "train/documents/task_000847.pdf", "instance_id": "task_000847", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning school and treasure."}
+{"document_pdf": "train/documents/task_000848.pdf", "instance_id": "task_000848", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning treasure and hunt."}
+{"document_pdf": "train/documents/task_000849.pdf", "instance_id": "task_000849", "user_query": "According to the brief's quantitative scenario concerning group and volunteers, what final value is required?"}
+{"document_pdf": "train/documents/task_000850.pdf", "instance_id": "task_000850", "user_query": "What is the requested result for the report's scenario about school and store?"}
+{"document_pdf": "train/documents/task_000851.pdf", "instance_id": "task_000851", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning easter and hunt."}
+{"document_pdf": "train/documents/task_000852.pdf", "instance_id": "task_000852", "user_query": "According to the brief's quantitative scenario concerning during and easter, what final value is required?"}
+{"document_pdf": "train/documents/task_000853.pdf", "instance_id": "task_000853", "user_query": "What is the requested result for the report's scenario about spring and festival?"}
+{"document_pdf": "train/documents/task_000854.pdf", "instance_id": "task_000854", "user_query": "According to the brief's quantitative scenario concerning archaeology and club, what final value is required?"}
+{"document_pdf": "train/documents/task_000855.pdf", "instance_id": "task_000855", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning library and stored."}
+{"document_pdf": "train/documents/task_000856.pdf", "instance_id": "task_000856", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning park and rangers."}
+{"document_pdf": "train/documents/task_000857.pdf", "instance_id": "task_000857", "user_query": "According to the brief's quantitative scenario concerning number and engineers, what final value is required?"}
+{"document_pdf": "train/documents/task_000858.pdf", "instance_id": "task_000858", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning number and teachers."}
+{"document_pdf": "train/documents/task_000859.pdf", "instance_id": "task_000859", "user_query": "What is the requested result for the report's scenario about party and artists?"}
+{"document_pdf": "train/documents/task_000860.pdf", "instance_id": "task_000860", "user_query": "According to the brief's quantitative scenario concerning beginning and festival, what final value is required?"}
+{"document_pdf": "train/documents/task_000861.pdf", "instance_id": "task_000861", "user_query": "According to the brief's quantitative scenario concerning start and seminar, what final value is required?"}
+{"document_pdf": "train/documents/task_000862.pdf", "instance_id": "task_000862", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning start and conference."}
+{"document_pdf": "train/documents/task_000863.pdf", "instance_id": "task_000863", "user_query": "According to the brief's quantitative scenario concerning morning and scientists, what final value is required?"}
+{"document_pdf": "train/documents/task_000864.pdf", "instance_id": "task_000864", "user_query": "According to the brief's quantitative scenario concerning during and conference, what final value is required?"}
+{"document_pdf": "train/documents/task_000865.pdf", "instance_id": "task_000865", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning smith and family."}
+{"document_pdf": "train/documents/task_000866.pdf", "instance_id": "task_000866", "user_query": "According to the brief's quantitative scenario concerning rodriguez and family, what final value is required?"}
+{"document_pdf": "train/documents/task_000867.pdf", "instance_id": "task_000867", "user_query": "What is the requested result for the report's scenario about hernandez and family?"}
+{"document_pdf": "train/documents/task_000868.pdf", "instance_id": "task_000868", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning patel and family."}
+{"document_pdf": "train/documents/task_000869.pdf", "instance_id": "task_000869", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning many and blueberry."}
+{"document_pdf": "train/documents/task_000870.pdf", "instance_id": "task_000870", "user_query": "According to the brief's quantitative scenario concerning patel and family, what final value is required?"}
+{"document_pdf": "train/documents/task_000871.pdf", "instance_id": "task_000871", "user_query": "According to the brief's quantitative scenario concerning total and cost, what final value is required?"}
+{"document_pdf": "train/documents/task_000872.pdf", "instance_id": "task_000872", "user_query": "What is the requested result for the report's scenario about total and cost?"}
+{"document_pdf": "train/documents/task_000873.pdf", "instance_id": "task_000873", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning samantha and bought."}
+{"document_pdf": "train/documents/task_000874.pdf", "instance_id": "task_000874", "user_query": "According to the brief's quantitative scenario concerning total and cost, what final value is required?"}
+{"document_pdf": "train/documents/task_000875.pdf", "instance_id": "task_000875", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and cost."}
+{"document_pdf": "train/documents/task_000876.pdf", "instance_id": "task_000876", "user_query": "What is the requested result for the report's scenario about sarah and bought?"}
+{"document_pdf": "train/documents/task_000877.pdf", "instance_id": "task_000877", "user_query": "What is the requested result for the report's scenario about jersey and costs?"}
+{"document_pdf": "train/documents/task_000878.pdf", "instance_id": "task_000878", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and cost."}
+{"document_pdf": "train/documents/task_000879.pdf", "instance_id": "task_000879", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning shopper and bought."}
+{"document_pdf": "train/documents/task_000880.pdf", "instance_id": "task_000880", "user_query": "According to the brief's quantitative scenario concerning total and cost, what final value is required?"}
+{"document_pdf": "train/documents/task_000881.pdf", "instance_id": "task_000881", "user_query": "What is the requested result for the report's scenario about maria and bought?"}
+{"document_pdf": "train/documents/task_000882.pdf", "instance_id": "task_000882", "user_query": "According to the brief's quantitative scenario concerning maya and went, what final value is required?"}
+{"document_pdf": "train/documents/task_000883.pdf", "instance_id": "task_000883", "user_query": "What is the requested result for the report's scenario about difference and ride?"}
+{"document_pdf": "train/documents/task_000884.pdf", "instance_id": "task_000884", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning difference and ride."}
+{"document_pdf": "train/documents/task_000885.pdf", "instance_id": "task_000885", "user_query": "According to the brief's quantitative scenario concerning difference and ride, what final value is required?"}
+{"document_pdf": "train/documents/task_000886.pdf", "instance_id": "task_000886", "user_query": "What is the requested result for the report's scenario about difference and ride?"}
+{"document_pdf": "train/documents/task_000887.pdf", "instance_id": "task_000887", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning keisha and spends."}
+{"document_pdf": "train/documents/task_000888.pdf", "instance_id": "task_000888", "user_query": "According to the brief's quantitative scenario concerning jasmine and spent, what final value is required?"}
+{"document_pdf": "train/documents/task_000889.pdf", "instance_id": "task_000889", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and distance."}
+{"document_pdf": "train/documents/task_000890.pdf", "instance_id": "task_000890", "user_query": "What is the requested result for the report's scenario about santiago and initially?"}
+{"document_pdf": "train/documents/task_000891.pdf", "instance_id": "task_000891", "user_query": "According to the brief's quantitative scenario concerning training and triathlon, what final value is required?"}
+{"document_pdf": "train/documents/task_000892.pdf", "instance_id": "task_000892", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning many and minutes."}
+{"document_pdf": "train/documents/task_000893.pdf", "instance_id": "task_000893", "user_query": "What is the requested result for the report's scenario about many and minutes?"}
+{"document_pdf": "train/documents/task_000894.pdf", "instance_id": "task_000894", "user_query": "According to the brief's quantitative scenario concerning swim and kilometer, what final value is required?"}
+{"document_pdf": "train/documents/task_000895.pdf", "instance_id": "task_000895", "user_query": "According to the brief's quantitative scenario concerning company and receives, what final value is required?"}
+{"document_pdf": "train/documents/task_000896.pdf", "instance_id": "task_000896", "user_query": "What is the requested result for the report's scenario about many and friends?"}
+{"document_pdf": "train/documents/task_000897.pdf", "instance_id": "task_000897", "user_query": "What is the requested result for the report's scenario about cost and admission?"}
+{"document_pdf": "train/documents/task_000898.pdf", "instance_id": "task_000898", "user_query": "According to the brief's quantitative scenario concerning maximum and number, what final value is required?"}
+{"document_pdf": "train/documents/task_000899.pdf", "instance_id": "task_000899", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning cost and go-karts."}
+{"document_pdf": "train/documents/task_000900.pdf", "instance_id": "task_000900", "user_query": "What is the requested result for the report's scenario about costs and go-kart?"}
+{"document_pdf": "train/documents/task_000901.pdf", "instance_id": "task_000901", "user_query": "What is the requested result for the report's scenario about total and number?"}
+{"document_pdf": "train/documents/task_000902.pdf", "instance_id": "task_000902", "user_query": "According to the brief's quantitative scenario concerning total and number, what final value is required?"}
+{"document_pdf": "train/documents/task_000903.pdf", "instance_id": "task_000903", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning olivia and processes."}
+{"document_pdf": "train/documents/task_000904.pdf", "instance_id": "task_000904", "user_query": "What is the requested result for the report's scenario about total and number?"}
+{"document_pdf": "train/documents/task_000905.pdf", "instance_id": "task_000905", "user_query": "According to the brief's quantitative scenario concerning total and number, what final value is required?"}
+{"document_pdf": "train/documents/task_000906.pdf", "instance_id": "task_000906", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning total and number."}
+{"document_pdf": "train/documents/task_000907.pdf", "instance_id": "task_000907", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning jack and favorite."}
+{"document_pdf": "train/documents/task_000908.pdf", "instance_id": "task_000908", "user_query": "Use the relevant quantitative passage in this document to determine the outcome concerning special and diet."}
