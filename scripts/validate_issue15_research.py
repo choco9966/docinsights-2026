@@ -26,6 +26,7 @@ CHECK_NAMES = (
     "candidate_contract_complete",
     "metrics_unique_nonempty_strings",
     "truth_and_holdout_contract",
+    "template_family_contract",
     "primary_sources_present",
     "verifier_precedes_rl",
     "first_actions_total_60_minutes",
@@ -77,6 +78,7 @@ REQUIRED_REPORT_TERMS = {
     "benchmark_label",
     "silver_agreement_not_human_gold_accuracy",
     "family-disjoint",
+    "template_family_contract",
     "숨겨진 validation/test",
     "구조 합의와 선택적 검수",
     "소형 Qwen verifier",
@@ -187,14 +189,57 @@ def validate_claim_contract(data: dict[str, Any], validation: Validation) -> Non
         )
 
 
+def validate_template_family_contract(data: dict[str, Any], validation: Validation) -> None:
+    contract = data.get("template_family_contract")
+    if not isinstance(contract, dict):
+        validation.fail("template_family_contract", "template_family_contract must be an object")
+        return
+
+    expected_scalars = {
+        "producer": "issue_15_preprocessing",
+        "join_key": "instance_id",
+        "issue_14_role": "ambiguity axes/tags and separated semantic/benchmark fields only",
+        "unknown_rate_abort_threshold": 0.05,
+        "split_invariant": "one template_family_id belongs to exactly one split",
+    }
+    for field, expected in expected_scalars.items():
+        if contract.get(field) != expected:
+            validation.fail(
+                "template_family_contract",
+                f"template_family_contract.{field} must equal {expected!r}",
+            )
+
+    expected_lists = {
+        "source_priority": [
+            "canonical_gsm_sem_provenance",
+            "versioned_label_blind_structural_fingerprint",
+        ],
+        "forbidden_inputs": ["benchmark_label", "hidden_holdout", "submission_score"],
+        "required_manifest_fields": [
+            "instance_id",
+            "template_family_id",
+            "derivation",
+            "algorithm_version",
+            "source_sha256",
+        ],
+    }
+    for field, expected in expected_lists.items():
+        if contract.get(field) != expected:
+            validation.fail(
+                "template_family_contract",
+                f"template_family_contract.{field} must equal {expected!r}",
+            )
+
+
 def validate_priorities(data: dict[str, Any], validation: Validation) -> None:
-    if data.get("schema_version") != "issue-15-docsem-followup-priorities-v1":
+    if data.get("schema_version") != "issue-15-docsem-followup-priorities-v2":
         validation.fail("priorities_schema", "unexpected schema_version")
     if data.get("research_mode") != "design_only_no_empirical_claims":
         validation.fail("priorities_schema", "research_mode must prohibit empirical claims")
     if "verifier" not in str(data.get("primary_strategy", "")):
         validation.fail("priorities_schema", "primary_strategy must prioritize verification")
     validate_claim_contract(data, validation)
+    validate_template_family_contract(data, validation)
 
     truth = data.get("truth_contract")
     if not isinstance(truth, dict):
@@ -391,6 +436,15 @@ def validate_priorities(data: dict[str, Any], validation: Validation) -> None:
                     f"candidates[{index}].dependencies.{issue}",
                     validation,
                     "candidate_contract_complete",
+                )
+            issue_14_dependency = dependencies.get("issue_14", "")
+            if any(
+                forbidden in str(issue_14_dependency)
+                for forbidden in ("template family", "family ID 또는")
+            ):
+                validation.fail(
+                    "template_family_contract",
+                    f"candidates[{index}] must not assign family production to Issue #14",
                 )
         candidate_sources = candidate.get("sources")
         if not isinstance(candidate_sources, list) or not candidate_sources:

@@ -67,6 +67,27 @@ def test_design_only_claim_contract_rejects_observed_claims() -> None:
     assert not validation.checks["design_only_claim_contract"]
 
 
+def test_template_family_contract_is_required() -> None:
+    priorities = load_json(PRIORITIES_PATH)
+    del priorities["template_family_contract"]
+
+    validation = Validation()
+    validate_priorities(priorities, validation)
+
+    assert not validation.checks["template_family_contract"]
+
+
+def test_template_family_contract_rejects_wrong_producer_and_label_input() -> None:
+    priorities = load_json(PRIORITIES_PATH)
+    priorities["template_family_contract"]["producer"] = "issue_14"
+    priorities["template_family_contract"]["forbidden_inputs"].remove("benchmark_label")
+
+    validation = Validation()
+    validate_priorities(priorities, validation)
+
+    assert not validation.checks["template_family_contract"]
+
+
 def test_report_empirical_claim_mutation_is_rejected() -> None:
     report = REPORT_PATH.read_text(encoding="utf-8") + "\n99% improved on the benchmark.\n"
 

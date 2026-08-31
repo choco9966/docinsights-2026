@@ -1,5 +1,5 @@
 {
-  "schema_version": "issue-15-docsem-followup-priorities-v1",
+  "schema_version": "issue-15-docsem-followup-priorities-v2",
   "issue": 15,
   "research_mode": "design_only_no_empirical_claims",
   "claim_contract": {
@@ -21,6 +21,29 @@
     "benchmark_label": "공개 Train의 주최 측 exact-match 기준값이며 semantic truth와 별도 필드로 보존하고 semantic truth를 덮어쓰지 않는다.",
     "ocr_reference": "Issue #8 codex-assisted-silver는 silver_agreement_not_human_gold_accuracy이며 의미 정답이나 benchmark label이 아니다.",
     "hidden_holdout_policy": "숨겨진 validation/test label, 제출 점수, 순위는 prompt, 규칙, threshold, checkpoint, fusion weight, abstention cutoff 선택에 사용하지 않는다. 공개 Train family-disjoint calibration에서 설정을 동결한 뒤 hidden holdout에는 한 번만 적용한다."
+  },
+  "template_family_contract": {
+    "producer": "issue_15_preprocessing",
+    "join_key": "instance_id",
+    "source_priority": [
+      "canonical_gsm_sem_provenance",
+      "versioned_label_blind_structural_fingerprint"
+    ],
+    "issue_14_role": "ambiguity axes/tags and separated semantic/benchmark fields only",
+    "forbidden_inputs": [
+      "benchmark_label",
+      "hidden_holdout",
+      "submission_score"
+    ],
+    "required_manifest_fields": [
+      "instance_id",
+      "template_family_id",
+      "derivation",
+      "algorithm_version",
+      "source_sha256"
+    ],
+    "unknown_rate_abort_threshold": 0.05,
+    "split_invariant": "one template_family_id belongs to exactly one split"
   },
   "sources": [
     {
@@ -63,7 +86,7 @@
     {
       "rank": 1,
       "minutes": 10,
-      "action": "truth, label, family, stage 계약과 Issue #14 입력 gate 고정",
+      "action": "truth, label, stage와 별도 family manifest 계약 및 Issue #14 입력 gate 고정",
       "deliverable": "필수 필드와 누출 gate 체크리스트"
     },
     {
@@ -93,7 +116,7 @@
   ],
   "three_day_mvp": {
     "primary_track": "structure_consensus_plus_small_qwen_verifier_selective_review",
-    "day_1": "Issue #14 truth/tag를 fail-closed 수입하고 family graph·고정 split·120건 structure trace를 만든다.",
+    "day_1": "Issue #14 truth/tag를 fail-closed 수입하고 Issue #15 전처리가 family manifest·graph·고정 split·120건 structure trace를 만든다.",
     "day_2": "규칙 기반 합의와 frozen small-Qwen verifier를 direct answer·answer repetition과 동일 조건에서 비교한다.",
     "day_3": "family-disjoint risk–coverage, first-error F1, calibration, review cost를 산출하고 hidden 적용용 frozen manifest를 만든다.",
     "rl_role": "MVP 밖의 후속 진단이다. verifier component reward accuracy 95% 이상, family overlap 0, reward-hacking 2% 이하일 때만 승격한다.",
@@ -122,7 +145,7 @@
       "compute": "CPU 또는 API 추론 2회와 24–120건 수동 검수; accelerator 불필요.",
       "leakage_risk": "높음: family 혼합과 label을 구조 생성에 노출할 위험. family-disjoint split과 blind structure pass로 통제한다.",
       "dependencies": {
-        "issue_14": "필수: ambiguity tag, semantic truth, benchmark label, template family",
+        "issue_14": "필수: ambiguity tag와 분리된 semantic/benchmark 상태; family는 별도 manifest에서 조인",
         "issue_8": "필수: ordered block OCR 계약; silver를 human gold로 해석하지 않음",
         "issue_11": "선택: provenance 검증된 OCR challenger 입력 ablation"
       },
@@ -210,7 +233,7 @@
       "compute": "API 또는 로컬 추론과 24–100쌍 사람 검수; 대규모 학습 불필요.",
       "leakage_risk": "높음: 원천 답·sibling을 hidden inference에 노출할 수 있다. 변형은 공개 Train 안에서만 사용한다.",
       "dependencies": {
-        "issue_14": "필수: template family와 ambiguity tag",
+        "issue_14": "필수: ambiguity tag; family는 Issue #15 전처리 manifest에서 조인",
         "issue_8": "필수: block text와 evidence identity",
         "issue_11": "선택: OCR engine의 변형 민감도 비교"
       },
@@ -232,7 +255,7 @@
       "compute": "CPU 해시·클러스터링; accelerator 불필요.",
       "leakage_risk": "치명적: sibling/template overlap. split 전에 family graph를 잠그고 overlap 0을 검증한다.",
       "dependencies": {
-        "issue_14": "필수: family ID 또는 이를 재현할 provenance",
+        "issue_14": "필수: ambiguity axes/tags와 분리된 truth 상태; family 생산 책임은 없음",
         "issue_8": "필수: 동일 instance mapping 보존",
         "issue_11": "필수: OCR artifact도 같은 split/provenance를 따라야 함"
       },

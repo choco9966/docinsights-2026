@@ -4,7 +4,7 @@
 
 첫 구현은 `구조 합의 + 선택적 검수`로 고정한다. 답 문자열의 반복 일치만 보지 않고 `근거 block → 사실 → 변수/방정식 → 계산 → 답`을 독립 생성·대조한 뒤, 불일치하거나 모호한 사례만 보류 또는 사람 검수로 보낸다. 다음 순위는 이 구조 신호를 입력으로 받는 소형 Qwen verifier다. RL은 verifier와 보상 감사가 먼저 통과해야 하는 후속 진단이며 3일 MVP의 주 경로가 아니다.
 
-이번 스프린트는 공개 1차 문헌과 저장소 계약을 검토해 실험 가설·지표·중단 조건을 설계한 문헌 연구다. 모델 학습이나 정확도 측정은 실행하지 않았으므로 아래 수치는 목표·gate이지 실측 결과가 아니다. Issue #14 산출물은 아직 이 브랜치에 없으므로 그 데이터를 요구하는 분석은 선행 계약만 정의한다.
+이번 스프린트는 공개 1차 문헌과 저장소 계약을 검토해 실험 가설·지표·중단 조건을 설계한 문헌 연구다. 모델 학습이나 정확도 측정은 실행하지 않았으므로 아래 수치는 목표·gate이지 실측 결과가 아니다. Issue #14의 에이전트 텍스트 감사 산출물은 병합됐지만 PDF·2인 최종 판정은 Issue #18에서 계속하므로, 사람 판정이 필요한 분석은 두 상태를 구분해 소비한다.
 
 ## 해석과 누출 계약
 
@@ -12,6 +12,7 @@
 - `benchmark_label`: 공개 Train의 주최 측 exact-match 기준값이다. 평가 대상이지만 자동으로 semantic truth가 되지 않는다. 두 값과 불일치 사유를 별도 필드로 보존하고 하나로 덮어쓰지 않는다.
 - `codex-assisted-silver`: Issue #8의 OCR engineering reference다. `silver_agreement_not_human_gold_accuracy`이며 의미 정답이나 benchmark label이 아니다.
 - 공개 Train도 `template_family_id` 단위로 train/calibration/test를 분리한다. 동일 family의 sibling, 원천 GSM-SEM 식별자, 숫자 치환본이 서로 다른 split에 들어가면 해당 결과를 무효화한다.
+- `template_family_id`는 Issue #14 산출 필드가 아니다. `template_family_contract`에 따라 Issue #15 전처리가 canonical GSM-SEM provenance를 우선 사용하고, 매핑이 없으면 versioned label-blind structural fingerprint로 생성한다. 생성에는 benchmark label, hidden holdout, 제출 점수를 사용하지 않는다. 결과 manifest는 `instance_id`, `template_family_id`, `derivation`, `algorithm_version`, `source_sha256`를 보존하며 unknown-family rate가 5%를 넘으면 평가를 중단한다.
 - 숨겨진 validation/test의 라벨, 제출 점수, 순위는 prompt, 규칙, threshold, checkpoint, fusion weight, abstention cutoff 선택에 사용하지 않는다. 모든 선택을 공개 Train의 family-disjoint calibration에서 동결한 뒤 hidden holdout에는 한 번만 적용한다. 포털 피드백을 보고 재조정한 결과는 공식 비교에서 제외한다.
 
 ## 1차 출처에서 얻은 설계 근거
@@ -28,7 +29,7 @@
 
 | 순위 | 시간 | 실행 | 완료 증거 |
 | ---: | ---: | --- | --- |
-| 1 | 0–10분 | `semantic_truth`, `benchmark_label`, `template_family_id`, stage status 계약을 고정하고 Issue #14 입력 존재 여부를 fail-closed 검사 | 필수 필드·분리·누출 gate 체크리스트 |
+| 1 | 0–10분 | `semantic_truth`, `benchmark_label`, stage status와 별도 family manifest 계약을 고정하고 Issue #14 입력 존재 여부를 fail-closed 검사 | 필수 필드·분리·누출 gate 체크리스트 |
 | 2 | 10–25분 | 공개 Train의 family-disjoint 고정 표본 24건에서 2개 독립 구조 추출을 실행 | evidence/fact/equation JSON 48건, family overlap 0 |
 | 3 | 25–40분 | 구조 합의 규칙과 `answer / abstain / review` 정책을 적용 | 불일치 유형, coverage, selective risk 초안 |
 | 4 | 40–50분 | Issue #14 S3/S4·semantic-label conflict와 review queue의 교집합을 감사 | tag별 review recall 표 |
@@ -60,7 +61,7 @@ Issue #14의 908/908 태그가 없으면 1순위 입력 gate에서 중단하고 
 
 ### 6. Family-disjoint 누출 감사
 
-가설은 random split이 template sibling 암기를 허용해 verifier와 solver 성능을 과대평가하며 family-disjoint split에서 유의한 하락이 나타난다는 것이다. novelty는 `original_id`·symbolic provenance와 lexical/structure fingerprint를 결합한 fail-closed family graph다. 1시간에는 908건의 family key coverage와 split overlap을 검사한다. 1일에는 random/family-disjoint 쌍을 고정하고, 3일에는 모든 후보의 gap과 cluster bootstrap interval을 보고한다. family overlap count, unknown-family rate, random-minus-disjoint gap, duplicate/near-duplicate rate, confidence interval을 측정한다. overlap이 0이 아니거나 unknown family가 5%를 넘으면 성능 평가를 중단한다. CPU 해시/클러스터링으로 충분하다. ID를 모델 feature로 사용하거나 sibling이 calibration과 test에 동시에 존재하는 것이 직접 누출이다. #14 family ID가 필수이고 #8/#11 산출물은 동일 instance mapping과 provenance를 유지해야 한다.
+가설은 random split이 template sibling 암기를 허용해 verifier와 solver 성능을 과대평가하며 family-disjoint split에서 유의한 하락이 나타난다는 것이다. novelty는 `original_id`·symbolic provenance와 lexical/structure fingerprint를 결합한 fail-closed family graph다. 1시간에는 908건의 family key coverage와 split overlap을 검사한다. 1일에는 random/family-disjoint 쌍을 고정하고, 3일에는 모든 후보의 gap과 cluster bootstrap interval을 보고한다. family overlap count, unknown-family rate, random-minus-disjoint gap, duplicate/near-duplicate rate, confidence interval을 측정한다. overlap이 0이 아니거나 unknown family가 5%를 넘으면 성능 평가를 중단한다. CPU 해시/클러스터링으로 충분하다. ID를 모델 feature로 사용하거나 sibling이 calibration과 test에 동시에 존재하는 것이 직접 누출이다. Issue #14는 ambiguity tag와 truth 분리 상태만 제공하고 family ID는 별도 manifest에서 생성하며, #8/#11 산출물은 동일 instance mapping과 provenance를 유지해야 한다.
 
 ### 7. 이미지–텍스트 hybrid
 
@@ -72,7 +73,7 @@ Issue #14의 908/908 태그가 없으면 1순위 입력 gate에서 중단하고 
 
 ## 3일 MVP
 
-1일차에는 Issue #14 태그와 truth 분리 필드를 fail-closed로 수입하고 family graph를 만든다. 공개 Train에서 family-disjoint development/calibration/test를 고정한 뒤 120건에 두 개의 독립 structure trace와 최초 오류 라벨을 작성한다.
+1일차에는 Issue #14 태그와 truth 분리 필드를 fail-closed로 수입하고 Issue #15 전처리가 별도 family manifest와 family graph를 만든다. 공개 Train에서 family-disjoint development/calibration/test를 고정한 뒤 120건에 두 개의 독립 structure trace와 최초 오류 라벨을 작성한다.
 
 2일차에는 규칙 기반 structure consensus와 frozen small-Qwen verifier를 같은 trace에 적용한다. direct answer, answer repetition, structure consensus, Qwen verifier 네 방법을 동일 split·decoder·OCR 입력으로 비교하고 threshold는 calibration에서만 선택한다.
 
