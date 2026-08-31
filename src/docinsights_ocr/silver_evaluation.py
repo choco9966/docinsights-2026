@@ -110,15 +110,23 @@ def write_silver_evaluation(
     output_path: str | Path,
     *,
     markdown_path: str | Path | None = None,
-    protected_source_paths: Iterable[str | Path] = (),
+    protected_source_paths: Iterable[str | Path] | None = None,
 ) -> dict[str, Any]:
     """Atomically write JSON and optionally a compact Markdown scorecard."""
     output = Path(output_path).resolve()
     markdown = Path(markdown_path).resolve() if markdown_path is not None else None
     if markdown is not None and markdown == output:
         raise ValueError("JSON and Markdown output paths must differ")
-    source_paths = _evaluation_source_paths(result)
-    source_paths.update(Path(path).resolve() for path in protected_source_paths)
+    source_values = _evaluation_source_values(result)
+    if protected_source_paths is None and any(
+        not Path(path).is_absolute() for path in source_values
+    ):
+        raise ValueError(
+            "protected_source_paths is required when evaluation sources use logical labels"
+        )
+    source_paths = {Path(path).resolve() for path in source_values}
+    if protected_source_paths is not None:
+        source_paths.update(Path(path).resolve() for path in protected_source_paths)
     for destination in (output, markdown):
         if destination is not None and destination in source_paths:
             raise ValueError(f"evaluation output must not overwrite a source: {destination}")
@@ -404,17 +412,17 @@ def _atomic_write(path: Path, payload: bytes) -> None:
     temporary.replace(path)
 
 
-def _evaluation_source_paths(result: Mapping[str, Any]) -> set[Path]:
+def _evaluation_source_values(result: Mapping[str, Any]) -> set[str]:
     sources = result.get("sources")
     if not isinstance(sources, Mapping):
         return set()
-    paths: set[Path] = set()
+    paths: set[str] = set()
     for source in sources.values():
         if not isinstance(source, Mapping):
             continue
         path = source.get("path")
         if isinstance(path, str) and path:
-            paths.add(Path(path).resolve())
+            paths.add(path)
     return paths
 
 

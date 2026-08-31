@@ -335,6 +335,44 @@ def test_silver_baseline_artifacts_fail_closed_on_hash_and_source_mismatch(
         _evaluate(paths)
 
 
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        (
+            lambda evaluation: evaluation["instances"][0].update(reference_status="failed"),
+            "reference status coverage",
+        ),
+        (
+            lambda evaluation: evaluation["summary"].update(reference_ok=0),
+            "reference status coverage",
+        ),
+        (
+            lambda evaluation: evaluation["instances"][0].update(prediction_status="failed"),
+            "prediction status summary",
+        ),
+        (
+            lambda evaluation: evaluation["summary"].update(prediction_ok=0, prediction_failed=1),
+            "prediction status summary",
+        ),
+    ],
+)
+def test_silver_baseline_status_summaries_fail_closed_after_rehash(
+    tmp_path: Path, mutation, message: str
+) -> None:
+    paths = _fixture(tmp_path)
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    evaluation_artifact = baselines["silver_baselines"]["apple_vision"]["evaluation_artifact"]
+    evaluation_path = paths["baselines_path"].parent / evaluation_artifact["path"]
+    evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
+    mutation(evaluation)
+    _json(evaluation_path, evaluation)
+    evaluation_artifact["sha256"] = hashlib.sha256(evaluation_path.read_bytes()).hexdigest()
+    _json(paths["baselines_path"], baselines)
+
+    with pytest.raises(ValueError, match=message):
+        _evaluate(paths)
+
+
 def test_query_passthrough_uses_independent_join_and_validates_keys(tmp_path: Path) -> None:
     tasks = _write(tmp_path / "tasks.jsonl", '{"instance_id":"x","user_query":"A  B\\t?"}\n')
     binding = {"kind": "raw_results_sha256", "sha256": "a" * 64}

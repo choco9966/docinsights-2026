@@ -160,7 +160,12 @@ def test_write_and_cli_emit_hashed_json_and_markdown(tmp_path: Path) -> None:
     assert saved["sources"]["reference"]["path"] == "logical/reference.jsonl"
     assert saved["sources"]["prediction"]["path"] == "logical/prediction.jsonl"
     assert "silver agreement" in markdown.read_text(encoding="utf-8")
-    manifest = write_silver_evaluation(saved, output, markdown_path=markdown)
+    manifest = write_silver_evaluation(
+        saved,
+        output,
+        markdown_path=markdown,
+        protected_source_paths=(reference, prediction),
+    )
     assert manifest["json"]["sha256"] == _sha256(output)
     assert manifest["markdown"]["sha256"] == _sha256(markdown)
 
@@ -203,6 +208,10 @@ def test_canonical_labels_remain_portable_without_weakening_source_protection(
         prediction_label="issue8/test-prediction.jsonl",
     )
     assert result == second_result
+    original = reference.read_bytes()
+    with pytest.raises(ValueError, match="protected_source_paths is required"):
+        write_silver_evaluation(result, reference)
+    assert reference.read_bytes() == original
     with pytest.raises(ValueError, match="must not overwrite a source"):
         write_silver_evaluation(
             result,
