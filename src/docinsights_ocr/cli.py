@@ -111,6 +111,8 @@ def build_parser() -> argparse.ArgumentParser:
     silver_parser.add_argument("output")
     silver_parser.add_argument("--markdown")
     silver_parser.add_argument("--engine-label")
+    silver_parser.add_argument("--reference-label")
+    silver_parser.add_argument("--prediction-label")
 
     shard_parser = subparsers.add_parser("cloud-shard")
     shard_parser.add_argument("input")
@@ -223,11 +225,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.reference,
             args.prediction,
             engine_label=args.engine_label,
+            reference_label=args.reference_label,
+            prediction_label=args.prediction_label,
         )
         outputs = write_silver_evaluation(
             evaluation,
             args.output,
             markdown_path=args.markdown,
+            protected_source_paths=(args.reference, args.prediction),
         )
         print(
             json.dumps(

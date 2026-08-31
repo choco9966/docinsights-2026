@@ -424,6 +424,8 @@ def evaluate(
                 else NA_NOT_MEASURED,
                 "sec_per_doc": latency if latency is not None else NA_NOT_MEASURED,
                 "docs_per_min": _nullable_rate(60, latency) if latency else NA_NOT_MEASURED,
+                "p95_sec_per_doc": NA_NOT_MEASURED,
+                "strict_exact_rate": NA_NOT_MEASURED,
                 "peak_ram_bytes": result["peak_process_rss_bytes_parent_sampled"],
                 "peak_ram_bytes_child": result.get("peak_process_rss_bytes_child", NA_NOT_MEASURED),
                 "peak_vram_bytes": result["peak_vram_bytes_parent_sampled"],
@@ -469,6 +471,7 @@ def evaluate(
             baselines,
             baselines_path=baselines_path,
             expected_reference_sha256=observed_reference_sha256,
+            expected_reference_ids=set(references),
         ),
     }
 
@@ -478,6 +481,7 @@ def _baseline_rows(
     *,
     baselines_path: Path,
     expected_reference_sha256: str,
+    expected_reference_ids: set[str],
 ) -> list[dict[str, Any]]:
     if baselines.get("schema_version") != "2.0":
         raise ValueError("unsupported baselines schema")
@@ -492,6 +496,8 @@ def _baseline_rows(
     expected_samples = reference_config.get("records")
     if type(expected_samples) is not int or expected_samples <= 0:
         raise ValueError("baseline reference record count must be a positive integer")
+    if len(expected_reference_ids) != expected_samples:
+        raise ValueError("baseline reference record count differs from validated reference IDs")
     configured = baselines.get("silver_baselines")
     if not isinstance(configured, dict) or not configured:
         raise ValueError("silver_baselines must be a non-empty object")
@@ -545,6 +551,22 @@ def _baseline_rows(
         samples = summary.get("instances")
         if type(samples) is not int or samples != expected_samples:
             raise ValueError(f"invalid silver evaluation sample count: {key}")
+        instance_rows = evaluation.get("instances")
+        if not isinstance(instance_rows, list) or not all(
+            isinstance(row, dict) for row in instance_rows
+        ):
+            raise ValueError(f"missing silver evaluation instances: {key}")
+        instance_index = _unique_index(instance_rows, "instance_id", f"{key} evaluation")
+        observed_ids = set(instance_index)
+        if observed_ids != expected_reference_ids:
+            missing = sorted(expected_reference_ids - observed_ids)
+            extra = sorted(observed_ids - expected_reference_ids)
+            raise ValueError(
+                f"silver evaluation instance coverage mismatch for {key}: "
+                f"missing={missing}, extra={extra}"
+            )
+        if len(instance_rows) != samples:
+            raise ValueError(f"silver evaluation instance count mismatch: {key}")
         if (
             reference_source.get("records") != samples
             or prediction_source.get("records") != samples
@@ -568,6 +590,17 @@ def _baseline_rows(
             or prediction_ok + prediction_failed != samples
         ):
             raise ValueError(f"silver prediction status coverage mismatch: {key}")
+        reference_ok = summary.get("reference_ok")
+        instance_reference_ok = sum(row.get("reference_status") == "ok" for row in instance_rows)
+        instance_prediction_ok = sum(row.get("prediction_status") == "ok" for row in instance_rows)
+        if (
+            type(reference_ok) is not int
+            or reference_ok != samples
+            or instance_reference_ok != reference_ok
+        ):
+            raise ValueError(f"silver reference status coverage mismatch: {key}")
+        if instance_prediction_ok != prediction_ok:
+            raise ValueError(f"silver prediction status summary mismatch: {key}")
         primary_score = evaluation.get("primary_score")
         if (
             not isinstance(primary_score, dict)
@@ -682,6 +715,8 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         "load_sec",
         "sec_per_doc",
         "docs_per_min",
+        "p95_sec_per_doc",
+        "strict_exact_rate",
         "peak_ram_bytes",
         "peak_ram_bytes_child",
         "peak_vram_bytes",

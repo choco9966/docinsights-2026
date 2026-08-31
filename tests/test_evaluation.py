@@ -110,12 +110,13 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
                 "interpretation": "silver_agreement_not_human_gold_accuracy",
                 "primary_score": {"name": "silver_text_score", "value": score},
                 "sources": {
-                    "reference": {"sha256": reference_sha256, "records": 2},
-                    "prediction": {"sha256": prediction_sha256, "records": 2},
+                    "reference": {"sha256": reference_sha256, "records": 1},
+                    "prediction": {"sha256": prediction_sha256, "records": 1},
                 },
                 "summary": {
-                    "instances": 2,
-                    "prediction_ok": 2,
+                    "instances": 1,
+                    "reference_ok": 1,
+                    "prediction_ok": 1,
                     "prediction_failed": 0,
                     "silver_text_score": score,
                     "micro_character_error_rate": cer,
@@ -124,12 +125,19 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
                     "ordered_block_exact_rate": 1.0,
                     "strict_exact_rate": 0.5,
                     "latency": {
-                        "measured_instances": 2,
+                        "measured_instances": 1,
                         "mean_seconds_per_document": seconds,
                         "documents_per_minute": 60 / seconds,
                         "p95_seconds_per_document": seconds + 1,
                     },
                 },
+                "instances": [
+                    {
+                        "instance_id": "task_000909",
+                        "reference_status": "ok",
+                        "prediction_status": "ok",
+                    }
+                ],
             },
         )
         silver_artifacts[key] = (evaluation, prediction_sha256)
@@ -139,7 +147,7 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
             "schema_version": "2.0",
             "reference": {
                 "kind": "codex-assisted-silver",
-                "records": 2,
+                "records": 1,
                 "sha256": reference_sha256,
             },
             "silver_baselines": {
@@ -284,10 +292,10 @@ def test_dynamic_reference_refresh_join_baselines_and_determinism(tmp_path: Path
     assert report["rows"][0]["cost"] == "test quota"
     assert {row["model"] for row in report["baselines"]} == {"Apple Vision", "Tesseract PSM 6"}
     apple = next(row for row in report["baselines"] if row["model"] == "Apple Vision")
-    assert apple["samples"] == 2
+    assert apple["samples"] == 1
     assert apple["silver_text_score"] == 90.0
     assert apple["silver_agreement_cer"] == 0.1
-    assert apple["cohort"].endswith("(n=2)")
+    assert apple["cohort"].endswith("(n=1)")
     first = write_outputs(report, tmp_path / "out")
     hashes_before = hash_paths(first)
     second = write_outputs(report, tmp_path / "out")
@@ -312,6 +320,18 @@ def test_silver_baseline_artifacts_fail_closed_on_hash_and_source_mismatch(
     baselines["silver_baselines"]["apple_vision"]["prediction_artifact_sha256"] = "0" * 64
     _json(paths["baselines_path"], baselines)
     with pytest.raises(ValueError, match="prediction mismatch"):
+        _evaluate(paths)
+
+    paths = _fixture(tmp_path / "coverage")
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    evaluation_artifact = baselines["silver_baselines"]["apple_vision"]["evaluation_artifact"]
+    evaluation_path = paths["baselines_path"].parent / evaluation_artifact["path"]
+    evaluation = json.loads(evaluation_path.read_text(encoding="utf-8"))
+    evaluation["instances"] = []
+    _json(evaluation_path, evaluation)
+    evaluation_artifact["sha256"] = hashlib.sha256(evaluation_path.read_bytes()).hexdigest()
+    _json(paths["baselines_path"], baselines)
+    with pytest.raises(ValueError, match="instance coverage|instance count"):
         _evaluate(paths)
 
 

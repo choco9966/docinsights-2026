@@ -33,6 +33,8 @@ def evaluate_codex_silver(
     prediction_path: str | Path,
     *,
     engine_label: str | None = None,
+    reference_label: str | None = None,
+    prediction_label: str | None = None,
 ) -> dict[str, Any]:
     """Evaluate one complete OCR run against the verified Codex silver reference."""
     reference_source = Path(reference_path).resolve()
@@ -48,6 +50,12 @@ def evaluate_codex_silver(
 
     reference_hash = _sha256_file(reference_source)
     prediction_hash = _sha256_file(prediction_source)
+    for label_name, label in (
+        ("reference_label", reference_label),
+        ("prediction_label", prediction_label),
+    ):
+        if label is not None and (not isinstance(label, str) or not label.strip()):
+            raise ValueError(f"{label_name} must be a non-empty string")
     rows = [
         _score_instance(instance_id, references[instance_id], predictions[instance_id])
         for instance_id in sorted(references)
@@ -80,12 +88,12 @@ def evaluate_codex_silver(
         },
         "sources": {
             "reference": {
-                "path": str(reference_source),
+                "path": reference_label or str(reference_source),
                 "sha256": reference_hash,
                 "records": len(references),
             },
             "prediction": {
-                "path": str(prediction_source),
+                "path": prediction_label or str(prediction_source),
                 "sha256": prediction_hash,
                 "records": len(predictions),
                 "engine_label": label,
@@ -102,6 +110,7 @@ def write_silver_evaluation(
     output_path: str | Path,
     *,
     markdown_path: str | Path | None = None,
+    protected_source_paths: Iterable[str | Path] = (),
 ) -> dict[str, Any]:
     """Atomically write JSON and optionally a compact Markdown scorecard."""
     output = Path(output_path).resolve()
@@ -109,17 +118,14 @@ def write_silver_evaluation(
     if markdown is not None and markdown == output:
         raise ValueError("JSON and Markdown output paths must differ")
     source_paths = _evaluation_source_paths(result)
+    source_paths.update(Path(path).resolve() for path in protected_source_paths)
     for destination in (output, markdown):
         if destination is not None and destination in source_paths:
-            raise ValueError(
-                f"evaluation output must not overwrite a source: {destination}"
-            )
+            raise ValueError(f"evaluation output must not overwrite a source: {destination}")
     serialized = json.dumps(dict(result), ensure_ascii=False, indent=2, sort_keys=True)
     payload = (serialized + "\n").encode()
     _atomic_write(output, payload)
-    manifest = {
-        "json": {"path": str(output), "sha256": hashlib.sha256(payload).hexdigest()}
-    }
+    manifest = {"json": {"path": str(output), "sha256": hashlib.sha256(payload).hexdigest()}}
     if markdown is not None:
         markdown_payload = _markdown_scorecard(result).encode()
         _atomic_write(markdown, markdown_payload)
@@ -175,12 +181,8 @@ def _score_instance(
             "prediction_characters": len(strict_prediction),
             "edit_distance": character_distance,
             "character_error_rate": character_error_rate,
-            "reference_normalized_character_accuracy": max(
-                0.0, 1.0 - character_error_rate
-            ),
-            "symmetric_edit_similarity": edit_similarity(
-                strict_reference, strict_prediction
-            ),
+            "reference_normalized_character_accuracy": max(0.0, 1.0 - character_error_rate),
+            "symmetric_edit_similarity": edit_similarity(strict_reference, strict_prediction),
         },
         "compatible_text": {
             "exact": compatible_reference == compatible_prediction,
@@ -198,15 +200,11 @@ def _score_instance(
             "edit_distance": word_distance,
             "word_error_rate": word_error_rate,
             "reference_normalized_word_accuracy": max(0.0, 1.0 - word_error_rate),
-            "symmetric_edit_similarity": edit_similarity(
-                reference_words, predicted_words
-            ),
+            "symmetric_edit_similarity": edit_similarity(reference_words, predicted_words),
         },
         "blocks": asdict(blocks),
         "exact_tokens": asdict(exact_token_prf(reference_text, predicted_text)),
-        "ordered_quantities": asdict(
-            ordered_quantity_prf(reference_text, predicted_text)
-        ),
+        "ordered_quantities": asdict(ordered_quantity_prf(reference_text, predicted_text)),
         "total_seconds": float(total_seconds) if total_seconds is not None else None,
     }
 
@@ -245,29 +243,21 @@ def _summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "strict_exact_count": sum(item["exact"] for item in strict),
         "strict_exact_rate": _ratio(sum(item["exact"] for item in strict), count),
         "compatible_exact_count": sum(item["exact"] for item in compatible),
-        "compatible_exact_rate": _ratio(
-            sum(item["exact"] for item in compatible), count
-        ),
-        "macro_character_error_rate": _mean(
-            item["character_error_rate"] for item in strict
-        ),
+        "compatible_exact_rate": _ratio(sum(item["exact"] for item in compatible), count),
+        "macro_character_error_rate": _mean(item["character_error_rate"] for item in strict),
         "micro_character_error_rate": micro_cer,
         "macro_character_accuracy": _mean(
             item["reference_normalized_character_accuracy"] for item in strict
         ),
         "micro_character_accuracy": max(0.0, 1.0 - micro_cer),
-        "macro_character_similarity": _mean(
-            item["symmetric_edit_similarity"] for item in strict
-        ),
+        "macro_character_similarity": _mean(item["symmetric_edit_similarity"] for item in strict),
         "micro_character_similarity": _symmetric_similarity(
             character_distance, reference_characters, prediction_characters
         ),
         "macro_word_error_rate": _mean(item["word_error_rate"] for item in words),
         "micro_word_error_rate": micro_wer,
         "micro_word_accuracy": max(0.0, 1.0 - micro_wer),
-        "macro_word_similarity": _mean(
-            item["symmetric_edit_similarity"] for item in words
-        ),
+        "macro_word_similarity": _mean(item["symmetric_edit_similarity"] for item in words),
         "micro_word_similarity": _symmetric_similarity(
             word_distance, reference_words, prediction_words
         ),
@@ -279,20 +269,14 @@ def _summary(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         ),
         "mean_block_f1": _mean(item["f1"] for item in blocks),
         "ordered_block_exact_count": sum(item["ordered_exact"] for item in blocks),
-        "ordered_block_exact_rate": _ratio(
-            sum(item["ordered_exact"] for item in blocks), count
-        ),
+        "ordered_block_exact_rate": _ratio(sum(item["ordered_exact"] for item in blocks), count),
         "exact_token_f1": exact_tokens["f1"],
         "ordered_quantity_f1": quantities["f1"],
         "silver_text_score": 100.0 * max(0.0, 1.0 - micro_cer),
         "latency": {
             "measured_instances": len(latencies),
-            "mean_seconds_per_document": statistics.fmean(latencies)
-            if latencies
-            else None,
-            "median_seconds_per_document": statistics.median(latencies)
-            if latencies
-            else None,
+            "mean_seconds_per_document": statistics.fmean(latencies) if latencies else None,
+            "median_seconds_per_document": statistics.median(latencies) if latencies else None,
             "p95_seconds_per_document": _nearest_rank(latencies, 0.95),
             "documents_per_minute": 60.0 / statistics.fmean(latencies)
             if latencies and statistics.fmean(latencies) > 0
@@ -395,10 +379,8 @@ def _markdown_scorecard(result: Mapping[str, Any]) -> str:
             f"- Silver text score: {summary['silver_text_score']:.4f} / 100",
             f"- Micro CER / WER: {summary['micro_character_error_rate']:.6f} / "
             f"{summary['micro_word_error_rate']:.6f}",
-            f"- Symmetric character similarity: "
-            f"{summary['micro_character_similarity']:.6f}",
-            f"- NFKC+whitespace similarity: "
-            f"{summary['micro_compatible_character_similarity']:.6f}",
+            f"- Symmetric character similarity: {summary['micro_character_similarity']:.6f}",
+            f"- NFKC+whitespace similarity: {summary['micro_compatible_character_similarity']:.6f}",
             f"- Ordered block exact: {summary['ordered_block_exact_count']} / "
             f"{summary['instances']}",
             f"- Exact-token F1 / ordered-quantity F1: "
@@ -407,8 +389,7 @@ def _markdown_scorecard(result: Mapping[str, Any]) -> str:
             "",
             "## Sources",
             "",
-            f"- Reference: `{sources['reference']['path']}` "
-            f"(`{sources['reference']['sha256']}`)",
+            f"- Reference: `{sources['reference']['path']}` (`{sources['reference']['sha256']}`)",
             f"- Prediction: `{sources['prediction']['path']}` "
             f"(`{sources['prediction']['sha256']}`)",
             "",
