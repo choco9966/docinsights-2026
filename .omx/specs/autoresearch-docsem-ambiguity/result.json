@@ -1,0 +1,18 @@
+{
+  "blind_artifact_path": "/Users/choco/Documents/project/docinsights-2026-issue-14/artifacts/ambiguity/train-ambiguity-blind.jsonl",
+  "blind_sha256": "c21856b6a8aa160dd05d6d70c3ae0b760192bdcb44a26de31616093b2f1af5a1",
+  "errors": [],
+  "output_artifact_path": "/Users/choco/Documents/project/docinsights-2026-issue-14/artifacts/ambiguity/train-ambiguity-tags.jsonl",
+  "output_sha256": "e8ac328a7ccaf2b02664387512740f8c0da6b5257f6edd65bc0f1df5e6d28594",
+  "passed": true,
+  "record_count": 908,
+  "schema_path": "/Users/choco/Documents/project/docinsights-2026-issue-14/schemas/docsem-train-ambiguity-v1.schema.json",
+  "schema_sha256": "11b721b33478f8dd25036a757a600411c6adf7032ee8b990fa78c2d0379f243d",
+  "schema_version": "1.0",
+  "state_path": "/Users/choco/Documents/project/docinsights-2026-issue-14/.omx/state/autoresearch-docsem-ambiguity/autoresearch-state.json",
+  "state_sha256": "b58c92ed3b750505f1a3c60ad365b5ea039badda01d195290e9fe75f9d53f7c5",
+  "status": "passed",
+  "summary": "908/908 automated screens and agent text audits validated; 273 overrides, 635 clean candidates; human adjudication pending",
+  "summary_sha256": "70c672dc53c8aba8d4286ae58aea56eef5da26f27ec2e6c0265398244eb5adfd",
+  "unique_instance_count": 908
+}

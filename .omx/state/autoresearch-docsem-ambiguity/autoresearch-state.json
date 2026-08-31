@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "workflow": "autoresearch",
+  "slug": "docsem-ambiguity",
+  "validation_mode": "mission-validator-script",
+  "mission_path": ".omx/specs/autoresearch-docsem-ambiguity/mission.md",
+  "sandbox_path": ".omx/specs/autoresearch-docsem-ambiguity/sandbox.md",
+  "completion_artifact_path": ".omx/specs/autoresearch-docsem-ambiguity/result.json",
+  "output_artifact_path": "artifacts/ambiguity/train-ambiguity-tags.jsonl",
+  "mission_validator_command": "uv run python .omx/specs/autoresearch-docsem-ambiguity/validate_mission.py --tasks artifacts/ambiguity/inputs/train-tasks.jsonl --labels artifacts/ambiguity/inputs/train-labels.jsonl --reference artifacts/ambiguity/inputs/codex-train-reference.jsonl --query-comparison artifacts/ambiguity/inputs/codex-train-query-comparison.jsonl --blind artifacts/ambiguity/train-ambiguity-blind.jsonl --output artifacts/ambiguity/train-ambiguity-tags.jsonl --summary artifacts/ambiguity/train-ambiguity-summary.json --schema schemas/docsem-train-ambiguity-v1.schema.json --state .omx/state/autoresearch-docsem-ambiguity/autoresearch-state.json --result .omx/specs/autoresearch-docsem-ambiguity/result.json",
+  "status": "complete"
+}

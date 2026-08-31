@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docinsights.local/schemas/docsem-train-ambiguity-v1.schema.json",
+  "title": "DocSem training ambiguity automated screening record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "audit_kind",
+    "screening_statement",
+    "adjudication_status",
+    "screening_classification",
+    "instance_id",
+    "split",
+    "blind_question_screen",
+    "axes",
+    "semantic_answer",
+    "benchmark_answer",
+    "issue_tags",
+    "severity",
+    "benchmark_risk",
+    "auto_signals",
+    "evidence",
+    "agent_reviews",
+    "review_required"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "audit_kind": {"const": "docsem-train-ambiguity-screen"},
+    "screening_statement": {
+      "const": "Automated screening and agent text audit; not completed human adjudication."
+    },
+    "adjudication_status": {
+      "const": "automated_screened_agent_text_audited_human_adjudication_pending"
+    },
+    "screening_classification": {"enum": ["clean_candidate", "flagged"]},
+    "instance_id": {"type": "string", "pattern": "^task_[0-9]{6}$"},
+    "split": {"const": "train"},
+    "blind_question_screen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_id",
+        "question",
+        "question_sha256",
+        "surface_integrity",
+        "semantic_determinacy",
+        "semantic_answer",
+        "issue_tags",
+        "auto_signals"
+      ],
+      "properties": {
+        "instance_id": {"type": "string", "pattern": "^task_[0-9]{6}$"},
+        "question": {"type": ["string", "null"]},
+        "question_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "surface_integrity": {"enum": ["intact", "awkward_but_parseable", "corrupted"]},
+        "semantic_determinacy": {
+          "enum": ["unique_explicit", "unique_with_convention", "multiple_plausible", "underdetermined"]
+        },
+        "semantic_answer": {"$ref": "#/$defs/semantic_answer"},
+        "issue_tags": {"$ref": "#/$defs/issue_tags"},
+        "auto_signals": {"$ref": "#/$defs/auto_signals"}
+      }
+    },
+    "axes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface_integrity", "semantic_determinacy", "benchmark_alignment"],
+      "properties": {
+        "surface_integrity": {"enum": ["intact", "awkward_but_parseable", "corrupted"]},
+        "semantic_determinacy": {
+          "enum": ["unique_explicit", "unique_with_convention", "multiple_plausible", "underdetermined"]
+        },
+        "benchmark_alignment": {
+          "enum": ["aligned", "normalized_equivalent", "semantic_conflict", "label_unverifiable"]
+        }
+      }
+    },
+    "semantic_answer": {"$ref": "#/$defs/semantic_answer"},
+    "benchmark_answer": {"type": "string", "minLength": 1},
+    "issue_tags": {"$ref": "#/$defs/issue_tags"},
+    "severity": {"enum": ["S0", "S1", "S2", "S3", "S4"]},
+    "benchmark_risk": {"enum": ["none", "low", "medium", "high"]},
+    "auto_signals": {"$ref": "#/$defs/auto_signals"},
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "benchmark_block_ids",
+        "recovered_block_id",
+        "recovered_pages",
+        "recovered_query_sha256",
+        "recovered_block_text_sha256",
+        "document_pdf_sha256",
+        "codex_reference_file_sha256",
+        "tasks_manifest_file_sha256",
+        "benchmark_blocks_present_in_reference",
+        "benchmark_matches_recovered_block"
+      ],
+      "properties": {
+        "benchmark_block_ids": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1}
+        },
+        "recovered_block_id": {"type": "string", "minLength": 1},
+        "recovered_pages": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 1}
+        },
+        "recovered_query_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "recovered_block_text_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "document_pdf_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "codex_reference_file_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "tasks_manifest_file_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "benchmark_blocks_present_in_reference": {"type": "boolean"},
+        "benchmark_matches_recovered_block": {"type": "boolean"}
+      }
+    },
+    "agent_reviews": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {"$ref": "#/$defs/agent_review"}
+    },
+    "review_required": {"type": "boolean"}
+  },
+  "$defs": {
+    "semantic_answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "status", "method"],
+      "properties": {
+        "value": {"type": ["string", "null"]},
+        "status": {"enum": ["computed", "not_computed", "unresolved"]},
+        "method": {"type": ["string", "null"]}
+      }
+    },
+    "issue_tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "clean",
+          "comparison_polarity_or_sign",
+          "role_or_subject_attribution",
+          "condition_insertion_or_deletion",
+          "cardinality_operand_gap",
+          "quantifier_scope_last_remaining",
+          "ordinal_or_count_mismatch",
+          "rate_unit_relation_corruption",
+          "target_or_subquestion_drift",
+          "distractor_operand_interference",
+          "label_template_carryover_suspected",
+          "answer_normalization_abs_sign",
+          "implicit_default_assumption",
+          "extraction_or_ocr_uncertain"
+        ]
+      }
+    },
+    "auto_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "detail"],
+        "properties": {
+          "code": {"type": "string", "minLength": 1},
+          "detail": {"type": "string"}
+        }
+      }
+    },
+    "agent_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_id",
+        "reviewer",
+        "review_kind",
+        "surface_integrity",
+        "semantic_determinacy",
+        "benchmark_alignment",
+        "issue_tags",
+        "severity",
+        "review_required",
+        "rationale",
+        "confidence",
+        "source_note"
+      ],
+      "properties": {
+        "instance_id": {"type": "string", "pattern": "^task_[0-9]{6}$"},
+        "reviewer": {"type": "string", "minLength": 1},
+        "review_kind": {"const": "agent_text_audit_no_pdf_visual_review"},
+        "surface_integrity": {"enum": ["intact", "awkward_but_parseable", "corrupted"]},
+        "semantic_determinacy": {
+          "enum": ["unique_explicit", "unique_with_convention", "multiple_plausible", "underdetermined"]
+        },
+        "benchmark_alignment": {
+          "enum": ["aligned", "normalized_equivalent", "semantic_conflict", "label_unverifiable"]
+        },
+        "semantic_answer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["value", "method"],
+          "properties": {
+            "value": {"type": "string", "minLength": 1},
+            "method": {"type": "string", "minLength": 1}
+          }
+        },
+        "issue_tags": {"$ref": "#/$defs/issue_tags"},
+        "severity": {"enum": ["S0", "S1", "S2", "S3", "S4"]},
+        "review_required": {"type": "boolean"},
+        "rationale": {"type": "string", "minLength": 1},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "source_note": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
