@@ -22,8 +22,9 @@ Docling 258M, SmolDocling 256M preview 네 개다. GLM-OCR은 실제 추론 및 
 Issue #8은 main merge commit `f57df2b6ab01b1a3024e97f09ab14ed66db8e1a2`로
 병합·종료됐다. `src/docinsights_ocr/silver_evaluation.py`와
 `docinsights-ocr codex-silver-evaluate`를 재사용해 Apple Vision과 Tesseract를 Codex
-Validation silver 217건 전수로 다시 채점했다. 새 평가 JSON은 Issue #8 산출물과
-byte-exact하게 일치했다. 해석 계약은
+Validation silver 217건 전수로 다시 채점했다. 절대 로컬 경로는 재현 가능한
+`issue8/...` 논리 라벨로 바꿨고, 그 두 source path 외의 scorer payload는 Issue #8
+산출물과 byte-exact하게 일치한다. 해석 계약은
 `silver_agreement_not_human_gold_accuracy`이며 human-gold accuracy가 아니다.
 
 HF 모델 품질은 여전히 `task_000909` 한 건만 실제 추론한 결과다. Apple/Tesseract의
@@ -115,15 +116,16 @@ SHA-256 provenance를 갖춰야 한다. 현재 reference artifact SHA-256은
 `baselines.json`은 더 이상 Apple/Tesseract 품질 값을 수동 복제하지 않는다. 생성기는
 `raw/silver/apple-vision-evaluation.json`과 `raw/silver/tesseract-evaluation.json`을 읽고,
 evaluation artifact SHA-256, reference SHA-256, prediction SHA-256, 217건 exactly-once
-coverage와 `silver_agreement_not_human_gold_accuracy` 계약을 검증한 뒤 표를 만든다.
+coverage, instance ID exact set, reference/prediction status 합계와
+`silver_agreement_not_human_gold_accuracy` 계약을 검증한 뒤 표를 만든다.
 
 | artifact | SHA-256 |
 | --- | --- |
 | Codex Validation reference 217 | `d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a` |
 | Apple prediction 217 | `8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01` |
-| Apple scorer JSON | `0dbe819e5a2a0f7ec6103d53f7a566d8f3df4ee53104c115d4dbe44bc530ab06` |
+| Apple scorer JSON | `5e7a85338f58ad766cdcc0353e5bd9e45e3a32a4394d41f73d0c20751fb32645` |
 | Tesseract prediction 217 | `8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf` |
-| Tesseract scorer JSON | `7ec24f24e907358091aa393ba7d65dc8d5a2890fede3d2ad0f9655fde36ea35c` |
+| Tesseract scorer JSON | `3db904ee7e4278b101915fbb701ecf4b38025e105c5d51033290f57e52446e49` |
 
 통합 비교표에는 각 행의 params, primary weight bytes, Hugging Face downloads snapshot,
 설치 크기, 성공률, CER/WER, 속도와 peak RAM/VRAM을 포함한다. HF snapshot의 설치 footprint는
@@ -150,12 +152,16 @@ uv run docinsights-ocr codex-silver-evaluate \
   "$ISSUE8_REFERENCE" "$APPLE_PREDICTION" \
   research/ocr-small-models/raw/silver/apple-vision-evaluation.json \
   --markdown research/ocr-small-models/raw/silver/apple-vision-evaluation.md \
-  --engine-label 'Apple Vision accurate 200 DPI'
+  --engine-label 'Apple Vision accurate 200 DPI' \
+  --reference-label issue8/codex-validation-reference.jsonl \
+  --prediction-label issue8/apple-vision-200dpi.jsonl
 uv run docinsights-ocr codex-silver-evaluate \
   "$ISSUE8_REFERENCE" "$TESSERACT_PREDICTION" \
   research/ocr-small-models/raw/silver/tesseract-evaluation.json \
   --markdown research/ocr-small-models/raw/silver/tesseract-evaluation.md \
-  --engine-label 'Tesseract eng PSM 6 200 DPI'
+  --engine-label 'Tesseract eng PSM 6 200 DPI' \
+  --reference-label issue8/codex-validation-reference.jsonl \
+  --prediction-label issue8/tesseract-200dpi-psm6-final.jsonl
 
 uvx check-jsonschema \
   --schemafile schemas/codex-silver-evaluation-v1.schema.json \

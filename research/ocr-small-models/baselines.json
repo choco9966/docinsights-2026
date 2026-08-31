@@ -20,7 +20,7 @@
       "prediction_artifact_sha256": "8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01",
       "evaluation_artifact": {
         "path": "raw/silver/apple-vision-evaluation.json",
-        "sha256": "0dbe819e5a2a0f7ec6103d53f7a566d8f3df4ee53104c115d4dbe44bc530ab06"
+        "sha256": "5e7a85338f58ad766cdcc0353e5bd9e45e3a32a4394d41f73d0c20751fb32645"
       },
       "runtime": {
         "device_runtime": "macOS Apple Silicon; Vision accurate; Poppler 200 DPI; 217 documents",
@@ -41,7 +41,7 @@
       "prediction_artifact_sha256": "8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf",
       "evaluation_artifact": {
         "path": "raw/silver/tesseract-evaluation.json",
-        "sha256": "7ec24f24e907358091aa393ba7d65dc8d5a2890fede3d2ad0f9655fde36ea35c"
+        "sha256": "3db904ee7e4278b101915fbb701ecf4b38025e105c5d51033290f57e52446e49"
       },
       "runtime": {
         "device_runtime": "macOS Apple Silicon CPU; Tesseract 5.5.3 eng PSM 6; Poppler 200 DPI; 217 documents",

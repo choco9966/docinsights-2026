@@ -140,15 +140,17 @@ def test_selection_gate_has_four_selected_and_glm_diagnostic_rejection() -> None
 def test_full_silver_baselines_are_scorer_outputs_with_pinned_sources() -> None:
     expected = {
         "apple-vision-evaluation.json": {
-            "evaluation_sha256": "0dbe819e5a2a0f7ec6103d53f7a566d8f3df4ee53104c115d4dbe44bc530ab06",
+            "evaluation_sha256": "5e7a85338f58ad766cdcc0353e5bd9e45e3a32a4394d41f73d0c20751fb32645",
             "prediction_sha256": "8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01",
+            "prediction_label": "issue8/apple-vision-200dpi.jsonl",
             "score": 99.37773767034393,
             "cer": 0.0062226232965606745,
             "wer": 0.00894595377474789,
         },
         "tesseract-evaluation.json": {
-            "evaluation_sha256": "7ec24f24e907358091aa393ba7d65dc8d5a2890fede3d2ad0f9655fde36ea35c",
+            "evaluation_sha256": "3db904ee7e4278b101915fbb701ecf4b38025e105c5d51033290f57e52446e49",
             "prediction_sha256": "8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf",
+            "prediction_label": "issue8/tesseract-200dpi-psm6-final.jsonl",
             "score": 99.94149497079819,
             "cer": 0.00058505029201817,
             "wer": 0.006029087822589881,
@@ -160,13 +162,11 @@ def test_full_silver_baselines_are_scorer_outputs_with_pinned_sources() -> None:
         assert _sha256(path) == values["evaluation_sha256"]
         assert evaluation["interpretation"] == "silver_agreement_not_human_gold_accuracy"
         assert evaluation["sources"]["reference"] == {
-            "path": (
-                "/Users/choco/.codex/worktrees/bed4/docinsights-2026/artifacts/ocr/"
-                "codex-validation-reference.jsonl"
-            ),
+            "path": "issue8/codex-validation-reference.jsonl",
             "records": 217,
             "sha256": "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a",
         }
+        assert evaluation["sources"]["prediction"]["path"] == values["prediction_label"]
         assert evaluation["sources"]["prediction"]["sha256"] == values["prediction_sha256"]
         assert evaluation["summary"]["instances"] == 217
         assert evaluation["summary"]["prediction_ok"] == 217

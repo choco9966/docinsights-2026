@@ -14,5 +14,5 @@
 
 ## Sources
 
-- Reference: `/Users/choco/.codex/worktrees/bed4/docinsights-2026/artifacts/ocr/codex-validation-reference.jsonl` (`d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a`)
-- Prediction: `/Users/choco/Documents/project/docinsights-2026-issue-8/artifacts/ocr/apple-vision-200dpi.jsonl` (`8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01`)
+- Reference: `issue8/codex-validation-reference.jsonl` (`d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a`)
+- Prediction: `issue8/apple-vision-200dpi.jsonl` (`8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01`)
