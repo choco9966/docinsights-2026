@@ -1,0 +1,12 @@
+{
+  "workflow": "autoresearch",
+  "slug": "docsem-followup",
+  "validation_mode": "mission-validator-script",
+  "status": "completed",
+  "mission_path": ".omx/specs/autoresearch-docsem-followup/mission.md",
+  "sandbox_path": ".omx/specs/autoresearch-docsem-followup/sandbox.md",
+  "completion_artifact_path": ".omx/specs/autoresearch-docsem-followup/result.json",
+  "output_artifact_path": "docs/research/issue-15-docsem-followup-research.md",
+  "machine_readable_artifact_path": "artifacts/research/docsem-followup-priorities.json",
+  "mission_validator_command": "uv run python scripts/validate_issue15_research.py"
+}

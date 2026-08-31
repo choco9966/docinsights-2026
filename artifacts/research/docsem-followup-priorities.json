@@ -1,0 +1,286 @@
+{
+  "schema_version": "issue-15-docsem-followup-priorities-v1",
+  "issue": 15,
+  "research_mode": "design_only_no_empirical_claims",
+  "claim_contract": {
+    "mode": "design_only",
+    "empirical_experiments_run": false,
+    "observed_claims": [],
+    "observed_metrics": [],
+    "allowed_claim_types": [
+      "primary_source_summary",
+      "hypothesis",
+      "planned_action",
+      "target_or_stop_gate",
+      "compute_estimate"
+    ]
+  },
+  "primary_strategy": "structure_consensus_and_selective_review_then_small_qwen_verifier",
+  "truth_contract": {
+    "semantic_truth": "공개 benchmark label을 보지 않고 문서와 query 의미만으로 판정하며 단일값, 복수 후보, 결정 불가, 문항 손상을 허용한다.",
+    "benchmark_label": "공개 Train의 주최 측 exact-match 기준값이며 semantic truth와 별도 필드로 보존하고 semantic truth를 덮어쓰지 않는다.",
+    "ocr_reference": "Issue #8 codex-assisted-silver는 silver_agreement_not_human_gold_accuracy이며 의미 정답이나 benchmark label이 아니다.",
+    "hidden_holdout_policy": "숨겨진 validation/test label, 제출 점수, 순위는 prompt, 규칙, threshold, checkpoint, fusion weight, abstention cutoff 선택에 사용하지 않는다. 공개 Train family-disjoint calibration에서 설정을 동결한 뒤 hidden holdout에는 한 번만 적용한다."
+  },
+  "sources": [
+    {
+      "id": "gsm_sem",
+      "title": "GSM-SEM: Benchmark and Framework for Generating Semantically Variant Augmentations",
+      "url": "https://arxiv.org/abs/2605.07053"
+    },
+    {
+      "id": "oracle_gsm_sem",
+      "title": "Oracle GSM-SEM repository and DocSem participant release",
+      "url": "https://github.com/oracle-samples/gsm-sem"
+    },
+    {
+      "id": "gsm_symbolic",
+      "title": "GSM-Symbolic: Understanding the Limitations of Mathematical Reasoning in Large Language Models",
+      "url": "https://arxiv.org/abs/2410.05229"
+    },
+    {
+      "id": "selective_ambiguity",
+      "title": "Selectively Answering Ambiguous Questions",
+      "url": "https://openreview.net/forum?id=x2W2dKdNI8"
+    },
+    {
+      "id": "math_minos",
+      "title": "LLM Critics Help Catch Bugs in Mathematics: Towards a Better Mathematical Verifier with Natural Language Feedback",
+      "url": "https://arxiv.org/abs/2406.14024"
+    },
+    {
+      "id": "declarative_mwp",
+      "title": "Solving Math Word Problems by Combining Language Models With Symbolic Solvers",
+      "url": "https://arxiv.org/abs/2304.09102"
+    },
+    {
+      "id": "small_llm_rl",
+      "title": "Reinforcement Learning for Reasoning in Small LLMs: What Works and What Doesn't",
+      "url": "https://arxiv.org/abs/2503.16219"
+    }
+  ],
+  "first_60_minutes": [
+    {
+      "rank": 1,
+      "minutes": 10,
+      "action": "truth, label, family, stage 계약과 Issue #14 입력 gate 고정",
+      "deliverable": "필수 필드와 누출 gate 체크리스트"
+    },
+    {
+      "rank": 2,
+      "minutes": 15,
+      "action": "family-disjoint 24건에 독립 evidence→fact→equation 구조 추출 2회",
+      "deliverable": "구조 trace 48건과 family overlap 0 증거"
+    },
+    {
+      "rank": 3,
+      "minutes": 15,
+      "action": "구조 합의 기반 answer, abstain, review 정책 적용",
+      "deliverable": "불일치 유형과 risk–coverage 초안"
+    },
+    {
+      "rank": 4,
+      "minutes": 10,
+      "action": "Issue #14 S3/S4·semantic-label conflict와 review queue 교집합 감사",
+      "deliverable": "태그별 review recall 표"
+    },
+    {
+      "rank": 5,
+      "minutes": 10,
+      "action": "direct answer, answer repetition, structure consensus 비교와 go/no-go 판정",
+      "deliverable": "동일 24건 비교표와 다음 1일 결정"
+    }
+  ],
+  "three_day_mvp": {
+    "primary_track": "structure_consensus_plus_small_qwen_verifier_selective_review",
+    "day_1": "Issue #14 truth/tag를 fail-closed 수입하고 family graph·고정 split·120건 structure trace를 만든다.",
+    "day_2": "규칙 기반 합의와 frozen small-Qwen verifier를 direct answer·answer repetition과 동일 조건에서 비교한다.",
+    "day_3": "family-disjoint risk–coverage, first-error F1, calibration, review cost를 산출하고 hidden 적용용 frozen manifest를 만든다.",
+    "rl_role": "MVP 밖의 후속 진단이다. verifier component reward accuracy 95% 이상, family overlap 0, reward-hacking 2% 이하일 때만 승격한다.",
+    "success_gate": [
+      "family overlap 0",
+      "semantic truth와 benchmark label 덮어쓰기 0",
+      "direct answer보다 error AUPRC와 risk–coverage AUC 모두 개선",
+      "coverage 70% 이상에서 selective risk 감소",
+      "hidden holdout 기반 선택 0"
+    ]
+  },
+  "candidates": [
+    {
+      "rank": 1,
+      "id": "structure_consensus_selective_verification",
+      "name": "구조 합의와 선택적 검수",
+      "track": "primary",
+      "hypothesis": "독립 evidence·fact·equation 합의는 최종 답 반복보다 오답을 잘 검출하고 낮은 coverage를 허용할수록 선택 정확도가 높아진다.",
+      "novelty": "DocSem visible block 근거와 Issue #14 모호성 축을 같은 review policy에 결합한다.",
+      "action_1h": "family-disjoint 24건을 두 번 구조화하고 answer repetition과 구조 합의의 보류 규칙을 비교한다.",
+      "extension_1d": "120건 calibration, 사람 오류 판정, threshold 동결을 수행한다.",
+      "extension_3d": "전 공개 Train out-of-family 평가와 hidden 적용용 frozen manifest를 만든다.",
+      "metrics": ["risk_coverage_auc", "selective_accuracy_at_80pct_coverage", "error_recall", "evidence_exact_f1", "review_rate"],
+      "stop_condition": "직접 답변보다 오답 recall이 높지 않거나 coverage 70%에서 selective risk가 감소하지 않으면 중단한다.",
+      "failure_condition": "family overlap, label-conditioned 구조 생성, Issue #14 필수 필드 누락 중 하나라도 발생하면 결과를 무효화한다.",
+      "compute": "CPU 또는 API 추론 2회와 24–120건 수동 검수; accelerator 불필요.",
+      "leakage_risk": "높음: family 혼합과 label을 구조 생성에 노출할 위험. family-disjoint split과 blind structure pass로 통제한다.",
+      "dependencies": {
+        "issue_14": "필수: ambiguity tag, semantic truth, benchmark label, template family",
+        "issue_8": "필수: ordered block OCR 계약; silver를 human gold로 해석하지 않음",
+        "issue_11": "선택: provenance 검증된 OCR challenger 입력 ablation"
+      },
+      "sources": ["selective_ambiguity", "math_minos", "declarative_mwp", "oracle_gsm_sem"]
+    },
+    {
+      "rank": 2,
+      "id": "small_qwen_verifier",
+      "name": "소형 Qwen verifier",
+      "track": "primary",
+      "hypothesis": "작은 Qwen이 새 답 생성보다 evidence·fact·equation·answer 정합성과 최초 오류 단계를 판정할 때 적은 compute로 위험을 더 낮춘다.",
+      "novelty": "step-wise 자연어 피드백을 DocSem의 OCR/fact/equation 단계와 abstention 결정에 맞춘다.",
+      "action_1h": "frozen Qwen checkpoint로 family-disjoint 24건 zero/few-shot verifier schema smoke를 한다.",
+      "extension_1d": "Issue #14 기반 hard negative를 만들고 LoRA와 prompt calibration을 비교한다.",
+      "extension_3d": "family-disjoint 3-fold와 구조 합의 선택 검수 결합을 완료한다.",
+      "metrics": ["error_auroc", "error_auprc", "first_error_macro_f1", "ece", "brier", "risk_coverage_auc", "latency"],
+      "stop_condition": "규칙 기반 구조 합의보다 AUPRC가 개선되지 않거나 ECE가 악화되고 latency가 2배를 넘으면 학습을 중단한다.",
+      "failure_condition": "sibling hard negative 또는 label-derived rationale가 split을 가로지르면 실험을 무효화한다.",
+      "compute": "0.5–3B Qwen, 단일 Apple Silicon 또는 16–24GB GPU; 3일 이내 LoRA만 허용.",
+      "leakage_risk": "높음: label-derived rationale와 sibling hard negative 이동. family-level provenance를 샘플 생성 전 잠근다.",
+      "dependencies": {
+        "issue_14": "필수: 오류 태그와 hard-negative 층화",
+        "issue_8": "필수: Qwen-facing OCR record와 visible block",
+        "issue_11": "선택: 소형 OCR별 verifier 입력 ablation"
+      },
+      "sources": ["math_minos", "selective_ambiguity", "declarative_mwp"]
+    },
+    {
+      "rank": 3,
+      "id": "ocr_fact_equation_error_decomposition",
+      "name": "OCR→사실→방정식 오류 분해",
+      "track": "primary_support",
+      "hypothesis": "answer error를 OCR, retrieval, fact binding, equation construction, execution으로 분리하면 우선 수정할 병목을 안정적으로 찾을 수 있다.",
+      "novelty": "Issue #8 silver agreement를 의미 정답과 분리한 단계별 counterfactual replacement로 각 단계의 상한을 잰다.",
+      "action_1h": "family-disjoint 24건에 stage schema와 최초 오류 라벨을 적용한다.",
+      "extension_1d": "각 단계를 silver/manual artifact로 하나씩 교체하는 oracle replacement를 수행한다.",
+      "extension_3d": "ambiguity tag와 OCR engine별 error transition matrix를 만든다.",
+      "metrics": ["stage_exact", "first_error_agreement", "oracle_replacement_uplift", "downstream_conditional_error", "annotator_kappa"],
+      "stop_condition": "최초 오류 합의 κ가 0.6 미만이거나 교체 실험으로 단계 귀속을 재현하지 못하면 taxonomy를 축소한다.",
+      "failure_condition": "silver를 human gold로 취급하거나 benchmark label을 보고 fact를 교정하면 해당 행과 집계를 폐기한다.",
+      "compute": "CPU 집계와 소량 API 추론·수동 검수; 학습 불필요.",
+      "leakage_risk": "중간: label-conditioned fact correction. blind 단계 산출 후 label comparison을 별도 실행한다.",
+      "dependencies": {
+        "issue_14": "필수: 의미·손상 층화와 semantic-label conflict",
+        "issue_8": "필수: OCR record, block, codex-assisted-silver 계약",
+        "issue_11": "선택: OCR engine별 단계 오류 ablation"
+      },
+      "sources": ["declarative_mwp", "math_minos", "oracle_gsm_sem"]
+    },
+    {
+      "rank": 4,
+      "id": "ambiguity_taxonomy_audit",
+      "name": "모호성 taxonomy 감사",
+      "track": "primary_support",
+      "hypothesis": "Issue #14의 의미·손상 태그가 OCR score보다 answer error를 더 잘 설명한다.",
+      "novelty": "semantic truth와 benchmark label 충돌을 오류가 아닌 별도 결과변수로 보존한다.",
+      "action_1h": "24건 stratified re-audit와 blind/label-pass 분리 검사를 한다.",
+      "extension_1d": "S3/S4 전수 일치도와 tag별 error odds ratio를 계산한다.",
+      "extension_3d": "family cluster bootstrap interval과 calibration drift를 산출한다.",
+      "metrics": ["coverage", "duplicate_count", "cohen_kappa", "tag_error_odds_ratio", "semantic_label_conflict_rate"],
+      "stop_condition": "blind pass에 label 흔적이 있거나 S3/S4 κ가 0.7 미만이면 모델 비교를 중단하고 재판정한다.",
+      "failure_condition": "semantic truth를 benchmark label로 덮어쓰거나 근거 없는 태그를 허용하면 taxonomy 집계를 무효화한다.",
+      "compute": "CPU 집계와 독립 검수자 2인; accelerator 불필요.",
+      "leakage_risk": "높음: label-first 판정과 sibling 태그 복제. blind pass와 family-level adjudication으로 통제한다.",
+      "dependencies": {
+        "issue_14": "필수: 908/908 taxonomy와 blind/label 분리",
+        "issue_8": "필수: OCR 텍스트 품질을 별도 입력 변수로 사용",
+        "issue_11": "선택: OCR candidate 변화에 대한 tag 안정성"
+      },
+      "sources": ["gsm_sem", "oracle_gsm_sem", "selective_ambiguity"]
+    },
+    {
+      "rank": 5,
+      "id": "metamorphic_contrastive_consistency",
+      "name": "Metamorphic·contrastive consistency",
+      "track": "secondary",
+      "hypothesis": "answer-preserving 변형에는 구조와 답이 유지되고 answer-changing 최소대조에는 관련 fact·equation·answer만 바뀌어야 한다.",
+      "novelty": "GSM-SEM strictness와 DocSem visible-block evidence를 결합해 false consistency까지 검사한다.",
+      "action_1h": "12 family에서 보존/변경 쌍 각 1개를 수동 작성·검수하고 dry run한다.",
+      "extension_1d": "100쌍을 생성하고 의미 보존·변경을 독립 검수한다.",
+      "extension_3d": "strictness별 consistency curve와 오류 유형 회귀를 만든다.",
+      "metrics": ["pair_accuracy", "preservation_consistency", "contrastive_sensitivity", "false_consistency_rate", "evidence_stability"],
+      "stop_condition": "변형 의미의 사람 합의가 95% 미만이거나 원천 family가 split을 가로지르면 생성물을 폐기한다.",
+      "failure_condition": "자동 변형 오류를 정답으로 쓰거나 보존·변경 쌍이 같은 답만 강제하면 결론을 내리지 않는다.",
+      "compute": "API 또는 로컬 추론과 24–100쌍 사람 검수; 대규모 학습 불필요.",
+      "leakage_risk": "높음: 원천 답·sibling을 hidden inference에 노출할 수 있다. 변형은 공개 Train 안에서만 사용한다.",
+      "dependencies": {
+        "issue_14": "필수: template family와 ambiguity tag",
+        "issue_8": "필수: block text와 evidence identity",
+        "issue_11": "선택: OCR engine의 변형 민감도 비교"
+      },
+      "sources": ["gsm_sem", "gsm_symbolic", "oracle_gsm_sem"]
+    },
+    {
+      "rank": 6,
+      "id": "family_disjoint_leakage_audit",
+      "name": "Family-disjoint 누출 감사",
+      "track": "required_guardrail",
+      "hypothesis": "random split은 template sibling 암기를 허용해 verifier와 solver 성능을 과대평가하며 family-disjoint split에서 유의한 하락이 나타난다.",
+      "novelty": "original/symbolic provenance와 lexical·structure fingerprint를 결합한 fail-closed family graph를 쓴다.",
+      "action_1h": "908건 family key coverage, duplicate, split overlap을 검사한다.",
+      "extension_1d": "random과 family-disjoint split pair를 manifest로 고정한다.",
+      "extension_3d": "모든 후보의 random-minus-disjoint gap과 cluster bootstrap interval을 보고한다.",
+      "metrics": ["family_overlap_count", "unknown_family_rate", "random_minus_disjoint_gap", "near_duplicate_rate", "cluster_bootstrap_ci"],
+      "stop_condition": "family overlap이 0이 아니거나 unknown family가 5%를 넘으면 성능 평가를 중단한다.",
+      "failure_condition": "family ID를 모델 feature로 사용하거나 sibling이 calibration과 test에 동시에 있으면 결과를 폐기한다.",
+      "compute": "CPU 해시·클러스터링; accelerator 불필요.",
+      "leakage_risk": "치명적: sibling/template overlap. split 전에 family graph를 잠그고 overlap 0을 검증한다.",
+      "dependencies": {
+        "issue_14": "필수: family ID 또는 이를 재현할 provenance",
+        "issue_8": "필수: 동일 instance mapping 보존",
+        "issue_11": "필수: OCR artifact도 같은 split/provenance를 따라야 함"
+      },
+      "sources": ["gsm_sem", "gsm_symbolic", "oracle_gsm_sem"]
+    },
+    {
+      "rank": 7,
+      "id": "image_text_hybrid",
+      "name": "이미지–텍스트 hybrid",
+      "track": "secondary",
+      "hypothesis": "OCR 텍스트와 원본 이미지에서 독립 추출한 구조가 합의할 때만 답하면 숫자·부호 OCR 오류를 줄일 수 있다.",
+      "novelty": "modality disagreement를 단순 fusion이 아니라 review trigger와 stage attribution으로 사용한다.",
+      "action_1h": "OCR disagreement 상위 12건과 대조 12건을 paired inference한다.",
+      "extension_1d": "합의/충돌 rule과 latency를 calibration split에서 조정한다.",
+      "extension_3d": "OCR engine×modality×ambiguity ablation을 수행한다.",
+      "metrics": ["answer_accuracy", "evidence_f1", "ocr_error_rescue_rate", "new_error_rate", "disagreement_precision", "p95_latency", "peak_memory"],
+      "stop_condition": "new-error가 rescue보다 많거나 p95가 text-only의 3배를 넘으면 primary 경로에서 제외한다.",
+      "failure_condition": "label 기반 disagreement 선별, 이미지 metadata lookup, external source-question lookup이 발생하면 무효화한다.",
+      "compute": "vision model 1회 추가 추론; Apple Silicon 또는 16–24GB GPU 권장.",
+      "leakage_risk": "중간: label 기반 hard-case 선택과 외부 source lookup. OCR-only 신호로 표본을 고정하고 opaque ID를 유지한다.",
+      "dependencies": {
+        "issue_14": "선택: ambiguity tag 층화",
+        "issue_8": "필수: PDF/OCR/block mapping",
+        "issue_11": "권장: provenance 검증된 text-side OCR engine"
+      },
+      "sources": ["oracle_gsm_sem", "declarative_mwp"]
+    },
+    {
+      "rank": 8,
+      "id": "rl_trajectory_pilot",
+      "name": "RL trajectory pilot",
+      "track": "deferred_diagnostic",
+      "hypothesis": "fact grounding, equation execution, verification, abstention을 분리 보상하고 보상을 감사하면 작은 Qwen trajectory가 개선될 수 있다.",
+      "novelty": "final-answer reward 대신 verifier 신뢰도와 semantic-label conflict abstention을 분리한다.",
+      "action_1h": "학습 없이 20 trajectory의 reward unit test와 adversarial reward-hacking 사례를 만든다.",
+      "extension_1d": "100–300 trajectory offline scoring과 rejection sampling만 수행한다.",
+      "extension_3d": "후보 1·2 gate 통과 때만 0.5–1.5B Qwen 짧은 LoRA/GRPO pilot을 실행한다.",
+      "metrics": ["component_reward_accuracy", "reward_hacking_rate", "family_disjoint_answer_evidence_score", "abstention_utility", "kl_divergence", "output_length", "seed_variance"],
+      "stop_condition": "reward 정확도 95% 미만, hacking 2% 초과, 두 seed 모두 verifier baseline 이하, 출력 길이 폭증 중 하나면 즉시 중단한다.",
+      "failure_condition": "hidden score 보상, label leakage, sibling trajectory 혼합 또는 verifier gate 미통과 상태의 학습은 금지한다.",
+      "compute": "reward audit은 CPU/API; 학습은 단일 24–48GB GPU 또는 동급 accelerator, 최대 3일 pilot.",
+      "leakage_risk": "치명적: hidden score를 reward로 쓰거나 label-derived trajectory가 split을 넘을 위험. frozen public family split만 허용한다.",
+      "dependencies": {
+        "issue_14": "필수: semantic truth, label conflict, 오류 태그",
+        "issue_8": "필수: grounded OCR/evidence trajectory 입력",
+        "issue_11": "필수: 선택한 OCR 입력의 provenance와 고정 설정"
+      },
+      "sources": ["small_llm_rl", "math_minos", "declarative_mwp"]
+    }
+  ]
+}

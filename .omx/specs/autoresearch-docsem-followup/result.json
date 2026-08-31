@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "passed": true,
+  "summary": "Issue #15 research mission validator passed",
+  "validation_mode": "mission-validator-script",
+  "validator_command": "uv run python scripts/validate_issue15_research.py",
+  "checks": {
+    "artifact_files_exist": true,
+    "priorities_schema": true,
+    "design_only_claim_contract": true,
+    "candidate_count_at_least_8": true,
+    "candidate_contract_complete": true,
+    "metrics_unique_nonempty_strings": true,
+    "truth_and_holdout_contract": true,
+    "primary_sources_present": true,
+    "verifier_precedes_rl": true,
+    "first_actions_total_60_minutes": true,
+    "three_day_mvp_complete": true,
+    "report_contract": true,
+    "no_observed_empirical_claims": true,
+    "autoresearch_state_complete": true,
+    "referenced_artifacts_exist": true
+  },
+  "errors": [],
+  "artifact_sha256": {
+    "docs/research/issue-15-docsem-followup-research.md": "ef0e473f599dbdea3096da502afeefa3bf2d24011774d6ed3ac138d84a7ed497",
+    "artifacts/research/docsem-followup-priorities.json": "60727654d66bd51d3d00e9830da6dafcc3821538557d01d8f772ed740d019d53",
+    ".omx/specs/autoresearch-docsem-followup/mission.md": "17298c626a39830e98800b01de164fdbdf95750c39df758ec711079fb2c10d01",
+    ".omx/specs/autoresearch-docsem-followup/sandbox.md": "f60426003415c158a7b245fab7db47dac0500a106fd3fe28b8d0752e27bd720a",
+    ".omx/state/autoresearch-docsem-followup/autoresearch-state.json": "01701a00c3ef33604dd009a48f87935f0a2ee9cc56480c2d4e7319c85907380f"
+  }
+}
