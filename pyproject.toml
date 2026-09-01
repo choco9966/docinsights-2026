@@ -9,11 +9,24 @@ description = "Qwen-facing OCR benchmark pipeline for the DocInsights 2026 DocSe
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "UPL-1.0" }
-dependencies = []
+dependencies = [
+  "huggingface-hub>=1.0,<2",
+]
+
+[project.optional-dependencies]
+notebook = [
+  "ipykernel>=6,<8",
+  "jupyterlab>=4,<5",
+  "matplotlib>=3.9,<4",
+  "pandas>=2.2,<4",
+  "pillow>=10,<13",
+  "pymupdf>=1.25,<2",
+]
 
 [project.scripts]
 docinsights-ocr = "docinsights_ocr.cli:main"
 docinsights-hf-ocr = "docinsights_hf_ocr.cli:main"
+docinsights = "docinsights_analysis.cli:main"
 
 [dependency-groups]
 dev = [
@@ -29,12 +42,14 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
+pythonpath = ["src"]
 testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 100
 target-version = "py311"
 extend-exclude = [
+  "notebooks/01_docsem_data_analysis.ipynb",
   "notebooks/docsem_hf_small_ocr_smoke.py",
   "notebooks/docsem_hf_small_ocr_smoke_v2.py",
   "research/ocr-small-models/raw/v2/runner-executed.py",
