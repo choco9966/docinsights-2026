@@ -259,7 +259,7 @@ uv run docinsights validate-submission artifacts/submissions/validation.jsonl
 uv run docinsights validate-submission artifacts/submissions/test.jsonl --tasks data/raw/docsem/test/tasks.jsonl
 ```
 
-세 개 이상의 독립 검수 파일은 각 행에 파일별로 고유한 `run_id`와 `instance_id`, `answer`, `evidence`, `rationale`, `confidence`를 기록하고 다음 명령으로 비교합니다. 도구는 중복된 실제 경로와 `run_id`, 입력과 겹치는 출력 경로를 거부하며 답과 Evidence가 전원 일치한 항목만 `consensus.jsonl`에 기록합니다. 하나라도 다른 항목은 `disagreements.jsonl`로 분리됩니다.
+세 개 이상의 독립 검수 파일은 각 행에 파일별로 고유한 `run_id`와 `instance_id`, `answer`, `evidence`, `rationale`, `confidence`를 기록하고 다음 명령으로 비교합니다. 도구는 중복된 실제 경로와 `run_id`, 입력과 겹치는 출력 경로를 거부하며 답과 Evidence가 전원 일치한 항목만 `consensus.jsonl`에 기록합니다. 하나라도 다른 항목은 `disagreements.jsonl`로 분리됩니다. `run_id`와 경로 검사는 실수로 같은 결과를 재사용하는 일을 막기 위한 장치이며, 독립 실행 자체의 증명은 아니므로 모델·프롬프트·실행 시각과 원시 응답의 해시는 비공개 실행 기록에 별도로 남깁니다.
 
 ```bash
 uv run docinsights compare-reviews \

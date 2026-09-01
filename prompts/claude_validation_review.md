@@ -57,7 +57,7 @@
 검수 과정과 근거를 남기는 상세 결과를 `artifacts/docsem_validation/claude_review.jsonl`에 저장하세요. 각 줄은 다음 필드만 사용합니다.
 
 ```json
-{"run_id":"review-<opaque-run-id>","instance_id":"task_XXXXXX","answer":"<final-answer>","evidence":["bNN"],"rationale":"사용한 수량과 독립 계산식을 기록한다.","confidence":"high"}
+{"run_id":"review-example-0001","instance_id":"task_XXXXXX","answer":"<final-answer>","evidence":["bNN"],"rationale":"사용한 수량과 독립 계산식을 기록한다.","confidence":"high"}
 ```
 
 - `run_id`: 이번 전체 검수에만 사용하는 8자 이상의 opaque ID. 한 파일의 모든 행에서 같고 다른 독립 검수와 달라야 합니다.
