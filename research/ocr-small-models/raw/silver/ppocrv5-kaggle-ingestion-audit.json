@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0",
+  "execution": {
+    "platform": "Kaggle CPU",
+    "script_version_id": 346301285,
+    "shard_count": 1,
+    "record_count": 217,
+    "failed_count": 0
+  },
+  "prediction": {
+    "logical_path": "kaggle/version-3/result-shard-00-of-01.jsonl",
+    "bytes": 6325899,
+    "sha256": "60e1844155e70fc5f4cea218e86be4ac2e6ca9fa35d4699fc820c568231c0fd1"
+  },
+  "runtime": {
+    "path": "ppocrv5-kaggle-runtime.json",
+    "sha256": "913b5b5e80a3e8a23f2542a23978f255ee1a4e2b93f8847965984e3bdc6d0a48",
+    "declared_result_sha256_matches": true
+  },
+  "coverage": {
+    "expected_instance_ids": 217,
+    "observed_instance_ids": 217,
+    "unique_instance_ids": 217,
+    "missing_instance_ids": [],
+    "extra_instance_ids": []
+  },
+  "canonical_merge": {
+    "status": "failed",
+    "error": "OCR record blocks must be ordered by block_id",
+    "failing_instance_id": "task_001108",
+    "reference_block_id": "b09",
+    "observed_block_id": "b0",
+    "block_text_equal_to_reference": true,
+    "strict_valid_records": 216
+  },
+  "evaluation": {
+    "input": "raw prediction without correction",
+    "semantic_correction_applied": false,
+    "interpretation": "silver_agreement_not_human_gold_accuracy",
+    "evaluation_sha256": "359ea3dd74f7995e2c710da80165134fad3147917587e0658d9efffa2808fb47"
+  }
+}

@@ -16,6 +16,7 @@ from docinsights_ocr.silver_evaluation import (
 
 
 def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
 
 
@@ -145,6 +146,10 @@ def test_write_and_cli_emit_hashed_json_and_markdown(tmp_path: Path) -> None:
                 str(markdown),
                 "--engine-label",
                 "fixture-engine",
+                "--reference-label",
+                "logical/reference.jsonl",
+                "--prediction-label",
+                "logical/prediction.jsonl",
             ]
         )
         == 0
@@ -152,16 +157,21 @@ def test_write_and_cli_emit_hashed_json_and_markdown(tmp_path: Path) -> None:
 
     saved = json.loads(output.read_text(encoding="utf-8"))
     assert saved["sources"]["prediction"]["engine_label"] == "fixture-engine"
+    assert saved["sources"]["reference"]["path"] == "logical/reference.jsonl"
+    assert saved["sources"]["prediction"]["path"] == "logical/prediction.jsonl"
     assert "silver agreement" in markdown.read_text(encoding="utf-8")
-    manifest = write_silver_evaluation(saved, output, markdown_path=markdown)
+    manifest = write_silver_evaluation(
+        saved,
+        output,
+        markdown_path=markdown,
+        protected_source_paths=(reference, prediction),
+    )
     assert manifest["json"]["sha256"] == _sha256(output)
     assert manifest["markdown"]["sha256"] == _sha256(markdown)
 
 
 @pytest.mark.parametrize("collision", ["reference", "prediction"])
-def test_writer_rejects_overwriting_evaluation_sources(
-    tmp_path: Path, collision: str
-) -> None:
+def test_writer_rejects_overwriting_evaluation_sources(tmp_path: Path, collision: str) -> None:
     reference, prediction = _artifacts(tmp_path)
     result = evaluate_codex_silver(reference, prediction)
     source = reference if collision == "reference" else prediction
@@ -177,3 +187,34 @@ def test_writer_rejects_overwriting_evaluation_sources(
         )
 
     assert source.read_bytes() == original
+
+
+def test_canonical_labels_remain_portable_without_weakening_source_protection(
+    tmp_path: Path,
+) -> None:
+    reference, prediction = _artifacts(tmp_path / "one")
+    result = evaluate_codex_silver(
+        reference,
+        prediction,
+        reference_label="issue8/codex-validation-reference.jsonl",
+        prediction_label="issue8/test-prediction.jsonl",
+    )
+    assert result["sources"]["reference"]["path"].startswith("issue8/")
+    second_reference, second_prediction = _artifacts(tmp_path / "two")
+    second_result = evaluate_codex_silver(
+        second_reference,
+        second_prediction,
+        reference_label="issue8/codex-validation-reference.jsonl",
+        prediction_label="issue8/test-prediction.jsonl",
+    )
+    assert result == second_result
+    original = reference.read_bytes()
+    with pytest.raises(ValueError, match="protected_source_paths is required"):
+        write_silver_evaluation(result, reference)
+    assert reference.read_bytes() == original
+    with pytest.raises(ValueError, match="must not overwrite a source"):
+        write_silver_evaluation(
+            result,
+            reference,
+            protected_source_paths=(reference, prediction),
+        )

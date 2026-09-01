@@ -1,0 +1,188 @@
+{
+  "child_wall_sec": 364.70791190299997,
+  "device": "cuda:0",
+  "doc_latency_sec": 354.49694065899985,
+  "dtype": "float16",
+  "error": null,
+  "exit_code": null,
+  "fixed_preflight": true,
+  "gate": "candidate",
+  "input_mode": "docling_chat",
+  "instance_id": "task_000909",
+  "load_sec": 1.7478552319998926,
+  "max_new_tokens": 512,
+  "model_class": "AutoModelForImageTextToText",
+  "model_index": 4,
+  "name": "granite-docling-258M",
+  "page_latency_sec": [
+    177.13072688700004,
+    176.28130550600008
+  ],
+  "parent_wall_sec": null,
+  "peak_cuda_allocated_bytes": 890579456,
+  "peak_cuda_reserved_bytes": 983564288,
+  "peak_process_rss_bytes_child": 2369581056,
+  "peak_process_rss_bytes_parent_sampled": null,
+  "peak_process_rss_sampling_error": null,
+  "peak_vram_bytes_parent_sampled": null,
+  "peak_vram_sampling_error": null,
+  "prompt": "Convert this page to DocTags.",
+  "raw_output_bytes": 1024,
+  "raw_output_sha256": [
+    "aeb1da71a4ab6e3c659da3f13cfe8d51afefd31365cee129668ff91002a71a86",
+    "aeb1da71a4ab6e3c659da3f13cfe8d51afefd31365cee129668ff91002a71a86"
+  ],
+  "raw_outputs": [
+    {
+      "bytes": 512,
+      "page": 1,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/04-granite-docling-258M-page-1.txt",
+      "sha256": "aeb1da71a4ab6e3c659da3f13cfe8d51afefd31365cee129668ff91002a71a86"
+    },
+    {
+      "bytes": 512,
+      "page": 2,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/04-granite-docling-258M-page-2.txt",
+      "sha256": "aeb1da71a4ab6e3c659da3f13cfe8d51afefd31365cee129668ff91002a71a86"
+    }
+  ],
+  "repo": "ibm-granite/granite-docling-258M",
+  "repo_file_metadata": [
+    {
+      "blob_id": "c76042c46155b351d6ebec65be41e160988f4742",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": ".gitattributes",
+      "size": 1706
+    },
+    {
+      "blob_id": "9ca91f891770e0e507bee3f299c01a9d72ae1775",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "README.md",
+      "size": 21039
+    },
+    {
+      "blob_id": "2895b6710d6bb8d5e7cc5d1137d79eff8ad06df2",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "added_tokens.json",
+      "size": 35
+    },
+    {
+      "blob_id": "5d5e96677dc13b8699410a83daecc2fb7080a617",
+      "lfs_sha256": "a1bd51ff1cea9daabc7f00522c7cc4b5905fa5cd3f67c40d0d707ee0686ce94b",
+      "lfs_size": 2321944,
+      "rfilename": "assets/granite_docling_split_page.png",
+      "size": 2321944
+    },
+    {
+      "blob_id": "646637ffb3a800fd2eb146519eb12fd37630c279",
+      "lfs_sha256": "15e72aca956d9e796788eaa4b0debb9ae988ca7a9637ae3b6df1e6ce671d73d0",
+      "lfs_size": 523477,
+      "rfilename": "assets/new_arxiv.png",
+      "size": 523477
+    },
+    {
+      "blob_id": "3b66e93d4b31ff6ba4fbea744407c43bad179212",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "chat_template.jinja",
+      "size": 588
+    },
+    {
+      "blob_id": "6a652f5b56550a9291c6a6bb019ade3744a8c8bb",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "config.json",
+      "size": 1641
+    },
+    {
+      "blob_id": "172b1f940804da1f6d8b8c2a807e0f3163122211",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "generation_config.json",
+      "size": 169
+    },
+    {
+      "blob_id": "e01f92aabcd2ff0c12e418e1ed3c28f825e4459a",
+      "lfs_sha256": "f4d43939df541ab6958e989e7a6761a8db1ccb484dcb0c2749fedbb1357d2bb8",
+      "lfs_size": 2185867,
+      "rfilename": "granite_docling.png",
+      "size": 2185867
+    },
+    {
+      "blob_id": "354558edcdbd64ca7abd407b8be3d5d09d39d781",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "merges.txt",
+      "size": 916646
+    },
+    {
+      "blob_id": "d27772b891988931a1a43a3bb962c6f91c69b371",
+      "lfs_sha256": "1cdad234deb1cde18ee6a586f849057f19851daf1fedce2e40aff791dbe46f61",
+      "lfs_size": 515093104,
+      "rfilename": "model.safetensors",
+      "size": 515093104
+    },
+    {
+      "blob_id": "893236748032d4bf033823d6a4a0d62b78b6bc0e",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "preprocessor_config.json",
+      "size": 486
+    },
+    {
+      "blob_id": "b3b1deadd0e6e18c2070fdb0c29074892ea58ffe",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "processor_config.json",
+      "size": 68
+    },
+    {
+      "blob_id": "e8e87b5f11beb05b0c8205811fc65d27d895ccc0",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "special_tokens_map.json",
+      "size": 812
+    },
+    {
+      "blob_id": "d3eef61ed03b4b5f9a18bbd7c330a0ef7e5de02e",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "tokenizer.json",
+      "size": 7153134
+    },
+    {
+      "blob_id": "1b20bc7d876f053bf0bc1ef0fb25ef24e1ef6a61",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "tokenizer_config.json",
+      "size": 17774
+    },
+    {
+      "blob_id": "07fe068601babcefc22b1f9ce254ed0eede3d7fd",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "vocab.json",
+      "size": 1612698
+    }
+  ],
+  "repo_metadata_error": null,
+  "requested_revision": "982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
+  "resolved_revision": "982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe",
+  "revision_resolution": "huggingface_api_confirmed_commit",
+  "schema_version": "2.0",
+  "selection_status": "existing_candidate",
+  "status": "succeeded",
+  "stderr_bytes": 0,
+  "stderr_path": null,
+  "stderr_sha256": null,
+  "stdout_bytes": 0,
+  "stdout_path": null,
+  "stdout_sha256": null,
+  "success": true,
+  "traceback": null,
+  "truncation_risk": "possible: max_new_tokens=512 is a fixed comparable preflight ceiling; token-limit completion does not establish full-page coverage",
+  "trust_remote_code": false
+}

@@ -1,0 +1,146 @@
+{
+  "child_wall_sec": 67.07069300399962,
+  "device": "cuda:0",
+  "doc_latency_sec": 55.47661837199985,
+  "dtype": "float16",
+  "error": null,
+  "exit_code": null,
+  "fixed_preflight": true,
+  "gate": "diagnostic_gate_fail",
+  "input_mode": "glm_chat",
+  "instance_id": "task_000909",
+  "load_sec": 3.0922998229998484,
+  "max_new_tokens": 512,
+  "model_class": "AutoModelForImageTextToText",
+  "model_index": 2,
+  "name": "GLM-OCR",
+  "page_latency_sec": [
+    28.479661551999925,
+    25.909246819000145
+  ],
+  "parent_wall_sec": null,
+  "peak_cuda_allocated_bytes": 6586189824,
+  "peak_cuda_reserved_bytes": 7302283264,
+  "peak_process_rss_bytes_child": 4360134656,
+  "peak_process_rss_bytes_parent_sampled": null,
+  "peak_process_rss_sampling_error": null,
+  "peak_vram_bytes_parent_sampled": null,
+  "peak_vram_sampling_error": null,
+  "prompt": "Text Recognition:",
+  "raw_output_bytes": 4271,
+  "raw_output_sha256": [
+    "21913fe73c52282cd30400b585068e915e04ad912f7cac22d07f1e3d0e5b1ee4",
+    "035d36785dbe1a687a3208fed7630ab22fb3b1add6d8904fb3b20e8b701e1702"
+  ],
+  "raw_outputs": [
+    {
+      "bytes": 2247,
+      "page": 1,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/02-GLM-OCR-page-1.txt",
+      "sha256": "21913fe73c52282cd30400b585068e915e04ad912f7cac22d07f1e3d0e5b1ee4"
+    },
+    {
+      "bytes": 2024,
+      "page": 2,
+      "path": "/kaggle/working/docinsights-hf-smoke-v2/raw/02-GLM-OCR-page-2.txt",
+      "sha256": "035d36785dbe1a687a3208fed7630ab22fb3b1add6d8904fb3b20e8b701e1702"
+    }
+  ],
+  "repo": "zai-org/GLM-OCR",
+  "repo_file_metadata": [
+    {
+      "blob_id": "ff3401de97f415491b0fd674059823e3f8510a5e",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": ".eval_results/mdpbench.yaml",
+      "size": 4784
+    },
+    {
+      "blob_id": "7186fb2de9bf6b20f8fcb23bfcb31e1f7826c692",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": ".eval_results/olmocrbench.yaml",
+      "size": 1765
+    },
+    {
+      "blob_id": "a6344aac8c09253b3b630fb776ae94478aa0275b",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": ".gitattributes",
+      "size": 1519
+    },
+    {
+      "blob_id": "2dcab5a6ed326dd7db202569c79c2244654ca028",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "README.md",
+      "size": 8277
+    },
+    {
+      "blob_id": "8f3b7224cc22edcb813a59ca438efc92f15749a9",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "chat_template.jinja",
+      "size": 4606
+    },
+    {
+      "blob_id": "46fbd1c232b7d9d0fc261cf10361350ef3af02c3",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "config.json",
+      "size": 1570
+    },
+    {
+      "blob_id": "0de866e8cc29b4479b56bf68300da9353bc63a71",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "generation_config.json",
+      "size": 165
+    },
+    {
+      "blob_id": "409cd679485ac9f54da5d9fb8df8ad41d9f5db30",
+      "lfs_sha256": "a16eb0de98d199293371c560f95f83130d2a2c9612449df16839f08ff9498815",
+      "lfs_size": 2650579464,
+      "rfilename": "model.safetensors",
+      "size": 2650579464
+    },
+    {
+      "blob_id": "308553695af766b3e3d05e68279d2c690e73273e",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "preprocessor_config.json",
+      "size": 367
+    },
+    {
+      "blob_id": "9f4a549a14a96217569648aa7627c6674ad94fe9",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "tokenizer.json",
+      "size": 6838609
+    },
+    {
+      "blob_id": "18f2106a5124ac945ee5526ac60fa75e09e97e11",
+      "lfs_sha256": null,
+      "lfs_size": null,
+      "rfilename": "tokenizer_config.json",
+      "size": 1066
+    }
+  ],
+  "repo_metadata_error": null,
+  "requested_revision": "ca5d8b3e287e52589e37c28385d9655ee4372f9d",
+  "resolved_revision": "ca5d8b3e287e52589e37c28385d9655ee4372f9d",
+  "revision_resolution": "huggingface_api_confirmed_commit",
+  "schema_version": "2.0",
+  "selection_status": "not_selected_diagnostic_gate_fail",
+  "status": "succeeded",
+  "stderr_bytes": 0,
+  "stderr_path": null,
+  "stderr_sha256": null,
+  "stdout_bytes": 0,
+  "stdout_path": null,
+  "stdout_sha256": null,
+  "success": true,
+  "traceback": null,
+  "truncation_risk": "possible: max_new_tokens=512 is a fixed comparable preflight ceiling; token-limit completion does not establish full-page coverage",
+  "trust_remote_code": false
+}

@@ -1,0 +1,1 @@
+{"status": "succeeded", "result_path": "/kaggle/working/docinsights-hf-smoke-v2/child-results/04-granite-docling-258M.json"}

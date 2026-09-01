@@ -1,0 +1,97 @@
+{
+  "schema_version": "2.0",
+  "snapshot_at": "2026-09-01T17:17:33+09:00",
+  "interpretation": "silver_agreement_not_human_gold_accuracy",
+  "reference": {
+    "kind": "codex-assisted-silver",
+    "records": 217,
+    "sha256": "d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a",
+    "issue_8_merge_commit": "f57df2b6ab01b1a3024e97f09ab14ed66db8e1a2"
+  },
+  "silver_baselines": {
+    "apple_vision": {
+      "model": "Apple Vision accurate 200 DPI",
+      "engine_label": "Apple Vision accurate 200 DPI",
+      "engines": [
+        "apple-vision"
+      ],
+      "revision": "NA(os_integrated_revision_not_exposed)",
+      "params": "NA(os_integrated_not_published)",
+      "weight_bytes": "NA(os_integrated_not_separable)",
+      "downloads": "NA(os_integrated_not_applicable)",
+      "install_size_bytes": "NA(os_integrated_not_separable)",
+      "license": "Apple platform API",
+      "prediction_artifact_sha256": "8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01",
+      "evaluation_artifact": {
+        "path": "raw/silver/apple-vision-evaluation.json",
+        "sha256": "5e7a85338f58ad766cdcc0353e5bd9e45e3a32a4394d41f73d0c20751fb32645"
+      },
+      "runtime": {
+        "device_runtime": "macOS Apple Silicon; Vision accurate; Poppler 200 DPI; 217 documents",
+        "peak_ram_bytes": 224903168,
+        "peak_vram_bytes": "NA(not_exposed_by_Vision_API)",
+        "cost": "local macOS; no metered API cost"
+      }
+    },
+    "tesseract_psm6": {
+      "model": "Tesseract 5.5.3 eng PSM 6 200 DPI",
+      "engine_label": "Tesseract eng PSM 6 200 DPI",
+      "engines": [
+        "tesseract-tsv"
+      ],
+      "revision": "5.5.3; eng.traineddata",
+      "params": "NA(not_applicable_to_traineddata)",
+      "weight_bytes": 4113088,
+      "downloads": "NA(not_captured_for_Homebrew_install)",
+      "install_size_bytes": 34848768,
+      "install_size_method": "2026-08-31 local Homebrew Cellar du -sk; 34032 KiB",
+      "license": "Apache-2.0",
+      "prediction_artifact_sha256": "8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf",
+      "evaluation_artifact": {
+        "path": "raw/silver/tesseract-evaluation.json",
+        "sha256": "3db904ee7e4278b101915fbb701ecf4b38025e105c5d51033290f57e52446e49"
+      },
+      "runtime": {
+        "device_runtime": "macOS Apple Silicon CPU; Tesseract 5.5.3 eng PSM 6; Poppler 200 DPI; 217 documents",
+        "peak_ram_bytes": 112754688,
+        "peak_vram_bytes": "NA(CPU_runtime)",
+        "cost": "local CPU; no metered API cost"
+      }
+    },
+    "ppocrv5_mobile_kaggle": {
+      "model": "PP-OCRv5 mobile detector + English mobile recognizer",
+      "engine_label": "PP-OCRv5 mobile (Kaggle CPU)",
+      "engines": [
+        "paddleocr-ppocrv5-mobile"
+      ],
+      "revision": "det@0d63e78e2b680928f6b1747d76a08db6e645efb7; rec@267c36e24c331595590fe7bd72bde2436fd286f2",
+      "params": "NA(combined_pipeline_not_reported)",
+      "weight_bytes": "NA(combined_pipeline_not_measured)",
+      "downloads": "NA(not_captured_at_execution)",
+      "install_size_bytes": "NA(not_measured_separately_from_Kaggle_environment)",
+      "license": "Apache-2.0",
+      "prediction_artifact_sha256": "60e1844155e70fc5f4cea218e86be4ac2e6ca9fa35d4699fc820c568231c0fd1",
+      "evaluation_artifact": {
+        "path": "raw/silver/ppocrv5-kaggle-evaluation.json",
+        "sha256": "359ea3dd74f7995e2c710da80165134fad3147917587e0658d9efffa2808fb47"
+      },
+      "runtime": {
+        "device_runtime": "Kaggle Linux x86_64 CPU; PaddlePaddle 3.2.0; PaddleOCR 3.3.2; PaddleX 3.3.13; 217 documents",
+        "peak_ram_bytes": "NA(not_captured_by_Kaggle_run)",
+        "peak_vram_bytes": "NA(CPU_runtime)",
+        "cost": "free Kaggle CPU quota"
+      },
+      "valid_ocr_records": 216,
+      "output_bytes": 6325899,
+      "ingestion_audit_artifact": {
+        "path": "raw/silver/ppocrv5-kaggle-ingestion-audit.json",
+        "sha256": "d157ad51391d03cfbe1b563e00fcb57ec14f091195464b35919e9592c9a0860f"
+      },
+      "row_type": "full_silver_diagnostic",
+      "candidate_gate_outcome": "fail_strict_schema",
+      "selection_status": "evaluated_diagnostic",
+      "runner_gate": "raw_217_coverage; strict_cloud_merge_failed_task_001108_b09_to_b0",
+      "notes": "217/217 inference completed and raw output was scored without correction; task_001108 misread block marker b09 as b0, so 216/217 records passed the strict canonical block-order contract; not human-gold accuracy and not rank-comparable with n=1 HF smoke"
+    }
+  }
+}

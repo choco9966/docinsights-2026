@@ -13,6 +13,7 @@ dependencies = []
 
 [project.scripts]
 docinsights-ocr = "docinsights_ocr.cli:main"
+docinsights-hf-ocr = "docinsights_hf_ocr.cli:main"
 
 [dependency-groups]
 dev = [
@@ -33,6 +34,11 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+extend-exclude = [
+  "notebooks/docsem_hf_small_ocr_smoke.py",
+  "notebooks/docsem_hf_small_ocr_smoke_v2.py",
+  "research/ocr-small-models/raw/v2/runner-executed.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

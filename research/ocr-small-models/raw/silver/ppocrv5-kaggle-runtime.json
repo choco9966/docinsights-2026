@@ -1,0 +1,40 @@
+{
+  "bundle_sha256": "9fb35e81feead385fedd3a5bd66ca780ca2aaee5b92b2247f75114cfae642967",
+  "detector": {
+    "repo": "PaddlePaddle/PP-OCRv5_mobile_det",
+    "revision": "0d63e78e2b680928f6b1747d76a08db6e645efb7"
+  },
+  "failed_count": 0,
+  "finished_at": "2026-08-31T18:00:12.921239+00:00",
+  "machine": "x86_64",
+  "manifest_sha256": "08bb8ef1948bdbb69ceddfc669d31adf7002707cdd149937b04615dae0eb2d3b",
+  "packages": {
+    "huggingface-hub": "0.34.4",
+    "paddleocr": "3.3.2",
+    "paddlepaddle": "3.2.0",
+    "paddlex": "3.3.13"
+  },
+  "pipeline_revision": "b5958def41c1d600c5f190d76be9386f615b7f71",
+  "platform": "Linux-6.12.90+-x86_64-with-glibc2.35",
+  "platform_role": "kaggle-cpu",
+  "python": "3.12.13",
+  "recognizer": {
+    "repo": "PaddlePaddle/en_PP-OCRv5_mobile_rec",
+    "revision": "267c36e24c331595590fe7bd72bde2436fd286f2"
+  },
+  "record_count": 217,
+  "repository_dirty": false,
+  "repository_sha": "b5958def41c1d600c5f190d76be9386f615b7f71",
+  "result_sha256": "60e1844155e70fc5f4cea218e86be4ac2e6ca9fa35d4699fc820c568231c0fd1",
+  "runtime_version": {
+    "COLAB_RELEASE_TAG": "release-colab-external-images_20260514-060047_RC00",
+    "KAGGLE_KERNEL_RUN_TYPE": "Batch"
+  },
+  "schema_version": "1.0",
+  "session_fingerprint": "1ce6a0fc96d816da791ddf617ac8196f9529a7a025c78d875000209e35ce38ef",
+  "shard_count": 1,
+  "shard_index": 0,
+  "shard_manifest_sha256": "87afbb83968c597398ca94c1ffc5940f6322c4381319f2b8f154cbf99789abe9",
+  "started_at": "2026-08-31T14:26:18.710261+00:00",
+  "timeout_seconds": 300.0
+}
