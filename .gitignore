@@ -8,5 +8,7 @@ __pycache__/
 
 artifacts/ocr/
 artifacts/model-smoke/
+artifacts/docsem_validation/
+artifacts/submissions/
 data/
 tmp/

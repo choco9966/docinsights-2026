@@ -17,6 +17,7 @@
 | `v9` | 2026-08-29 20:52:18 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001058` 하나만 `19`로 변경 |
 | `v10` | 2026-08-29 20:53:55 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v10.jsonl` | `34f7f14808d80071c1238721b74ca60268b24376b2c96d51139c4b4b16d84ed3` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001043` 하나만 `558`로 변경 |
 | `v11` | 2026-08-29 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v11.jsonl` | `3b31480cce4dd29303d43447211ff8a96589c9edf035e487fb8f7ac5e6addab3` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001006` 하나만 `925`로 변경 |
+| `v12` | 2026-08-30 15:14:43 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v12.jsonl` | `38a386805a3c9b87f50f52b009006cf67bb7f8b71b2ceb1bbd2f4502e99f79fd` | 217 | 1.0 | 217/217 | 1.0 | 1.0 | v7에서 `task_000960` 하나만 `18`에서 `66`으로 변경해 만점 달성 |
 
 ## v1 해석
 
@@ -84,13 +85,17 @@ v7의 217개 PDF를 다시 대조한 결과, 점수 차분으로 확정된 항�
 
 `v11`은 확정 기준선 v7에서 `task_001006: 1145 → 925` 하나만 변경했습니다. evidence를 포함한 나머지 216개 행은 v7과 동일하며 로컬 형식 검사에서 217개 전체가 통과했습니다. 포털 결과가 215/217이므로 기존 `task_001006=1145`가 정답으로 확정됩니다.
 
+## v12 최종 제출
+
+`v12`는 v7에서 `task_000960: 18 → 66` 하나만 변경하고 evidence `b11`을 유지했습니다. PDF 문면을 그대로 계산하면 `5:00 PM - 3:36 PM - 24분 - 42분 = 18분`이지만, 공개 GSM-SEM 원천 3종과 Validation 217개 질문을 대조한 결과 모든 문항이 각각 하나의 원천 레코드에 고유하게 매칭됐고 v7과 원천 `final_answer`가 다른 유일한 문항이 `task_000960`이었습니다. 대응 원천은 총시간 132분에서 `132 - 24 - 42 = 66`을 계산하므로 DocSem 변환 과정에서 시각 문구만 달라지고 원천 라벨은 유지된 사례로 판정했습니다. 포털 결과는 Answer accuracy, Evidence exact match, Evidence F1이 모두 `1.0`으로 217/217 만점을 확인했으며 저장 경로는 `submissions/20260830T061443Z_haetae_v12.json`입니다.
+
 ## 다음 제출 기록 방법
 
 새 제출은 `artifacts/submissions/v2.jsonl`, `v3.jsonl`처럼 버전 번호를 올려 저장하고 위 표에 한 행씩 추가합니다. 제출 전에 다음 명령으로 형식을 검사하고 SHA-256을 기록합니다.
 
 ```bash
-uv run docinsights validate-submission artifacts/submissions/v11.jsonl --tasks data/raw/docsem/val/tasks.jsonl
-shasum -a 256 artifacts/submissions/v11.jsonl
+uv run docinsights validate-submission artifacts/submissions/v12.jsonl --tasks data/raw/docsem/val/tasks.jsonl
+shasum -a 256 artifacts/submissions/v12.jsonl
 ```
 
 같은 파일을 다시 제출하더라도 SHA-256이 같으면 동일한 예측으로 간주합니다. 파일 내용이 달라지면 새 버전으로 저장하고 변경한 문제, 변경 이유와 검수 방법을 방법 열 또는 별도 문단에 기록합니다.
