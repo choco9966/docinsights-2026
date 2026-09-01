@@ -160,6 +160,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path("artifacts/docsem_validation/claude_blind/comparison"),
     )
     blind_compare_parser.add_argument("--minimum-confidence", type=float, default=0.95)
+    blind_compare_parser.add_argument(
+        "--portal-confirmations",
+        type=Path,
+        help="Git에서 제외한 포털 확정 JSON 산출물",
+    )
+    blind_compare_parser.add_argument(
+        "--portal-confirmations-sha256",
+        help="포털 확정 산출물의 기대 SHA-256",
+    )
 
     blind_merge_parser = subparsers.add_parser(
         "merge-blind-reviews", help="여러 블라인드 검수 lane JSONL 병합"
@@ -276,6 +285,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 args.baseline,
                 args.output,
                 minimum_confidence=args.minimum_confidence,
+                portal_confirmations_path=args.portal_confirmations,
+                portal_confirmations_sha256=args.portal_confirmations_sha256,
             )
         except BlindReviewError as error:
             print(f"블라인드 검수 비교 실패:\n{error}")

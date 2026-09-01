@@ -57,20 +57,22 @@
 검수 과정과 근거를 남기는 상세 결과를 `artifacts/docsem_validation/claude_review.jsonl`에 저장하세요. 각 줄은 다음 필드만 사용합니다.
 
 ```json
-{"instance_id":"task_000909","answer":"4000","evidence":["b09"],"rationale":"2000 × 2 = 4000으로 계산했다.","confidence":"high"}
+{"run_id":"review-<opaque-run-id>","instance_id":"task_XXXXXX","answer":"<final-answer>","evidence":["bNN"],"rationale":"사용한 수량과 독립 계산식을 기록한다.","confidence":"high"}
 ```
 
+- `run_id`: 이번 전체 검수에만 사용하는 8자 이상의 opaque ID. 한 파일의 모든 행에서 같고 다른 독립 검수와 달라야 합니다.
 - `instance_id`: 입력과 정확히 같은 task ID
 - `answer`: 설명과 단위를 제거한 문자열 정답
 - `evidence`: 하나 이상의 근거 블록 ID 목록
 - `rationale`: 사용한 수량과 계산식을 확인할 수 있는 간결한 한국어 문장
 - `confidence`: `high`, `medium`, `low` 중 하나
 
-상세 검수가 끝나면 제출 스키마와 같은 `instance_id`, `answer`, `evidence` 세 필드만 담은 `artifacts/submissions/validation_claude_review.jsonl`도 생성하세요. 제출용 파일에는 rationale, confidence 또는 다른 필드를 넣지 마세요.
+상세 검수가 끝나면 제출 스키마와 같은 `instance_id`, `answer`, `evidence` 세 필드만 담은 `artifacts/submissions/validation_claude_review.jsonl`도 생성하세요. 제출용 파일에는 `run_id`, rationale, confidence 또는 다른 필드를 넣지 마세요.
 
 ## 완료 조건과 검증
 
 - 두 결과 파일 모두 정확히 217개 줄이어야 합니다.
+- 상세 결과의 `run_id`는 모든 행에서 같아야 하며 다른 독립 검수 파일에서 재사용하면 안 됩니다.
 - `instance_id`는 217개가 모두 고유해야 하고 입력 task의 ID 집합과 정확히 일치해야 합니다.
 - 누락, 중복, 빈 answer, 빈 evidence가 없어야 합니다.
 - 모든 rationale의 계산 결과가 해당 answer와 일치해야 합니다.

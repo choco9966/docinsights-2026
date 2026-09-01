@@ -173,17 +173,30 @@ def test_compare_blind_review_command_reports_candidates(
     baseline_path = tmp_path / "v7.jsonl"
     output_dir = tmp_path / "comparison"
 
-    def fake_compare(review, baseline, output, *, minimum_confidence):
+    confirmations_path = tmp_path / "portal-confirmations.json"
+    confirmations_sha256 = "0" * 64
+
+    def fake_compare(
+        review,
+        baseline,
+        output,
+        *,
+        minimum_confidence,
+        portal_confirmations_path,
+        portal_confirmations_sha256,
+    ):
         assert review == review_path
         assert baseline == baseline_path
         assert output == output_dir
         assert minimum_confidence == 0.95
+        assert portal_confirmations_path == confirmations_path
+        assert portal_confirmations_sha256 == confirmations_sha256
         return ComparisonSummary(
             total=217,
             confirmed=200,
             candidates=1,
             needs_review=3,
-            excluded_portal_confirmed=13,
+            excluded_portal_confirmed=2,
             portal_conflicts=0,
         )
 
@@ -197,10 +210,14 @@ def test_compare_blind_review_command_reports_candidates(
             str(baseline_path),
             "--output",
             str(output_dir),
+            "--portal-confirmations",
+            str(confirmations_path),
+            "--portal-confirmations-sha256",
+            confirmations_sha256,
         ]
     )
 
     assert exit_code == 0
     output = capsys.readouterr().out
     assert "안전 후보 1개" in output
-    assert "포털 확정 제외 13개" in output
+    assert "포털 확정 제외 2개" in output
