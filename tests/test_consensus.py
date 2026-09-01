@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -26,7 +27,7 @@ def review(
         "instance_id": instance_id,
         "answer": answer,
         "evidence": evidence,
-        "rationale": "1 + 1 = 2",
+        "rationale": f"{run_id}: 1 + 1 = 2",
         "confidence": confidence,
     }
 
@@ -171,7 +172,7 @@ def test_compare_review_passes_rejects_duplicate_resolved_path(tmp_path: Path) -
         [review("task_000001", "2", ["b06"], run_id="review-run-3")],
     )
 
-    with pytest.raises(ReviewValidationError, match="파일 경로"):
+    with pytest.raises(ReviewValidationError, match="같은 검수 파일"):
         compare_review_passes(
             [first_path, alias_path, third_path],
             tasks_path,
@@ -248,3 +249,100 @@ def test_compare_review_passes_rejects_output_input_collision(tmp_path: Path) ->
             consensus_path=pass_paths[0],
             disagreements_path=tmp_path / "disagreements.jsonl",
         )
+
+
+@pytest.mark.parametrize("output_name", ["consensus", "disagreements"])
+@pytest.mark.parametrize("input_name", ["pass1", "pass2", "pass3", "tasks"])
+def test_compare_review_passes_rejects_hard_linked_output_input_collision(
+    tmp_path: Path, output_name: str, input_name: str
+) -> None:
+    tasks_path = tmp_path / "tasks.jsonl"
+    pass_paths = [tmp_path / f"pass{number}.jsonl" for number in range(1, 4)]
+    write_jsonl(tasks_path, [{"instance_id": "task_000001"}])
+    for number, path in enumerate(pass_paths, start=1):
+        write_jsonl(
+            path,
+            [review("task_000001", "2", ["b06"], run_id=f"review-run-{number}")],
+        )
+    protected_paths = {
+        "pass1": pass_paths[0],
+        "pass2": pass_paths[1],
+        "pass3": pass_paths[2],
+        "tasks": tasks_path,
+    }
+    linked_output = tmp_path / f"{output_name}.jsonl"
+    os.link(protected_paths[input_name], linked_output)
+    original_bytes = protected_paths[input_name].read_bytes()
+    consensus_path = linked_output if output_name == "consensus" else tmp_path / "consensus.jsonl"
+    disagreements_path = (
+        linked_output if output_name == "disagreements" else tmp_path / "disagreements.jsonl"
+    )
+
+    with pytest.raises(ReviewValidationError, match="입력 경로"):
+        compare_review_passes(
+            pass_paths,
+            tasks_path,
+            consensus_path=consensus_path,
+            disagreements_path=disagreements_path,
+        )
+
+    assert protected_paths[input_name].read_bytes() == original_bytes
+
+
+def test_compare_review_passes_rejects_equal_output_paths(tmp_path: Path) -> None:
+    tasks_path = tmp_path / "tasks.jsonl"
+    pass_paths = [tmp_path / f"pass{number}.jsonl" for number in range(1, 4)]
+    write_jsonl(tasks_path, [{"instance_id": "task_000001"}])
+    for number, path in enumerate(pass_paths, start=1):
+        write_jsonl(
+            path,
+            [review("task_000001", "2", ["b06"], run_id=f"review-run-{number}")],
+        )
+    output_path = tmp_path / "shared-output.jsonl"
+
+    with pytest.raises(ReviewValidationError, match="서로 달라야"):
+        compare_review_passes(
+            pass_paths,
+            tasks_path,
+            consensus_path=output_path,
+            disagreements_path=output_path,
+        )
+
+    assert not output_path.exists()
+
+
+def test_compare_review_passes_rejects_mixed_run_ids_within_pass(tmp_path: Path) -> None:
+    tasks_path = tmp_path / "tasks.jsonl"
+    pass_paths = [tmp_path / f"pass{number}.jsonl" for number in range(1, 4)]
+    write_jsonl(
+        tasks_path,
+        [{"instance_id": "task_000001"}, {"instance_id": "task_000002"}],
+    )
+    write_jsonl(
+        pass_paths[0],
+        [
+            review("task_000001", "2", ["b06"], run_id="review-run-1"),
+            review("task_000002", "3", ["b07"], run_id="review-run-other"),
+        ],
+    )
+    for number, path in enumerate(pass_paths[1:], start=2):
+        write_jsonl(
+            path,
+            [
+                review("task_000001", "2", ["b06"], run_id=f"review-run-{number}"),
+                review("task_000002", "3", ["b07"], run_id=f"review-run-{number}"),
+            ],
+        )
+    consensus_path = tmp_path / "consensus.jsonl"
+    disagreements_path = tmp_path / "disagreements.jsonl"
+
+    with pytest.raises(ReviewValidationError, match="하나의 run_id"):
+        compare_review_passes(
+            pass_paths,
+            tasks_path,
+            consensus_path=consensus_path,
+            disagreements_path=disagreements_path,
+        )
+
+    assert not consensus_path.exists()
+    assert not disagreements_path.exists()

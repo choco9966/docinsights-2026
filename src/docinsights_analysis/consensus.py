@@ -115,6 +115,15 @@ def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     )
 
 
+def _same_file_or_path(first: Path, second: Path) -> bool:
+    if first.resolve(strict=False) == second.resolve(strict=False):
+        return True
+    try:
+        return first.samefile(second)
+    except OSError:
+        return False
+
+
 def compare_review_passes(
     pass_paths: list[Path],
     tasks_path: Path,
@@ -125,16 +134,20 @@ def compare_review_passes(
     """세 개 이상의 독립 검수 결과에서 전원 일치 항목만 제출 후보로 만든다."""
     if len(pass_paths) < 3:
         raise ReviewValidationError("독립 검수 결과가 최소 3개 필요합니다")
-    resolved_pass_paths = [path.resolve(strict=False) for path in pass_paths]
-    if len(resolved_pass_paths) != len(set(resolved_pass_paths)):
-        raise ReviewValidationError("같은 검수 파일 경로를 독립 pass로 중복 사용할 수 없습니다")
-    resolved_tasks_path = tasks_path.resolve(strict=False)
-    resolved_consensus_path = consensus_path.resolve(strict=False)
-    resolved_disagreements_path = disagreements_path.resolve(strict=False)
-    protected_inputs = {*resolved_pass_paths, resolved_tasks_path}
-    if resolved_consensus_path == resolved_disagreements_path:
+    if any(
+        _same_file_or_path(first, second)
+        for index, first in enumerate(pass_paths)
+        for second in pass_paths[index + 1 :]
+    ):
+        raise ReviewValidationError("같은 검수 파일을 독립 pass로 중복 사용할 수 없습니다")
+    if _same_file_or_path(consensus_path, disagreements_path):
         raise ReviewValidationError("합의와 불일치 출력 경로는 서로 달라야 합니다")
-    if {resolved_consensus_path, resolved_disagreements_path} & protected_inputs:
+    protected_inputs = [*pass_paths, tasks_path]
+    if any(
+        _same_file_or_path(output_path, input_path)
+        for output_path in (consensus_path, disagreements_path)
+        for input_path in protected_inputs
+    ):
         raise ReviewValidationError("출력 경로가 검수 또는 task 입력 경로와 겹칩니다")
     ordered_ids = _task_ids(tasks_path)
     expected_ids = frozenset(ordered_ids)

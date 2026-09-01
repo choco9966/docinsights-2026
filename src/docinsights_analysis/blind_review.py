@@ -110,8 +110,12 @@ class MergeSummary:
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    return _parse_jsonl(path, path.read_text(encoding="utf-8"))
+
+
+def _parse_jsonl(path: Path, raw_text: str) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for line_number, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for line_number, raw_line in enumerate(raw_text.splitlines(), start=1):
         if not raw_line.strip():
             raise BlindReviewError(f"{path}:{line_number}: 빈 줄이 있습니다")
         try:
@@ -741,7 +745,7 @@ def export_qa_review(
         raise BlindReviewError("expected_count는 1 이상이어야 합니다")
 
     review_index = _validated_review_index(review_path)
-    baseline_index = _validated_baseline_index(baseline_path)
+    baseline_index, _ = _validated_baseline_index(baseline_path)
     if set(review_index) != set(baseline_index):
         missing = sorted(set(baseline_index) - set(review_index))
         unknown = sorted(set(review_index) - set(baseline_index))
@@ -1012,8 +1016,15 @@ def _equation_supports_answer(
     )
 
 
-def _validated_baseline_index(path: Path) -> dict[str, dict[str, Any]]:
-    rows = _read_jsonl(path)
+def _validated_baseline_index(path: Path) -> tuple[dict[str, dict[str, Any]], str]:
+    try:
+        payload = path.read_bytes()
+        raw_text = payload.decode("utf-8")
+    except OSError as error:
+        raise BlindReviewError(f"기준 제출물을 읽을 수 없습니다: {path}") from error
+    except UnicodeDecodeError as error:
+        raise BlindReviewError(f"기준 제출물이 UTF-8이 아닙니다: {path}") from error
+    rows = _parse_jsonl(path, raw_text)
     for line_number, row in enumerate(rows, start=1):
         answer = row.get("answer")
         evidence = row.get("evidence")
@@ -1028,13 +1039,13 @@ def _validated_baseline_index(path: Path) -> dict[str, dict[str, Any]]:
             or len(evidence) != len(set(evidence))
         ):
             raise BlindReviewError(f"{path}:{line_number}: baseline evidence가 올바르지 않습니다")
-    return _index_unique(rows, path)
+    return _index_unique(rows, path), hashlib.sha256(payload).hexdigest()
 
 
 def _load_portal_confirmations(
     path: Path | None,
     expected_sha256: str | None,
-    baseline_path: Path,
+    baseline_sha256: str,
 ) -> dict[str, tuple[str, tuple[str, ...]]]:
     if (path is None) != (expected_sha256 is None):
         raise BlindReviewError("포털 확정 산출물 경로와 SHA-256은 함께 제공해야 합니다")
@@ -1043,10 +1054,13 @@ def _load_portal_confirmations(
     if _SHA256_HEX.fullmatch(expected_sha256) is None:
         raise BlindReviewError("포털 확정 산출물 SHA-256 형식이 올바르지 않습니다")
     try:
-        artifact_sha256 = _sha256(path)
-        artifact = json.loads(path.read_text(encoding="utf-8"))
+        payload = path.read_bytes()
+        artifact_sha256 = hashlib.sha256(payload).hexdigest()
+        artifact = json.loads(payload.decode("utf-8"))
     except OSError as error:
         raise BlindReviewError(f"포털 확정 산출물을 읽을 수 없습니다: {path}") from error
+    except UnicodeDecodeError as error:
+        raise BlindReviewError("포털 확정 산출물이 UTF-8이 아닙니다") from error
     except json.JSONDecodeError as error:
         raise BlindReviewError(
             f"포털 확정 산출물이 올바른 JSON 객체가 아닙니다: {error.msg}"
@@ -1057,11 +1071,11 @@ def _load_portal_confirmations(
         raise BlindReviewError("포털 확정 산출물의 최상위 필드가 올바르지 않습니다")
     if artifact["schema_version"] != "1.0":
         raise BlindReviewError("지원하지 않는 포털 확정 산출물 schema_version입니다")
-    baseline_sha256 = artifact["baseline_sha256"]
+    declared_baseline_sha256 = artifact["baseline_sha256"]
     if (
-        not isinstance(baseline_sha256, str)
-        or _SHA256_HEX.fullmatch(baseline_sha256) is None
-        or baseline_sha256 != _sha256(baseline_path)
+        not isinstance(declared_baseline_sha256, str)
+        or _SHA256_HEX.fullmatch(declared_baseline_sha256) is None
+        or declared_baseline_sha256 != baseline_sha256
     ):
         raise BlindReviewError("포털 확정 산출물의 baseline SHA-256이 현재 기준선과 다릅니다")
     rows = artifact["rows"]
@@ -1155,7 +1169,7 @@ def compare_blind_review(
     portal_confirmations_sha256: str | None = None,
 ) -> ComparisonSummary:
     """블라인드 풀이와 기준 제출을 사후 비교해 안전 후보만 분리한다."""
-    baseline_rows = _validated_baseline_index(baseline_path)
+    baseline_rows, baseline_sha256 = _validated_baseline_index(baseline_path)
     review_index = _validated_review_index(review_path)
     if set(review_index) != set(baseline_rows):
         missing = sorted(set(baseline_rows) - set(review_index))
@@ -1170,13 +1184,23 @@ def compare_blind_review(
     portal_confirmations = _load_portal_confirmations(
         portal_confirmations_path,
         portal_confirmations_sha256,
-        baseline_path,
+        baseline_sha256,
     )
     unknown_confirmations = sorted(set(portal_confirmations) - set(baseline_rows))
     if unknown_confirmations:
         raise BlindReviewError(
             "포털 확정 산출물에 기준선에 없는 instance_id가 있습니다: "
             + ", ".join(unknown_confirmations)
+        )
+    mismatched_confirmations = sorted(
+        instance_id
+        for instance_id, (answer, evidence) in portal_confirmations.items()
+        if baseline_rows[instance_id].get("answer") != answer
+        or tuple(sorted(baseline_rows[instance_id].get("evidence", []))) != evidence
+    )
+    if mismatched_confirmations:
+        raise BlindReviewError(
+            "포털 확정 산출물 행이 기준선과 다릅니다: " + ", ".join(mismatched_confirmations)
         )
     for instance_id, baseline in baseline_rows.items():
         review = review_index[instance_id]

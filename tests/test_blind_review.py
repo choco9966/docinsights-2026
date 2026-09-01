@@ -921,7 +921,7 @@ def test_portal_confirmations_reject_baseline_mismatch_and_duplicate_rows(
         blind_review._load_portal_confirmations(
             confirmations_path,
             blind_review._sha256(confirmations_path),
-            baseline_path,
+            blind_review._sha256(baseline_path),
         )
 
     confirmations_path.write_text(
@@ -938,7 +938,211 @@ def test_portal_confirmations_reject_baseline_mismatch_and_duplicate_rows(
         blind_review._load_portal_confirmations(
             confirmations_path,
             blind_review._sha256(confirmations_path),
+            blind_review._sha256(baseline_path),
+        )
+
+
+def test_portal_confirmations_hash_and_parse_the_same_bytes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    baseline_path = tmp_path / "baseline.jsonl"
+    review_path = tmp_path / "review.jsonl"
+    confirmations_path = tmp_path / "portal-confirmations.json"
+    write_jsonl(
+        baseline_path,
+        [{"instance_id": "task_000001", "answer": "10", "evidence": ["b01"]}],
+    )
+    write_jsonl(
+        review_path,
+        [
+            {
+                "instance_id": "task_000001",
+                "question_text": "question",
+                "answer": "12",
+                "evidence_block_ids": ["b01"],
+                "equation": "10 + 2 = 12",
+                "verification_equation": "12 - 2 = 10",
+                "unit": "items",
+                "unique_answer": True,
+                "visual_source_checked": True,
+                "confidence": 0.99,
+                "flags": [],
+            }
+        ],
+    )
+    original_artifact = {
+        "schema_version": "1.0",
+        "baseline_sha256": blind_review._sha256(baseline_path),
+        "rows": [{"instance_id": "task_000001", "answer": "10", "evidence": ["b01"]}],
+    }
+    confirmations_path.write_text(json.dumps(original_artifact), encoding="utf-8")
+    expected_sha256 = blind_review._sha256(confirmations_path)
+    original_sha256 = blind_review._sha256
+
+    def replace_after_hash(path: Path) -> str:
+        if path == confirmations_path:
+            confirmations_path.write_text(
+                json.dumps(
+                    {
+                        **original_artifact,
+                        "rows": [
+                            {
+                                "instance_id": "task_000001",
+                                "answer": "99",
+                                "evidence": ["b01"],
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            return expected_sha256
+        return original_sha256(path)
+
+    monkeypatch.setattr(blind_review, "_sha256", replace_after_hash)
+
+    summary = blind_review.compare_blind_review(
+        review_path,
+        baseline_path,
+        tmp_path / "comparison",
+        portal_confirmations_path=confirmations_path,
+        portal_confirmations_sha256=expected_sha256,
+    )
+
+    assert summary.excluded_portal_confirmed == 1
+    assert json.loads(confirmations_path.read_text()) == original_artifact
+
+
+def test_baseline_hash_and_parse_use_the_same_bytes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    baseline_path = tmp_path / "baseline.jsonl"
+    review_path = tmp_path / "review.jsonl"
+    confirmations_path = tmp_path / "portal-confirmations.json"
+    write_jsonl(
+        baseline_path,
+        [{"instance_id": "task_000001", "answer": "10", "evidence": ["b01"]}],
+    )
+    write_jsonl(
+        review_path,
+        [
+            {
+                "instance_id": "task_000001",
+                "question_text": "question",
+                "answer": "10",
+                "evidence_block_ids": ["b01"],
+                "equation": "8 + 2 = 10",
+                "verification_equation": "10 - 2 = 8",
+                "unit": "items",
+                "unique_answer": True,
+                "visual_source_checked": True,
+                "confidence": 0.99,
+                "flags": [],
+            }
+        ],
+    )
+    tampered_baseline = (
+        json.dumps({"instance_id": "task_000001", "answer": "99", "evidence": ["b01"]}) + "\n"
+    ).encode()
+    tampered_sha256 = hashlib.sha256(tampered_baseline).hexdigest()
+    confirmations_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "baseline_sha256": tampered_sha256,
+                "rows": [
+                    {
+                        "instance_id": "task_000001",
+                        "answer": "10",
+                        "evidence": ["b01"],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    expected_artifact_sha256 = blind_review._sha256(confirmations_path)
+    original_sha256 = blind_review._sha256
+
+    def replace_baseline_after_parse(path: Path) -> str:
+        if path == baseline_path:
+            baseline_path.write_bytes(tampered_baseline)
+            return tampered_sha256
+        return original_sha256(path)
+
+    monkeypatch.setattr(blind_review, "_sha256", replace_baseline_after_parse)
+
+    with pytest.raises(blind_review.BlindReviewError, match="기준선과 다릅니다"):
+        blind_review.compare_blind_review(
+            review_path,
             baseline_path,
+            tmp_path / "comparison",
+            portal_confirmations_path=confirmations_path,
+            portal_confirmations_sha256=expected_artifact_sha256,
+        )
+
+    assert baseline_path.read_text().find('"answer": "10"') != -1
+
+
+@pytest.mark.parametrize(
+    ("confirmation_row", "message"),
+    [
+        (
+            {"instance_id": "task_999999", "answer": "10", "evidence": ["b01"]},
+            "기준선에 없는",
+        ),
+        (
+            {"instance_id": "task_000001", "answer": "11", "evidence": ["b01"]},
+            "행이 기준선과 다릅니다",
+        ),
+    ],
+)
+def test_portal_confirmations_must_match_bound_baseline_rows(
+    tmp_path: Path, confirmation_row: dict, message: str
+) -> None:
+    baseline_path = tmp_path / "baseline.jsonl"
+    review_path = tmp_path / "review.jsonl"
+    confirmations_path = tmp_path / "portal-confirmations.json"
+    write_jsonl(
+        baseline_path,
+        [{"instance_id": "task_000001", "answer": "10", "evidence": ["b01"]}],
+    )
+    write_jsonl(
+        review_path,
+        [
+            {
+                "instance_id": "task_000001",
+                "question_text": "question",
+                "answer": "10",
+                "evidence_block_ids": ["b01"],
+                "equation": "8 + 2 = 10",
+                "verification_equation": "10 - 2 = 8",
+                "unit": "items",
+                "unique_answer": True,
+                "visual_source_checked": True,
+                "confidence": 0.99,
+                "flags": [],
+            }
+        ],
+    )
+    confirmations_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "baseline_sha256": blind_review._sha256(baseline_path),
+                "rows": [confirmation_row],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(blind_review.BlindReviewError, match=message):
+        blind_review.compare_blind_review(
+            review_path,
+            baseline_path,
+            tmp_path / "comparison",
+            portal_confirmations_path=confirmations_path,
+            portal_confirmations_sha256=blind_review._sha256(confirmations_path),
         )
 
 
