@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -96,9 +97,9 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
     reference_sha256 = hashlib.sha256(refs.read_bytes()).hexdigest()
     silver_dir = tmp_path / "raw/silver"
     silver_artifacts: dict[str, tuple[Path, str]] = {}
-    for key, score, cer, wer, seconds in (
-        ("apple", 90.0, 0.1, 0.2, 5.0),
-        ("tesseract", 95.0, 0.05, 0.1, 10.0),
+    for key, engine_label, engine, score, cer, wer, seconds in (
+        ("apple", "Apple Vision", "apple-vision", 90.0, 0.1, 0.2, 5.0),
+        ("tesseract", "Tesseract PSM 6", "tesseract-tsv", 95.0, 0.05, 0.1, 10.0),
     ):
         prediction_sha256 = ("e" if key == "apple" else "f") * 64
         evaluation = _json(
@@ -111,7 +112,12 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
                 "primary_score": {"name": "silver_text_score", "value": score},
                 "sources": {
                     "reference": {"sha256": reference_sha256, "records": 1},
-                    "prediction": {"sha256": prediction_sha256, "records": 1},
+                    "prediction": {
+                        "sha256": prediction_sha256,
+                        "records": 1,
+                        "engine_label": engine_label,
+                        "engines": [engine],
+                    },
                 },
                 "summary": {
                     "instances": 1,
@@ -153,6 +159,8 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
             "silver_baselines": {
                 "apple_vision": {
                     "model": "Apple Vision",
+                    "engine_label": "Apple Vision",
+                    "engines": ["apple-vision"],
                     "revision": "fixture-apple",
                     "prediction_artifact_sha256": silver_artifacts["apple"][1],
                     "evaluation_artifact": {
@@ -169,6 +177,8 @@ def _fixture(tmp_path: Path) -> dict[str, Path]:
                 },
                 "tesseract_psm6": {
                     "model": "Tesseract PSM 6",
+                    "engine_label": "Tesseract PSM 6",
+                    "engines": ["tesseract-tsv"],
                     "revision": "fixture-tesseract",
                     "prediction_artifact_sha256": silver_artifacts["tesseract"][1],
                     "evaluation_artifact": {
@@ -303,6 +313,130 @@ def test_dynamic_reference_refresh_join_baselines_and_determinism(tmp_path: Path
     assert "full_silver_baseline" in (tmp_path / "out/comparison.csv").read_text()
     raw_csv = write_raw_csv(paths["raw_results"], tmp_path / "out" / "measured-raw.csv")
     assert "org/model-1" in raw_csv.read_text(encoding="utf-8")
+
+
+def test_silver_baseline_registry_accepts_additional_full_cohort_engine(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    additional = copy.deepcopy(baselines["silver_baselines"]["tesseract_psm6"])
+    source_path = paths["baselines_path"].parent / additional["evaluation_artifact"]["path"]
+    evaluation = json.loads(source_path.read_text(encoding="utf-8"))
+    evaluation["sources"]["prediction"]["engine_label"] = "PP-OCRv5 mobile"
+    evaluation["sources"]["prediction"]["engines"] = ["paddleocr-ppocrv5-mobile"]
+    evaluation["sources"]["prediction"]["sha256"] = "1" * 64
+    ppocr_path = source_path.with_name("ppocrv5.json")
+    _json(ppocr_path, evaluation)
+    additional["model"] = "PP-OCRv5 mobile"
+    additional["engine_label"] = "PP-OCRv5 mobile"
+    additional["engines"] = ["paddleocr-ppocrv5-mobile"]
+    additional["prediction_artifact_sha256"] = "1" * 64
+    additional["evaluation_artifact"] = {
+        "path": "raw/silver/ppocrv5.json",
+        "sha256": hashlib.sha256(ppocr_path.read_bytes()).hexdigest(),
+    }
+    additional["valid_ocr_records"] = 0
+    audit_path = source_path.with_name("ppocrv5-audit.json")
+    runtime_path = source_path.with_name("ppocrv5-runtime.json")
+    _json(
+        runtime_path,
+        {"result_sha256": "1" * 64, "record_count": 1, "failed_count": 0},
+    )
+    _json(
+        audit_path,
+        {
+            "prediction": {"sha256": "1" * 64},
+            "runtime": {
+                "path": "ppocrv5-runtime.json",
+                "sha256": hashlib.sha256(runtime_path.read_bytes()).hexdigest(),
+                "declared_result_sha256_matches": True,
+            },
+            "coverage": {
+                "expected_instance_ids": 1,
+                "observed_instance_ids": 1,
+                "unique_instance_ids": 1,
+                "missing_instance_ids": [],
+                "extra_instance_ids": [],
+            },
+            "canonical_merge": {
+                "status": "failed",
+                "error": "OCR record blocks must be ordered by block_id",
+                "strict_valid_records": 0,
+            },
+            "evaluation": {
+                "evaluation_sha256": additional["evaluation_artifact"]["sha256"],
+                "semantic_correction_applied": False,
+            },
+        },
+    )
+    additional["ingestion_audit_artifact"] = {
+        "path": "raw/silver/ppocrv5-audit.json",
+        "sha256": hashlib.sha256(audit_path.read_bytes()).hexdigest(),
+    }
+    additional["output_bytes"] = 6_325_899
+    additional["row_type"] = "full_silver_diagnostic"
+    additional["candidate_gate_outcome"] = "fail_strict_schema"
+    additional["selection_status"] = "evaluated_diagnostic"
+    additional["runner_gate"] = "raw_217_coverage_strict_merge_failed"
+    additional["notes"] = "one malformed block marker; raw text scored without correction"
+    baselines["silver_baselines"]["ppocrv5_mobile"] = additional
+    _json(paths["baselines_path"], baselines)
+
+    report = _evaluate(paths)
+
+    assert [row["model"] for row in report["baselines"]] == [
+        "Apple Vision",
+        "Tesseract PSM 6",
+        "PP-OCRv5 mobile",
+    ]
+    assert "PP-OCRv5 mobile" in report["comparison_scope"]
+    ppocr = report["baselines"][2]
+    assert ppocr["inference_success_rate"] == 1.0
+    assert ppocr["valid_ocr_rate"] == 0.0
+    assert ppocr["output_bytes"] == 6_325_899
+    assert ppocr["candidate_gate_outcome"] == "fail_strict_schema"
+    assert ppocr["selection_status"] == "evaluated_diagnostic"
+    assert ppocr["runner_gate"] == "raw_217_coverage_strict_merge_failed"
+    assert ppocr["notes"] == "one malformed block marker; raw text scored without correction"
+    write_outputs(report, tmp_path / "out")
+    assert "PP-OCRv5 mobile" in (tmp_path / "out/comparison.md").read_text(encoding="utf-8")
+
+
+def test_silver_baseline_engine_identity_fails_closed(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    baselines["silver_baselines"]["apple_vision"]["engines"] = ["other-engine"]
+    _json(paths["baselines_path"], baselines)
+
+    with pytest.raises(ValueError, match="engine identity mismatch"):
+        _evaluate(paths)
+
+
+def test_silver_diagnostic_requires_bound_ingestion_audit(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    baseline = baselines["silver_baselines"]["apple_vision"]
+    baseline["valid_ocr_records"] = 0
+    baseline["row_type"] = "full_silver_diagnostic"
+    baseline["candidate_gate_outcome"] = "fail_strict_schema"
+    baseline["selection_status"] = "evaluated_diagnostic"
+    _json(paths["baselines_path"], baselines)
+
+    with pytest.raises(ValueError, match="missing ingestion audit identity"):
+        _evaluate(paths)
+
+
+def test_silver_diagnostic_cannot_be_published_as_operational_baseline(tmp_path: Path) -> None:
+    paths = _fixture(tmp_path)
+    baselines = json.loads(paths["baselines_path"].read_text(encoding="utf-8"))
+    baseline = baselines["silver_baselines"]["apple_vision"]
+    baseline["valid_ocr_records"] = 0
+    baseline["row_type"] = "full_silver_baseline"
+    baseline["candidate_gate_outcome"] = "operational_baseline"
+    baseline["selection_status"] = "operational_baseline"
+    _json(paths["baselines_path"], baselines)
+
+    with pytest.raises(ValueError, match="invalid silver diagnostic workflow metadata"):
+        _evaluate(paths)
 
 
 def test_silver_baseline_artifacts_fail_closed_on_hash_and_source_mismatch(

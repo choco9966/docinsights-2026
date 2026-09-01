@@ -21,13 +21,12 @@ Docling 258M, SmolDocling 256M preview 네 개다. GLM-OCR은 실제 추론 및 
 
 Issue #8은 main merge commit `f57df2b6ab01b1a3024e97f09ab14ed66db8e1a2`로
 병합·종료됐다. `src/docinsights_ocr/silver_evaluation.py`와
-`docinsights-ocr codex-silver-evaluate`를 재사용해 Apple Vision과 Tesseract를 Codex
-Validation silver 217건 전수로 다시 채점했다. 절대 로컬 경로는 재현 가능한
-`issue8/...` 논리 라벨로 바꿨고, 그 두 source path 외의 scorer payload는 Issue #8
-산출물과 byte-exact하게 일치한다. 해석 계약은
+`docinsights-ocr codex-silver-evaluate`를 재사용해 Apple Vision, Tesseract, PP-OCRv5
+mobile을 Codex Validation silver 217건 전수로 채점했다. 절대 로컬 경로는 재현 가능한
+논리 라벨로 바꿨다. 해석 계약은
 `silver_agreement_not_human_gold_accuracy`이며 human-gold accuracy가 아니다.
 
-HF 모델 품질은 여전히 `task_000909` 한 건만 실제 추론한 결과다. Apple/Tesseract의
+HF document-model 품질은 여전히 `task_000909` 한 건만 실제 추론한 결과다. 세 OCR 엔진의
 217건 full-silver 결과와 HF의 1건 smoke 결과는 cohort와 device/runtime가 다르다. 따라서
 아래 수치를 한 표에 보존하더라도 교차 cohort 품질 순위나 승자를 만들 수 없다.
 
@@ -39,16 +38,24 @@ HF 모델 품질은 여전히 `task_000909` 한 건만 실제 추론한 결과�
 | Granite Docling 258M | 성공 | 실패 | N/A | N/A | N/A | 반복문자 invalid |
 | SmolDocling 256M preview | 성공 | 성공 | 0.452238 | 0.452802 | 0.756757 | b08-b13, b21-b23 |
 
-217건 full-silver baseline은 다음과 같다.
+217건 full-silver cohort 행은 다음과 같다.
 
-| 엔진 | samples | 성공 | silver score | micro CER | micro WER | block exact | s/doc | docs/min | peak RSS |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Apple Vision accurate 200 DPI | 217 | 217/217 | 99.377738 | 0.006223 | 0.008946 | 217/217 | 3.878133 | 15.471362 | 224,903,168 B |
-| Tesseract 5.5.3 eng PSM 6 | 217 | 217/217 | 99.941495 | 0.000585 | 0.006029 | 217/217 | 6.033493 | 9.944489 | 112,754,688 B |
+| 엔진 | samples | inference | strict valid | silver score | micro CER | micro WER | block exact | s/doc | docs/min | peak RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Apple Vision accurate 200 DPI | 217 | 217/217 | 217/217 | 99.377738 | 0.006223 | 0.008946 | 217/217 | 3.878133 | 15.471362 | 224,903,168 B |
+| Tesseract 5.5.3 eng PSM 6 | 217 | 217/217 | 217/217 | 99.941495 | 0.000585 | 0.006029 | 217/217 | 6.033493 | 9.944489 | 112,754,688 B |
+| PP-OCRv5 mobile, Kaggle CPU | 217 | 217/217 | 216/217 | 99.617639 | 0.003824 | 0.014463 | 216/217 | 58.915511 | 1.018408 | N/A |
 
-Tesseract의 silver agreement가 높고 Apple Vision의 처리량이 높다는 것은 이 217건
-cohort 안에서만 유효하다. 동일 renderer 또는 reference의 공통 오류 가능성이 있으므로
-두 값 모두 사람 정답 정확도로 해석하지 않는다.
+Tesseract의 silver agreement가 가장 높고 Apple Vision의 처리량이 가장 높으며 PP-OCRv5는
+그 사이의 text agreement지만 가장 느리다. 이 비교는 동일 217건 cohort 안에서만 유효하고,
+동일 renderer 또는 reference의 공통 오류 가능성이 있으므로 사람 정답 정확도로 해석하지
+않는다.
+
+PP-OCRv5 raw output은 217건과 runtime SHA-256 계약을 모두 충족했지만 `task_001108`에서
+`b09` marker를 `b0`로 인식했다. 본문은 Codex reference와 일치해도 canonical block-order
+계약에는 어긋나므로 strict `cloud-merge`는 실패했고, 표는 raw output을 수정하지 않은 채
+동일 silver scorer로 평가한 diagnostic 결과다. 이 한 건을 자동 보정하거나 217/217 strict
+valid로 보고하지 않는다.
 
 SmolDocling의 DocTags 원문에는 `b01` 같은 marker가 남아 있어 현재 parser가 block-ID
 alignment를 수행했다. 구조 marker가 없는 출력을 성공으로 간주하는 예외는 두지 않는다.
@@ -80,6 +87,9 @@ inference 실패로 전환하고 raw 출력을 제거한다.
 | SmolDocling 256M preview | 1.3555 | 38.1619 | 2,316,926,976 | 2,369,949,696 | 1,157,627,904 | 887,485,952 | 3,729 |
 
 비용은 Kaggle 무료 quota다. 할당된 T4 두 장 중 child에는 `cuda:0`만 노출했다.
+PP-OCRv5 217건 실행은 별도 Kaggle CPU Version #3에서 217/217을 완료했으며 평균
+58.915511초/문서, p95 62.197254초/문서였다. 해당 runtime은 peak RSS를 기록하지 않아
+추정값을 채우지 않았다.
 
 ## 증거, 환경, 입력 격리
 
@@ -113,8 +123,8 @@ SHA-256 provenance를 갖춰야 한다. 현재 reference artifact SHA-256은
 
 ## Full-silver baseline 근거와 한계
 
-`baselines.json`은 더 이상 Apple/Tesseract 품질 값을 수동 복제하지 않는다. 생성기는
-`raw/silver/apple-vision-evaluation.json`과 `raw/silver/tesseract-evaluation.json`을 읽고,
+`baselines.json`은 더 이상 full-silver 품질 값을 수동 복제하지 않는다. 생성기는 Apple
+Vision, Tesseract, PP-OCRv5의 `raw/silver/*-evaluation.json`을 읽고,
 evaluation artifact SHA-256, reference SHA-256, prediction SHA-256, 217건 exactly-once
 coverage, instance ID exact set, reference/prediction status 합계와
 `silver_agreement_not_human_gold_accuracy` 계약을 검증한 뒤 표를 만든다.
@@ -126,6 +136,9 @@ coverage, instance ID exact set, reference/prediction status 합계와
 | Apple scorer JSON | `5e7a85338f58ad766cdcc0353e5bd9e45e3a32a4394d41f73d0c20751fb32645` |
 | Tesseract prediction 217 | `8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf` |
 | Tesseract scorer JSON | `3db904ee7e4278b101915fbb701ecf4b38025e105c5d51033290f57e52446e49` |
+| PP-OCRv5 Kaggle raw prediction 217 | `60e1844155e70fc5f4cea218e86be4ac2e6ca9fa35d4699fc820c568231c0fd1` |
+| PP-OCRv5 scorer JSON | `359ea3dd74f7995e2c710da80165134fad3147917587e0658d9efffa2808fb47` |
+| PP-OCRv5 runtime JSON | `913b5b5e80a3e8a23f2542a23978f255ee1a4e2b93f8847965984e3bdc6d0a48` |
 
 통합 비교표에는 각 행의 params, primary weight bytes, Hugging Face downloads snapshot,
 설치 크기, 성공률, CER/WER, 속도와 peak RAM/VRAM을 포함한다. HF snapshot의 설치 footprint는
@@ -145,6 +158,7 @@ export ISSUE8_REFERENCE=/absolute/path/to/codex-validation-reference.jsonl
 export ISSUE8_REFERENCE_SHA256=d8cefce5507a74e6424bd6555fb9f67a14881f2b53891b3d08e39013ca10bc4a
 export APPLE_PREDICTION=/absolute/path/to/apple-vision-200dpi.jsonl
 export TESSERACT_PREDICTION=/absolute/path/to/tesseract-200dpi-psm6-final.jsonl
+export PPOCRV5_PREDICTION=/absolute/path/to/result-shard-00-of-01.jsonl
 test "$(shasum -a 256 "$ISSUE8_REFERENCE" | cut -d ' ' -f 1)" = \
   "$ISSUE8_REFERENCE_SHA256"
 
@@ -162,11 +176,19 @@ uv run docinsights-ocr codex-silver-evaluate \
   --engine-label 'Tesseract eng PSM 6 200 DPI' \
   --reference-label issue8/codex-validation-reference.jsonl \
   --prediction-label issue8/tesseract-200dpi-psm6-final.jsonl
+uv run docinsights-ocr codex-silver-evaluate \
+  "$ISSUE8_REFERENCE" "$PPOCRV5_PREDICTION" \
+  research/ocr-small-models/raw/silver/ppocrv5-kaggle-evaluation.json \
+  --markdown research/ocr-small-models/raw/silver/ppocrv5-kaggle-evaluation.md \
+  --engine-label 'PP-OCRv5 mobile (Kaggle CPU)' \
+  --reference-label issue8/codex-validation-reference.jsonl \
+  --prediction-label kaggle/version-3/result-shard-00-of-01.jsonl
 
 uvx check-jsonschema \
   --schemafile schemas/codex-silver-evaluation-v1.schema.json \
   research/ocr-small-models/raw/silver/apple-vision-evaluation.json \
-  research/ocr-small-models/raw/silver/tesseract-evaluation.json
+  research/ocr-small-models/raw/silver/tesseract-evaluation.json \
+  research/ocr-small-models/raw/silver/ppocrv5-kaggle-evaluation.json
 
 PYTHONPATH=src python3 -m docinsights_hf_ocr generate \
   --raw-results research/ocr-small-models/raw/v2/results.jsonl \
@@ -191,7 +213,8 @@ git diff --check -- . \
 
 Issue #11의 완료 주장은 v2 evidence ingestion, pinned revision/file OID 검증, 네 selected
 후보와 GLM diagnostic rejection, inference/validity 분리, HF 고정 1건 silver alignment,
-Apple/Tesseract 217건 scorer 재실행, schema 및 byte/hash 재현 검사가 통과하는 범위로
-제한한다. 217건 HF 추론 또는 human-gold 정확도는 완료 주장에 포함하지 않는다.
+세 OCR 엔진의 217건 scorer 실행, PP-OCRv5 strict schema 실패의 보존, schema 및 byte/hash
+재현 검사가 통과하는 범위로 제한한다. 217건 HF document-model 추론 또는 human-gold
+정확도는 완료 주장에 포함하지 않는다.
 `raw/v2/results.csv`는 원본 Kaggle ZIP의 CRLF를 byte-exact 보존하므로 whitespace diff
 검사에서만 제외하며, 내용은 artifact hash와 `cmp` 회귀 테스트로 검증한다.

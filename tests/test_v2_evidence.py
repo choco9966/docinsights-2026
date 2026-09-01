@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import runpy
+import statistics
 from pathlib import Path
 
 import pytest
@@ -143,6 +144,8 @@ def test_full_silver_baselines_are_scorer_outputs_with_pinned_sources() -> None:
             "evaluation_sha256": "5e7a85338f58ad766cdcc0353e5bd9e45e3a32a4394d41f73d0c20751fb32645",
             "prediction_sha256": "8d55f10f9f628cdc6744f451d1c04de5158495a6452ae123d0ff9670d1908c01",
             "prediction_label": "issue8/apple-vision-200dpi.jsonl",
+            "engine_label": "Apple Vision accurate 200 DPI",
+            "engines": ["apple-vision"],
             "score": 99.37773767034393,
             "cer": 0.0062226232965606745,
             "wer": 0.00894595377474789,
@@ -151,9 +154,21 @@ def test_full_silver_baselines_are_scorer_outputs_with_pinned_sources() -> None:
             "evaluation_sha256": "3db904ee7e4278b101915fbb701ecf4b38025e105c5d51033290f57e52446e49",
             "prediction_sha256": "8b5db676267a0a1ab51c345798994eb5f38f4b5148728e54adbb40cf94acadaf",
             "prediction_label": "issue8/tesseract-200dpi-psm6-final.jsonl",
+            "engine_label": "Tesseract eng PSM 6 200 DPI",
+            "engines": ["tesseract-tsv"],
             "score": 99.94149497079819,
             "cer": 0.00058505029201817,
             "wer": 0.006029087822589881,
+        },
+        "ppocrv5-kaggle-evaluation.json": {
+            "evaluation_sha256": "359ea3dd74f7995e2c710da80165134fad3147917587e0658d9efffa2808fb47",
+            "prediction_sha256": "60e1844155e70fc5f4cea218e86be4ac2e6ca9fa35d4699fc820c568231c0fd1",
+            "prediction_label": "kaggle/version-3/result-shard-00-of-01.jsonl",
+            "engine_label": "PP-OCRv5 mobile (Kaggle CPU)",
+            "engines": ["paddleocr-ppocrv5-mobile"],
+            "score": 99.61763870863076,
+            "cer": 0.0038236129136924074,
+            "wer": 0.014463074363240753,
         },
     }
     for filename, values in expected.items():
@@ -168,17 +183,80 @@ def test_full_silver_baselines_are_scorer_outputs_with_pinned_sources() -> None:
         }
         assert evaluation["sources"]["prediction"]["path"] == values["prediction_label"]
         assert evaluation["sources"]["prediction"]["sha256"] == values["prediction_sha256"]
+        assert evaluation["sources"]["prediction"]["engine_label"] == values["engine_label"]
+        assert evaluation["sources"]["prediction"]["engines"] == values["engines"]
         assert evaluation["summary"]["instances"] == 217
         assert evaluation["summary"]["prediction_ok"] == 217
         assert evaluation["summary"]["silver_text_score"] == values["score"]
         assert evaluation["summary"]["micro_character_error_rate"] == values["cer"]
         assert evaluation["summary"]["micro_word_error_rate"] == values["wer"]
 
+    ppocr = json.loads((SILVER / "ppocrv5-kaggle-evaluation.json").read_text())
+    assert ppocr["summary"]["ordered_block_exact_count"] == 216
+    assert ppocr["summary"]["exact_token_f1"] == 0.9966111471627371
+    assert ppocr["summary"]["ordered_quantity_f1"] == 0.9964476021314386
+    ppocr_instances = ppocr["instances"]
+    character_distance = sum(row["strict_text"]["edit_distance"] for row in ppocr_instances)
+    reference_characters = sum(
+        row["strict_text"]["reference_characters"] for row in ppocr_instances
+    )
+    word_distance = sum(row["words"]["edit_distance"] for row in ppocr_instances)
+    reference_words = sum(row["words"]["reference_words"] for row in ppocr_instances)
+    assert ppocr["summary"]["micro_character_error_rate"] == pytest.approx(
+        character_distance / reference_characters
+    )
+    assert ppocr["summary"]["micro_word_error_rate"] == pytest.approx(
+        word_distance / reference_words
+    )
+    assert ppocr["summary"]["mean_block_f1"] == pytest.approx(
+        statistics.fmean(row["blocks"]["f1"] for row in ppocr_instances)
+    )
+    assert ppocr["summary"]["ordered_block_exact_count"] == sum(
+        row["blocks"]["ordered_exact"] for row in ppocr_instances
+    )
+    latencies = [row["total_seconds"] for row in ppocr_instances]
+    assert ppocr["summary"]["latency"]["mean_seconds_per_document"] == pytest.approx(
+        statistics.fmean(latencies)
+    )
+    runtime = SILVER / "ppocrv5-kaggle-runtime.json"
+    assert _sha256(runtime) == "913b5b5e80a3e8a23f2542a23978f255ee1a4e2b93f8847965984e3bdc6d0a48"
+    runtime_data = json.loads(runtime.read_text())
+    assert runtime_data["record_count"] == 217
+    assert runtime_data["failed_count"] == 0
+    assert (
+        runtime_data["result_sha256"]
+        == expected["ppocrv5-kaggle-evaluation.json"]["prediction_sha256"]
+    )
+    audit = json.loads((SILVER / "ppocrv5-kaggle-ingestion-audit.json").read_text())
+    assert audit["prediction"]["sha256"] == runtime_data["result_sha256"]
+    assert audit["coverage"] == {
+        "expected_instance_ids": 217,
+        "observed_instance_ids": 217,
+        "unique_instance_ids": 217,
+        "missing_instance_ids": [],
+        "extra_instance_ids": [],
+    }
+    assert audit["canonical_merge"] == {
+        "status": "failed",
+        "error": "OCR record blocks must be ordered by block_id",
+        "failing_instance_id": "task_001108",
+        "reference_block_id": "b09",
+        "observed_block_id": "b0",
+        "block_text_equal_to_reference": True,
+        "strict_valid_records": 216,
+    }
+    assert audit["evaluation"]["semantic_correction_applied"] is False
+
     comparison = json.loads((ROOT / "generated/comparison.json").read_text(encoding="utf-8"))
     assert comparison["cross_cohort_quality_ranking_allowed"] is False
     assert {row["samples"] for row in comparison["rows"]} == {1}
     assert {row["samples"] for row in comparison["baselines"]} == {217}
     assert {row["quality_samples"] for row in comparison["baselines"]} == {217}
+    ppocr_row = next(
+        row for row in comparison["baselines"] if row["row_type"] == "full_silver_diagnostic"
+    )
+    assert ppocr_row["valid_ocr_rate"] == 216 / 217
+    assert ppocr_row["runner_gate"].endswith("task_001108_b09_to_b0")
 
 
 def test_pinned_model_revisions_parameters_oids_and_remote_code_audit() -> None:

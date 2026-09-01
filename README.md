@@ -184,7 +184,7 @@ Qwen 입력 JSONL은 [`schemas/docsem-ocr-v1.schema.json`](schemas/docsem-ocr-v1
 
 ### Colab·Kaggle CPU와 Mac Studio
 
-PP-OCRv5 mobile은 [`notebooks/ocr/cloud_cpu_ppocrv5.ipynb`](notebooks/ocr/cloud_cpu_ppocrv5.ipynb)에서 217개 Validation 문서를 8개 결정적 shard로 나눠 Kaggle 또는 Colab CPU에서 실행할 수 있습니다. Kaggle을 주 cloud cohort, Colab을 독립 재현 cohort, Mac Studio를 입력 생성·병합·Apple Vision·LightOnOCR·GLM-OCR 실행 환경으로 사용합니다. Notebook은 immutable commit·입력 hash·VM session을 확인하고, 병합기는 runtime sidecar가 다른 Kaggle·Colab·package·model cohort를 섞지 않습니다.
+PP-OCRv5 mobile은 [`notebooks/ocr/cloud_cpu_ppocrv5.ipynb`](notebooks/ocr/cloud_cpu_ppocrv5.ipynb)에서 217개 Validation 문서를 결정적 shard로 나눠 Kaggle 또는 Colab CPU에서 실행할 수 있습니다. Kaggle Version #3의 1-shard 전수 실행은 217/217을 완료했지만 `task_001108`의 block marker 오류로 strict contract 기준 216/217만 유효해 canonical merge가 실패하므로 raw 결과를 diagnostic으로만 비교합니다. 상세 점수와 해시는 [소형 OCR 비교 보고서](research/ocr-small-models/report.md)에 기록합니다.
 
 ```bash
 uv run docinsights-ocr cloud-pack artifacts/ocr/validation-manifest.jsonl /absolute/path/to/docsem artifacts/ocr/docsem-validation-ocr-input.tar.gz

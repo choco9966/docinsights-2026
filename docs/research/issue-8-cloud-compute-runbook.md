@@ -8,7 +8,7 @@ Validation OCR은 Kaggle CPU를 PP-OCRv5의 주 분할 실행 환경으로, Cola
 
 | 환경 | 공식적으로 확인된 조건 | 이번 실험의 역할 |
 | --- | --- | --- |
-| Kaggle Notebook CPU | 4 CPU cores, 30GB RAM, 최대 12시간, `/kaggle/working` 자동 저장 20GB | PP-OCRv5 mobile 8-shard 주 실행과 clean `Save & Run All` 재현 |
+| Kaggle Notebook CPU | 4 CPU cores, 30GB RAM, 최대 12시간, `/kaggle/working` 자동 저장 20GB | PP-OCRv5 mobile 실행과 clean `Save & Run All` 재현; 실제 Version #3은 1-shard 전수 실행 |
 | Google Colab CPU | 자원·idle timeout·최대 VM 수명은 동적이며 보장되지 않음, 무료 런타임은 조건에 따라 최대 12시간 | Kaggle과 분리한 독립 재현 또는 중단된 shard의 별도 cohort 실행 |
 | Mac Studio | 사용자가 연결할 Apple Silicon 장비이며 사양·OS·디스크는 아직 미확인 | 입력 묶음 생성, shard 병합·감사, Apple Vision 전수 재현, LightOnOCR·GLM-OCR 실행 |
 
@@ -66,9 +66,9 @@ Checkpoint 옆에는 현재 VM의 boot/session fingerprint가 저장됩니다. �
 | PaddlePaddle / PaddleOCR / PaddleX | `3.2.0` / `3.3.2` / `3.3.13` |
 | 입력 | 200 DPI PNG, CPU, MKL-DNN 비활성, orientation·unwarping 비활성 |
 
-각 shard에서 회수할 파일은 `result-shard-XX-of-08.jsonl`, `runtime-shard-XX-of-08.json`, `pip-freeze-shard-XX-of-08.txt`입니다. Runtime sidecar에는 platform role, OS·architecture·Python, clean repository SHA, package·model revision, bundle·full/shard manifest·result hash, session fingerprint와 시작·종료 시각이 들어갑니다. Paddle `predict()`는 현재 Python 프로세스 안에서 실행되므로 CLI의 timeout은 renderer에만 적용되고 inference hang을 강제 종료하지 못합니다. 이 한계는 cloud 실행 기록에 남기고 전체 shard session timeout으로 감시합니다.
+각 shard에서 회수할 파일은 `result-shard-XX-of-NN.jsonl`, `runtime-shard-XX-of-NN.json`, `pip-freeze-shard-XX-of-NN.txt`입니다. Runtime sidecar에는 platform role, OS·architecture·Python, clean repository SHA, package·model revision, bundle·full/shard manifest·result hash, session fingerprint와 시작·종료 시각이 들어갑니다. Paddle `predict()`는 현재 Python 프로세스 안에서 실행되므로 CLI의 timeout은 renderer에만 적용되고 inference hang을 강제 종료하지 못합니다. 이 한계는 cloud 실행 기록에 남기고 전체 shard session timeout으로 감시합니다.
 
-이 노트북과 archive는 로컬에서 JSON·코드 compile, 고정 hash, 샤딩·병합 회귀 테스트를 통과했지만 Kaggle/Colab의 실제 clean one-document와 full-shard 실행 결과는 아직 없습니다. 각 플랫폼에서 첫 shard를 완료한 뒤 notebook version과 runtime sidecar를 실험 ledger에 추가해야 cloud 성능 수치로 사용합니다.
+Kaggle Version #3(`scriptVersionId=346301285`)은 1-shard로 Validation 217건을 완료했고 failed record는 0건이다. result SHA-256은 `60e1844155e70fc5f4cea218e86be4ac2e6ca9fa35d4699fc820c568231c0fd1`, runtime SHA-256은 `913b5b5e80a3e8a23f2542a23978f255ee1a4e2b93f8847965984e3bdc6d0a48`이며 runtime이 선언한 result hash와 일치한다. 다만 `task_001108`의 `b09`가 `b0`로 인식되어 strict canonical merge는 실패했으므로 raw cohort를 canonical 결과로 승격하지 않는다. 완료된 Version #3을 재실행하거나 자동 보정하지 않고 이 실패를 비교평가의 구조 정확도에 반영한다.
 
 ## Mac Studio 연결과 역할
 
@@ -88,14 +88,14 @@ LightOnOCR-2-1B의 weight 파일은 약 2.01GB이고 GLM-OCR 8-bit MLX weight는
 Mac Studio는 다음 순서로 사용합니다.
 
 1. cloud archive와 manifest SHA-256을 다시 확인합니다.
-2. Kaggle shard 8개와 runtime sidecar 8개를 같은 디렉터리에 모읍니다.
+2. 같은 cohort의 Kaggle shard와 runtime sidecar를 같은 디렉터리에 모읍니다.
 3. `cloud-merge`로 runtime cohort, clean repository SHA, bundle·manifest·result hash, 누락·중복·오배정·PDF SHA·질의·split·OCR 구성과 strict JSONL schema를 fail-closed로 검사합니다.
 4. 병합한 PP-OCRv5 결과를 Tesseract, Apple Vision, Codex-assisted silver와 비교하되 agreement를 accuracy로 부르지 않습니다.
 5. 고정 6문서 smoke set에서 LightOnOCR와 GLM-OCR을 먼저 실행하고 자원·출력 계약을 통과한 모델만 217개 전수 후보로 올립니다.
 
 ## 병합과 판정
 
-Kaggle cohort 8개가 모두 도착하면 Mac Studio에서 다음과 같이 병합합니다.
+Kaggle cohort의 모든 shard가 도착하면 Mac Studio에서 다음과 같이 병합합니다. 아래 8-shard 명령은 원래 분할 계획이며, 실제 Version #3은 같은 계약을 `result-shard-00-of-01.jsonl`과 `runtime-shard-00-of-01.json`에 적용했다.
 
 ```bash
 uv run docinsights-ocr cloud-merge artifacts/ocr/validation-manifest.jsonl artifacts/ocr/paddleocr-kaggle-200dpi.jsonl artifacts/ocr/kaggle/result-shard-*-of-08.jsonl --runtimes artifacts/ocr/kaggle/runtime-shard-*-of-08.json --report artifacts/ocr/paddleocr-kaggle-200dpi.merge.json

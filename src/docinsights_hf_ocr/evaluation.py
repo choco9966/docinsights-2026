@@ -446,11 +446,19 @@ def evaluate(
     codex_total_seconds = sum(
         row.get("timing", {}).get("total_seconds", 0.0) for row in references.values()
     )
+    baseline_rows = _baseline_rows(
+        baselines,
+        baselines_path=baselines_path,
+        expected_reference_sha256=observed_reference_sha256,
+        expected_reference_ids=set(references),
+    )
+    baseline_labels = ", ".join(row["model"] for row in baseline_rows)
     return {
         "schema_version": "2.0",
         "comparison_scope": (
-            "HF models use one fixed DocSem case; Apple Vision and Tesseract use the full "
-            "217-case silver cohort; cross-cohort quality ranking is prohibited"
+            f"{len(rows)} document-model candidates use one fixed DocSem case; "
+            f"{baseline_labels} use the full "
+            f"{len(references)}-case silver cohort; cross-cohort quality ranking is prohibited"
         ),
         "interpretation": SILVER_INTERPRETATION,
         "cross_cohort_quality_ranking_allowed": False,
@@ -467,12 +475,7 @@ def evaluate(
         },
         "query_passthrough": query,
         "rows": rows,
-        "baselines": _baseline_rows(
-            baselines,
-            baselines_path=baselines_path,
-            expected_reference_sha256=observed_reference_sha256,
-            expected_reference_ids=set(references),
-        ),
+        "baselines": baseline_rows,
     }
 
 
@@ -502,10 +505,9 @@ def _baseline_rows(
     if not isinstance(configured, dict) or not configured:
         raise ValueError("silver_baselines must be a non-empty object")
     rows = []
-    for key in ("apple_vision", "tesseract_psm6"):
-        metadata = configured.get(key)
+    for key, metadata in configured.items():
         if not isinstance(metadata, dict):
-            raise ValueError(f"missing silver baseline configuration: {key}")
+            raise ValueError(f"invalid silver baseline configuration: {key}")
         artifact = metadata.get("evaluation_artifact")
         if not isinstance(artifact, dict):
             raise ValueError(f"missing evaluation artifact identity: {key}")
@@ -540,6 +542,22 @@ def _baseline_rows(
         prediction_source = sources.get("prediction")
         if not isinstance(reference_source, dict) or not isinstance(prediction_source, dict):
             raise ValueError(f"incomplete silver evaluation sources: {key}")
+        expected_engine_label = metadata.get("engine_label")
+        expected_engines = metadata.get("engines")
+        if not isinstance(expected_engine_label, str) or not expected_engine_label:
+            raise ValueError(f"missing silver engine label identity: {key}")
+        if (
+            not isinstance(expected_engines, list)
+            or not expected_engines
+            or any(not isinstance(engine, str) or not engine for engine in expected_engines)
+            or len(expected_engines) != len(set(expected_engines))
+        ):
+            raise ValueError(f"invalid silver engine identity: {key}")
+        if (
+            prediction_source.get("engine_label") != expected_engine_label
+            or prediction_source.get("engines") != expected_engines
+        ):
+            raise ValueError(f"silver evaluation engine identity mismatch: {key}")
         if reference_source.get("sha256") != expected_reference_sha256:
             raise ValueError(f"silver evaluation reference mismatch: {key}")
         prediction_sha256 = metadata.get("prediction_artifact_sha256")
@@ -601,6 +619,98 @@ def _baseline_rows(
             raise ValueError(f"silver reference status coverage mismatch: {key}")
         if instance_prediction_ok != prediction_ok:
             raise ValueError(f"silver prediction status summary mismatch: {key}")
+        valid_ocr_records = metadata.get("valid_ocr_records", prediction_ok)
+        if (
+            type(valid_ocr_records) is not int
+            or valid_ocr_records < 0
+            or valid_ocr_records > prediction_ok
+        ):
+            raise ValueError(f"invalid silver valid OCR record count: {key}")
+        workflow_fields = {
+            "candidate_gate_outcome": metadata.get(
+                "candidate_gate_outcome", "operational_baseline"
+            ),
+            "selection_status": metadata.get("selection_status", "operational_baseline"),
+            "runner_gate": metadata.get("runner_gate", f"full_{samples}_coverage"),
+            "notes": metadata.get(
+                "notes",
+                f"full {samples}-case Codex silver agreement; not human-gold accuracy; "
+                "not rank-comparable with n=1 HF smoke",
+            ),
+        }
+        if any(not isinstance(value, str) or not value for value in workflow_fields.values()):
+            raise ValueError(f"invalid silver workflow metadata: {key}")
+        row_type = metadata.get("row_type", "full_silver_baseline")
+        if not isinstance(row_type, str) or not row_type:
+            raise ValueError(f"invalid silver row type: {key}")
+        if valid_ocr_records != prediction_ok:
+            if (
+                row_type != "full_silver_diagnostic"
+                or workflow_fields["candidate_gate_outcome"] != "fail_strict_schema"
+                or workflow_fields["selection_status"] != "evaluated_diagnostic"
+            ):
+                raise ValueError(f"invalid silver diagnostic workflow metadata: {key}")
+            audit_artifact = metadata.get("ingestion_audit_artifact")
+            if not isinstance(audit_artifact, dict):
+                raise ValueError(f"missing ingestion audit identity: {key}")
+            audit_relative_path = audit_artifact.get("path")
+            audit_expected_sha256 = audit_artifact.get("sha256")
+            if not isinstance(audit_relative_path, str) or not _is_sha256(audit_expected_sha256):
+                raise ValueError(f"invalid ingestion audit identity: {key}")
+            audit_path = (baselines_path.parent / audit_relative_path).resolve()
+            if not audit_path.is_relative_to(baselines_path.parent.resolve()):
+                raise ValueError(f"ingestion audit escapes research directory: {key}")
+            if not audit_path.is_file() or _sha256_file(audit_path) != audit_expected_sha256:
+                raise ValueError(f"ingestion audit SHA-256 mismatch: {key}")
+            audit = json.loads(audit_path.read_text(encoding="utf-8"))
+            audit_prediction = audit.get("prediction")
+            audit_runtime = audit.get("runtime")
+            audit_coverage = audit.get("coverage")
+            audit_merge = audit.get("canonical_merge")
+            audit_evaluation = audit.get("evaluation")
+            if (
+                not isinstance(audit_prediction, dict)
+                or audit_prediction.get("sha256") != prediction_sha256
+                or not isinstance(audit_coverage, dict)
+                or audit_coverage.get("expected_instance_ids") != samples
+                or audit_coverage.get("observed_instance_ids") != samples
+                or audit_coverage.get("unique_instance_ids") != samples
+                or audit_coverage.get("missing_instance_ids") != []
+                or audit_coverage.get("extra_instance_ids") != []
+                or not isinstance(audit_merge, dict)
+                or audit_merge.get("status") != "failed"
+                or not isinstance(audit_merge.get("error"), str)
+                or not audit_merge["error"].strip()
+                or audit_merge.get("strict_valid_records") != valid_ocr_records
+                or not isinstance(audit_evaluation, dict)
+                or audit_evaluation.get("evaluation_sha256") != actual_sha256
+                or audit_evaluation.get("semantic_correction_applied") is not False
+            ):
+                raise ValueError(f"ingestion audit contract mismatch: {key}")
+            if not isinstance(audit_runtime, dict):
+                raise ValueError(f"missing ingestion runtime identity: {key}")
+            runtime_relative_path = audit_runtime.get("path")
+            runtime_expected_sha256 = audit_runtime.get("sha256")
+            if not isinstance(runtime_relative_path, str) or not _is_sha256(
+                runtime_expected_sha256
+            ):
+                raise ValueError(f"invalid ingestion runtime identity: {key}")
+            runtime_artifact_path = (audit_path.parent / runtime_relative_path).resolve()
+            if not runtime_artifact_path.is_relative_to(baselines_path.parent.resolve()):
+                raise ValueError(f"ingestion runtime escapes research directory: {key}")
+            if (
+                not runtime_artifact_path.is_file()
+                or _sha256_file(runtime_artifact_path) != runtime_expected_sha256
+            ):
+                raise ValueError(f"ingestion runtime SHA-256 mismatch: {key}")
+            runtime_artifact = json.loads(runtime_artifact_path.read_text(encoding="utf-8"))
+            if (
+                audit_runtime.get("declared_result_sha256_matches") is not True
+                or runtime_artifact.get("result_sha256") != prediction_sha256
+                or runtime_artifact.get("record_count") != samples
+                or runtime_artifact.get("failed_count") != prediction_failed
+            ):
+                raise ValueError(f"ingestion runtime contract mismatch: {key}")
         primary_score = evaluation.get("primary_score")
         if (
             not isinstance(primary_score, dict)
@@ -610,7 +720,7 @@ def _baseline_rows(
             raise ValueError(f"silver evaluation primary score mismatch: {key}")
         rows.append(
             {
-                "row_type": "full_silver_baseline",
+                "row_type": row_type,
                 "cohort": f"DocSem Validation full silver (n={samples})",
                 "model": metadata["model"],
                 "revision": metadata["revision"],
@@ -624,7 +734,7 @@ def _baseline_rows(
                 "samples": samples,
                 "quality_samples": samples,
                 "inference_success_rate": prediction_ok / samples,
-                "valid_ocr_rate": prediction_ok / samples,
+                "valid_ocr_rate": valid_ocr_records / samples,
                 "silver_text_score": summary["silver_text_score"],
                 "silver_agreement_cer": summary["micro_character_error_rate"],
                 "silver_agreement_wer": summary["micro_word_error_rate"],
@@ -642,15 +752,9 @@ def _baseline_rows(
                 "peak_ram_bytes_child": NA_NOT_MEASURED,
                 "peak_vram_bytes": runtime.get("peak_vram_bytes", NA_NOT_MEASURED),
                 "peak_vram_bytes_child_allocated": NA_NOT_MEASURED,
-                "output_bytes": NA_NOT_MEASURED,
+                "output_bytes": metadata.get("output_bytes", NA_NOT_MEASURED),
                 "cost": runtime["cost"],
-                "candidate_gate_outcome": "operational_baseline",
-                "selection_status": "operational_baseline",
-                "runner_gate": "full_217_coverage",
-                "notes": (
-                    "full 217-case Codex silver agreement; not human-gold accuracy; "
-                    "not rank-comparable with n=1 HF smoke"
-                ),
+                **workflow_fields,
                 "error": None,
                 "evaluation_artifact_sha256": actual_sha256,
                 "prediction_artifact_sha256": prediction_sha256,
@@ -730,13 +834,17 @@ def write_outputs(report: dict[str, Any], out_dir: Path) -> list[Path]:
         "evaluation_artifact_sha256",
         "prediction_artifact_sha256",
     ]
+    full_cohort_models = ", ".join(row["model"] for row in report["baselines"])
+    full_cohort_samples = sorted({row["samples"] for row in report["baselines"]})
+    cohort_size = full_cohort_samples[0] if len(full_cohort_samples) == 1 else "mixed"
     lines = [
         "# DocSem 소형 OCR 비교표",
         "",
         "해석 계약: `silver_agreement_not_human_gold_accuracy`.",
         "",
-        "Apple Vision/Tesseract는 Validation 217건 전수 cohort이고 HF 모델은 고정 1건 "
-        "smoke cohort다. 표본과 실행 조건이 다르므로 교차 cohort 품질 순위를 만들 수 없다.",
+        f"{full_cohort_models}는 Validation {cohort_size}건 전수 cohort이고 "
+        f"{len(report['rows'])}개 document-model 후보는 고정 1건 smoke cohort다. 표본과 실행 "
+        "조건이 다르므로 교차 cohort 품질 순위를 만들 수 없다.",
         "",
         "| " + " | ".join(headers) + " |",
         "| " + " | ".join("---" for _ in headers) + " |",
