@@ -1,101 +1,53 @@
 # DocSem 제출 실험 기록
 
-공식 Submission Portal에 업로드한 파일과 평가 결과를 버전별로 기록합니다. Validation 정답 예측 파일은 대회 진행 중 공개 저장소에 노출하지 않도록 Git에서 제외된 `artifacts/submissions/`에 보관하고, 이 문서에는 재현과 식별에 필요한 파일명과 SHA-256만 기록합니다. 연락처 이메일은 기록하지 않습니다.
+공식 Submission Portal의 집계 결과와 제출 산출물 식별 정보만 기록합니다. 대회 진행 중인 Validation의 개별 `instance_id`, answer, evidence, 계산 과정과 포털 차분 판정은 Git에서 제외된 `artifacts/submissions/`와 `artifacts/docsem_validation/`의 비공개 감사 산출물에만 보관합니다.
 
 ## 제출 결과
 
-| 버전 | 제출일 (KST) | Split | 팀 | 참가자 | 제출 파일 | SHA-256 | Examples | Answer accuracy | 정답 수 | Evidence exact match | Evidence F1 | 방법 |
-| --- | --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| `v1` | 2026-08-29 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v1.jsonl` | `ae5e57f45edf6c094e82cb02b749f62fc811af8a631c05790d5dec09a5d3a996` | 217 | 0.97235 | 211/217 | 1.0 | 1.0 | CODEX 독립 풀이 3회와 불일치 항목 재검수 |
-| `v2` | 2026-08-29 18:29:53 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v2.jsonl` | `2be417abe62c528c10bb35e06dfd10e585e7e606804756abf343693b313bef35` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v1 의미 변형 오답 후보 6건 수정, 팀의 두 번째 제출 |
-| `v3` | 2026-08-29 18:36:16 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v3.jsonl` | `2a424d2ac66050718678b346a600c5c236f4a0ef90ae2ea8cecafd6fec0a9a52` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | `task_001004`와 `task_001124`를 PDF 문구 기준으로 수정 |
-| `v4` | 2026-08-29 19:35:21 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v4.jsonl` | `c7784972ac231df59e4102b112e3354ab5e58292da7e6ac3daef2905d5b0cd99` | 217 | 0.981567 | 213/217 | 1.0 | 1.0 | v1·v2·v3 점수 차분 확인을 위해 `task_000913`, `task_001004`를 재변경 |
-| `v5` | 2026-08-29 20:40:53 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v5.jsonl` | `c950f2511e8486a722da268ad6d39a96fab34f0afc3e2ae8943235fd22ffe7ed` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | 확정값을 유지하고 미확정 후보 `task_000940`만 `4140`으로 단일 변경 |
-| `v6` | 2026-08-29 20:42:37 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v6.jsonl` | `889263ea9a6ace1562a8ea7eeb2715765d83d95e8c3b825607516ea159802a44` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | `task_000940=24840`을 복원하고 미확정 후보 `task_001036`을 `42`로 변경 |
-| `v7` | 2026-08-29 20:45:40 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v7.jsonl` | `db953923ca2ec0b9c6c0ad5e8009e64484ea81e560f03e8ecd92a6dba31d19fe` | 217 | 0.995392 | 216/217 | 1.0 | 1.0 | v6에서 `task_001036` 하나만 `105`로 복원해 확정 기준선 수립 |
-| `v8` | 2026-08-29 20:48:24 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_000943` 하나만 `87300`으로 변경 |
-| `v9` | 2026-08-29 20:52:18 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001058` 하나만 `19`로 변경 |
-| `v10` | 2026-08-29 20:53:55 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v10.jsonl` | `34f7f14808d80071c1238721b74ca60268b24376b2c96d51139c4b4b16d84ed3` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001043` 하나만 `558`로 변경 |
-| `v11` | 2026-08-29 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v11.jsonl` | `3b31480cce4dd29303d43447211ff8a96589c9edf035e487fb8f7ac5e6addab3` | 217 | 0.990783 | 215/217 | 1.0 | 1.0 | v7에서 `task_001006` 하나만 `925`로 변경 |
-| `v12` | 2026-08-30 15:14:43 | Validation | haetae | A. Hyeonwoo Kim, B. Gwanghwan Lee | `artifacts/submissions/v12.jsonl` | `38a386805a3c9b87f50f52b009006cf67bb7f8b71b2ceb1bbd2f4502e99f79fd` | 217 | 1.0 | 217/217 | 1.0 | 1.0 | v7에서 `task_000960` 하나만 `18`에서 `66`으로 변경해 만점 달성 |
+| 버전 | 제출일 (KST) | 제출 파일 | SHA-256 | Examples | Answer accuracy | Evidence exact match | Evidence F1 | 연구 구분 |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
+| `v1` | 2026-08-29 | `artifacts/submissions/v1.jsonl` | `ae5e57f45edf6c094e82cb02b749f62fc811af8a631c05790d5dec09a5d3a996` | 217 | 0.97235 | 1.0 | 1.0 | PDF·`user_query` 기반 최초 블라인드 풀이 |
+| `v2` | 2026-08-29 18:29:53 | `artifacts/submissions/v2.jsonl` | `2be417abe62c528c10bb35e06dfd10e585e7e606804756abf343693b313bef35` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v3` | 2026-08-29 18:36:16 | `artifacts/submissions/v3.jsonl` | `2a424d2ac66050718678b346a600c5c236f4a0ef90ae2ea8cecafd6fec0a9a52` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v4` | 2026-08-29 19:35:21 | `artifacts/submissions/v4.jsonl` | `c7784972ac231df59e4102b112e3354ab5e58292da7e6ac3daef2905d5b0cd99` | 217 | 0.981567 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v5` | 2026-08-29 20:40:53 | `artifacts/submissions/v5.jsonl` | `c950f2511e8486a722da268ad6d39a96fab34f0afc3e2ae8943235fd22ffe7ed` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v6` | 2026-08-29 20:42:37 | `artifacts/submissions/v6.jsonl` | `889263ea9a6ace1562a8ea7eeb2715765d83d95e8c3b825607516ea159802a44` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v7` | 2026-08-29 20:45:40 | `artifacts/submissions/v7.jsonl` | `db953923ca2ec0b9c6c0ad5e8009e64484ea81e560f03e8ecd92a6dba31d19fe` | 217 | 0.995392 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v8` | 2026-08-29 20:48:24 | `artifacts/submissions/v8.jsonl` | `a194f3d81969dbb7686fe0f676b5571d320c2af521dc20e72d87a79c810e64b1` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v9` | 2026-08-29 20:52:18 | `artifacts/submissions/v9.jsonl` | `a909b9e603eaa64a02e6ff1fc1cc98773da5f1c0327040ddab12c2dec155b46b` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v10` | 2026-08-29 20:53:55 | `artifacts/submissions/v10.jsonl` | `34f7f14808d80071c1238721b74ca60268b24376b2c96d51139c4b4b16d84ed3` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v11` | 2026-08-29 | `artifacts/submissions/v11.jsonl` | `3b31480cce4dd29303d43447211ff8a96589c9edf035e487fb8f7ac5e6addab3` | 217 | 0.990783 | 1.0 | 1.0 | 포털 점수 차분 진단 |
+| `v12` | 2026-08-30 15:14:43 | `artifacts/submissions/v12.jsonl` | `38a386805a3c9b87f50f52b009006cf67bb7f8b71b2ceb1bbd2f4502e99f79fd` | 217 | 1.0 | 1.0 | 1.0 | Post-hoc source-label recovery |
 
-## v1 해석
+## 연구 해석
 
-- 포털에 표시된 Answer accuracy `0.97235`는 217개 중 211개 정답으로 환산되며 오답은 6개입니다.
-- Evidence exact match와 Evidence F1이 모두 `1.0`이므로 217개 전체의 evidence 블록 집합은 정답과 일치했습니다.
-- 로컬 제출 형식 검사에서 217개 인스턴스, ID 완전성, 필수 필드와 evidence 형식이 모두 통과했습니다.
+- `v1`은 제공된 PDF와 `user_query`만 사용한 최초 풀이이며, 이후 제출은 숨겨진 Validation 포털 점수를 관찰하면서 후보를 바꾼 post-hoc 진단입니다. 따라서 `v2`~`v12` 성능을 독립 holdout 일반화 성능이나 재현 가능한 모델 정확도로 해석하지 않습니다.
+- `v12`는 공개 원천 데이터의 label을 사후 대조한 source-label recovery 결과입니다. 포털의 세 집계 지표가 모두 `1.0`인 사실은 기록하되, Issue #5의 PDF+query-only 규약을 준수한 완료 결과나 논문의 주 성능으로 사용하지 않습니다.
+- 포털 피드백으로 선택한 규칙, 후보, 정답 또는 evidence를 Training 감독 신호, prompt 선택, reward 설계, checkpoint 선택에 사용하지 않습니다. 후속 연구는 Training-only 개발과 family-disjoint 내부 평가를 사용하고 숨겨진 holdout은 마지막 one-shot 평가로 봉인합니다.
 
-## v1 오답 후보와 v2 수정
+## 비공개 감사 계약
 
-포털은 오답 개수만 제공하고 해당 instance ID는 공개하지 않으므로 아래 6건은 PDF의 정답 evidence, 동일 수치로 생성된 인접 문제와 공개 학습 데이터의 답변 분포를 대조해 추론한 후보입니다. `v2` 점수로 이 후보군이 v1을 개선한다는 점은 확인됐지만 개별 항목의 정오 여부는 확인되지 않았습니다.
+- 각 제출 JSONL과 개별 변경 기록은 Git에서 제외된 경로에 보관하고 공개 문서에는 파일명, 전체 SHA-256과 집계 점수만 남깁니다.
+- 포털에서 확인한 행을 도구에 전달할 때는 `--portal-confirmations`와 `--portal-confirmations-sha256`을 함께 지정합니다. 도구는 비공개 산출물 자체의 SHA-256과 그 안에 선언된 기준 제출물 SHA-256을 모두 검증하며, 누락되거나 다르면 비교를 중단합니다.
+- 현재 tip에서 민감한 상세를 제거해도 이미 공개된 Git 이력은 자동으로 삭제되지 않습니다. 이력 재작성은 복제본과 열린 작업에 영향을 주는 별도의 파괴적 조치이므로 범위와 주최 측 통지 필요성을 확인한 뒤 별도로 결정합니다.
 
-| Instance ID | Evidence | v1 | v2 | 검수 계산 | v1 오류 추정 이유 | 신뢰도 |
-| --- | --- | ---: | ---: | --- | --- | --- |
-| `task_000913` | `b09` | 24 | 11 | `30 - 6 - 13 = 11` | 질문 문구가 도착 지점을 학교에서 소방서로 바꿔 `30 - 6 = 24`로 읽히지만, 같은 수치의 인접 문제들은 학교까지 남은 시간을 요구합니다. | 높음 |
-| `task_001004` | `b10` | 20 | 40 | `100 - 60 = 40` | `Ryan getting 60 meters`가 `60 meters more than Alex`로 변형된 것으로 보이며, v1은 변형된 문구대로 `x + (x + 60) = 100`을 풀었습니다. | 중간 |
-| `task_001081` | `b06` | -171 | 171 | `4 × 65 - 89 = 171` | 질문의 비교 방향이 ‘회계사 고용’에서 ‘직접 처리’로 뒤집혔지만, 인접 문제들은 기회비용에서 회계사 비용을 빼는 원래 연산을 유지합니다. | 높음 |
-| `task_001091` | `b07` | -985 | 689 | `9 × 93 - 148 = 689` | 프리랜서 9시간의 귀속 주체가 직접 관리 쪽으로 바뀌어 v1이 음수로 계산했으며, 동일 유형은 고문 고용으로 확보하는 수입에서 수수료를 뺍니다. | 높음 |
-| `task_001093` | `b06` | -341 | 341 | `6 × 70 - 79 = 341` | 질문의 비교 방향이 ‘회계사 고용’에서 ‘직접 처리’로 뒤집혀 v1의 부호가 반대가 되었습니다. | 높음 |
-| `task_001094` | `b09` | 271 | 341 | `6 × 70 - 79 = 341` | 회계사 고용 시 Kayla에게도 1시간이 든다는 조건이 삽입된 것으로 보이며, v1은 이 1시간의 기회비용까지 차감했습니다. | 높음 |
+비공개 포털 확정 산출물은 다음 계약을 따릅니다. 예시의 placeholder를 실제 값으로 바꾼 뒤 파일 자체의 SHA-256을 별도 채널에 기록합니다.
 
-`v2`는 위 6개 answer만 변경하고 217개 evidence는 `v1`과 동일하게 유지했습니다. 제출 형식 검사는 217개 전체에 대해 통과했습니다.
-
-## v2 해석
-
-- 포털에 표시된 Answer accuracy `0.990783`은 217개 중 215개 정답으로 환산되며 오답은 2개입니다.
-- v1보다 정답 수가 4개 증가했으므로 6개 변경의 순효과는 `+4`입니다.
-- Evidence exact match와 Evidence F1은 모두 `1.0`으로 유지되어 남은 오류는 answer에만 존재합니다.
-- 집계 점수만으로는 수정한 6건 중 어느 항목이 맞거나 틀렸는지 식별할 수 없으므로 가장 낮은 신뢰도로 수정한 `task_001004`와 기존 후보군에서 제외했던 `task_001124`를 PDF 원본으로 육안 재검수했습니다.
-- 포털 저장 경로는 `submissions/20260829T092953Z_haetae_v2.json`이며 팀의 두 번째 제출입니다.
-
-## v3·v4 점수 판정
-
-| Instance ID | Evidence | v2 | v3 | PDF 문구 기준 계산 | 포털 점수 판정 |
-| --- | --- | ---: | ---: | --- | --- |
-| `task_001004` | `b10` | 40 | 20 | Alex를 `x`라고 하면 Ryan은 `x + 60`이므로 `x + (x + 60) = 100`, `x = 20` | v3의 `20`이 정답 |
-| `task_001124` | `b10` | 150 | 30 | PDF 문구만 따르면 `30`으로 읽히지만 생성 라벨은 원래 연산을 유지한 것으로 추정 | v2의 `150`이 정답 |
-
-`v3`는 `task_001004`를 바로잡아 1개를 개선했지만 `task_001124`를 오답으로 바꾸어 순효과가 0이었습니다. `v4`에서 `task_000913: 11 → 24`, `task_001004: 20 → 40` 두 값을 바꾸자 정답 수가 215개에서 213개로 정확히 2개 감소했으므로 `task_000913=11`, `task_001004=20`이 각각 확정됩니다. 이 점수 차분과 v1·v2 변화를 함께 보면 `task_001081=171`, `task_001091=689`, `task_001093=341`, `task_001094=341`, `task_001124=150`도 확정됩니다.
-
-## v5 단일 후보 실험
-
-`v5`는 `v2`에서 확정 오류 `task_001004`를 `20`으로 복원하고 `task_001124=150`을 유지한 상태를 기준선으로 삼았습니다. 여기에 유일한 미확정 변경으로 `task_000940: 24840 → 4140`만 적용했습니다. 포털 결과가 215/217이므로 `task_000940=4140`은 오답이고 기존 `24840`이 정답으로 확정됩니다. `task_001124`를 정답으로 복원한 효과와 `task_000940`을 오답으로 바꾼 효과가 상쇄되어 v3와 같은 점수가 나왔습니다. 포털 저장 경로는 `submissions/20260829T114053Z_haetae_v5.json`입니다.
-
-## v6 후보 실험과 v7 기준선
-
-`v6`는 `v5`에서 `task_000940=24840`을 복원하는 동시에 `task_001036: 105 → 42`를 변경해 이전 제출 대비 두 answer가 달랐습니다. 포털 결과는 215/217이었습니다. 이후 `v7`에서 `task_001036` 하나만 `42 → 105`로 복원하자 216/217로 정확히 1개 개선됐으므로 `task_001036=105`가 정답으로 확정됩니다. `v7`은 현재 정답 216개가 확인된 기준선이며 이후 버전은 반드시 v7에서 answer 하나만 변경합니다. v6 포털 저장 경로는 `submissions/20260829T114237Z_haetae_v6.json`, v7 포털 저장 경로는 `submissions/20260829T114540Z_haetae_v7.json`입니다.
-
-## v8 단일 후보 실험
-
-`v8`은 v7에서 `task_000943: 21825 → 87300` 하나만 변경했습니다. 포털 결과가 215/217이므로 기존 `task_000943=21825`가 정답으로 확정됩니다. 포털 저장 경로는 `submissions/20260829T114824Z_haetae_v8.json`입니다.
-
-## v9 단일 후보 실험
-
-`v9`은 확정 기준선 v7에서 `task_001058: 16 → 19` 하나만 변경했습니다. 포털 결과가 215/217이므로 기존 `task_001058=16`이 정답으로 확정됩니다. 포털 저장 경로는 `submissions/20260829T115218Z_haetae_v9.json`입니다. 현재 최고 점수 제출은 216/217인 v7입니다.
-
-## v10 단일 후보 실험
-
-`v10`은 확정 기준선 v7에서 `task_001043: 540 → 558` 하나만 변경했습니다. 포털 결과가 215/217이므로 기존 `task_001043=540`이 정답으로 확정됩니다. 포털 저장 경로는 `submissions/20260829T115355Z_haetae_v10.json`입니다. v5부터 v10까지 검증한 문구 모호 후보가 모두 기존 답으로 확정됐으므로, 남은 오답은 기존 후보군 밖에서 다시 찾습니다.
-
-## v10 이후 전수 재검수
-
-v7의 217개 PDF를 다시 대조한 결과, 점수 차분으로 확정된 항목을 제외하면 산술식·숫자·통화 기호·단위가 명확하게 잘못된 answer는 발견되지 않았습니다. 가장 높은 단일 실험 후보는 `task_001006: 1145 → 925`입니다. PDF에는 토요일 재고가 200권이고 일요일에 145권을 추가한 뒤 월요일에 "토요일에 추가된 수"의 4배를 더한다고 적혀 있어, 명시된 추가량 145를 기준으로 해석하면 `200 + 145 + 4 × 145 = 925`가 됩니다. 다만 형제 문항은 토요일 수량 200을 기준으로 계산한 `1145`를 지지하므로 신뢰도는 낮습니다. 최고 점수 기준선은 v7의 216/217입니다.
-
-## v11 단일 후보 실험
-
-`v11`은 확정 기준선 v7에서 `task_001006: 1145 → 925` 하나만 변경했습니다. evidence를 포함한 나머지 216개 행은 v7과 동일하며 로컬 형식 검사에서 217개 전체가 통과했습니다. 포털 결과가 215/217이므로 기존 `task_001006=1145`가 정답으로 확정됩니다.
-
-## v12 최종 제출
-
-`v12`는 v7에서 `task_000960: 18 → 66` 하나만 변경하고 evidence `b11`을 유지했습니다. PDF 문면을 그대로 계산하면 `5:00 PM - 3:36 PM - 24분 - 42분 = 18분`이지만, 공개 GSM-SEM 원천 3종과 Validation 217개 질문을 대조한 결과 모든 문항이 각각 하나의 원천 레코드에 고유하게 매칭됐고 v7과 원천 `final_answer`가 다른 유일한 문항이 `task_000960`이었습니다. 대응 원천은 총시간 132분에서 `132 - 24 - 42 = 66`을 계산하므로 DocSem 변환 과정에서 시각 문구만 달라지고 원천 라벨은 유지된 사례로 판정했습니다. 포털 결과는 Answer accuracy, Evidence exact match, Evidence F1이 모두 `1.0`으로 217/217 만점을 확인했으며 저장 경로는 `submissions/20260830T061443Z_haetae_v12.json`입니다.
-
-## 다음 제출 기록 방법
-
-새 제출은 `artifacts/submissions/v2.jsonl`, `v3.jsonl`처럼 버전 번호를 올려 저장하고 위 표에 한 행씩 추가합니다. 제출 전에 다음 명령으로 형식을 검사하고 SHA-256을 기록합니다.
-
-```bash
-uv run docinsights validate-submission artifacts/submissions/v12.jsonl --tasks data/raw/docsem/val/tasks.jsonl
-shasum -a 256 artifacts/submissions/v12.jsonl
+```json
+{"schema_version":"1.0","baseline_sha256":"<64-hex>","rows":[{"instance_id":"task_XXXXXX","answer":"<final-answer>","evidence":["bNN"]}]}
 ```
 
-같은 파일을 다시 제출하더라도 SHA-256이 같으면 동일한 예측으로 간주합니다. 파일 내용이 달라지면 새 버전으로 저장하고 변경한 문제, 변경 이유와 검수 방법을 방법 열 또는 별도 문단에 기록합니다.
+```bash
+uv run docinsights compare-blind-review artifacts/docsem_validation/review.jsonl --baseline artifacts/submissions/<baseline>.jsonl --portal-confirmations artifacts/docsem_validation/portal-confirmations.json --portal-confirmations-sha256 <64-hex>
+```
+
+## 새 제출 기록 방법
+
+새 제출은 `artifacts/submissions/<version>.jsonl`에 저장하고 제출 전에 형식과 SHA-256을 확인합니다.
+
+```bash
+uv run docinsights validate-submission artifacts/submissions/<version>.jsonl --tasks data/raw/docsem/val/tasks.jsonl
+shasum -a 256 artifacts/submissions/<version>.jsonl
+```
+
+같은 SHA-256은 동일한 예측으로 취급합니다. 개별 변경 사유와 검수 계산은 비공개 감사 기록에만 추가하고 이 문서에는 집계 결과만 한 행으로 기록합니다.

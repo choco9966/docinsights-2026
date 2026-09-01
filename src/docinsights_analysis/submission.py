@@ -54,7 +54,8 @@ def _expected_instance_ids(tasks_path: Path) -> frozenset[str]:
     return frozenset(identifiers)
 
 
-def _validate_row(row: dict[str, Any], line_number: int) -> list[str]:
+def validate_submission_row(row: dict[str, Any], line_number: int) -> list[str]:
+    """제출 JSONL 한 행을 공식 스키마 계약으로 검증한다."""
     errors: list[str] = []
     fields = frozenset(row)
     missing_fields = sorted(REQUIRED_FIELDS - fields)
@@ -93,7 +94,7 @@ def validate_submission(submission_path: Path, tasks_path: Path) -> SubmissionSu
     identifiers: list[str] = []
 
     for line_number, row in enumerate(rows, start=1):
-        errors.extend(_validate_row(row, line_number))
+        errors.extend(validate_submission_row(row, line_number))
         instance_id = row.get("instance_id")
         if isinstance(instance_id, str) and instance_id:
             identifiers.append(instance_id)

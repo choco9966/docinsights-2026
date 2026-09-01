@@ -1,12 +1,16 @@
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from docinsights_analysis.submission import BLOCK_ID_PATTERN
+from docinsights_analysis.submission import validate_submission_row
 
-REVIEW_FIELDS = frozenset({"instance_id", "answer", "evidence", "rationale", "confidence"})
+REVIEW_FIELDS = frozenset(
+    {"run_id", "instance_id", "answer", "evidence", "rationale", "confidence"}
+)
 CONFIDENCE_VALUES = frozenset({"high", "medium", "low"})
+RUN_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$")
 
 
 class ReviewValidationError(ValueError):
@@ -51,23 +55,19 @@ def _task_ids(tasks_path: Path) -> list[str]:
 
 def _validate_review_row(path: Path, line_number: int, row: dict[str, Any]) -> None:
     missing = sorted(REVIEW_FIELDS - frozenset(row))
+    extra = sorted(frozenset(row) - REVIEW_FIELDS)
     if missing:
         raise ReviewValidationError(f"{path}:{line_number}: 필수 필드 누락: {', '.join(missing)}")
-    if not isinstance(row["instance_id"], str) or not row["instance_id"]:
-        raise ReviewValidationError(f"{path}:{line_number}: instance_id가 올바르지 않습니다")
-    if not isinstance(row["answer"], str) or not row["answer"]:
-        raise ReviewValidationError(f"{path}:{line_number}: answer가 올바르지 않습니다")
-    evidence = row["evidence"]
-    if (
-        not isinstance(evidence, list)
-        or not evidence
-        or any(
-            not isinstance(block_id, str) or not BLOCK_ID_PATTERN.fullmatch(block_id)
-            for block_id in evidence
-        )
-    ):
-        raise ReviewValidationError(f"{path}:{line_number}: evidence가 올바르지 않습니다")
-    if not isinstance(row["rationale"], str) or not row["rationale"]:
+    if extra:
+        raise ReviewValidationError(f"{path}:{line_number}: 허용되지 않은 필드: {', '.join(extra)}")
+    run_id = row["run_id"]
+    if not isinstance(run_id, str) or RUN_ID_PATTERN.fullmatch(run_id) is None:
+        raise ReviewValidationError(f"{path}:{line_number}: run_id가 올바르지 않습니다")
+    submission_row = {field: row[field] for field in ("instance_id", "answer", "evidence")}
+    submission_errors = validate_submission_row(submission_row, line_number)
+    if submission_errors:
+        raise ReviewValidationError(f"{path}: " + "; ".join(submission_errors))
+    if not isinstance(row["rationale"], str) or not row["rationale"].strip():
         raise ReviewValidationError(f"{path}:{line_number}: rationale이 비어 있습니다")
     confidence = row["confidence"]
     valid_numeric_confidence = (
@@ -81,10 +81,12 @@ def _validate_review_row(path: Path, line_number: int, row: dict[str, Any]) -> N
         )
 
 
-def _load_pass(path: Path, expected_ids: frozenset[str]) -> dict[str, dict[str, Any]]:
+def _load_pass(path: Path, expected_ids: frozenset[str]) -> tuple[str, dict[str, dict[str, Any]]]:
     reviews: dict[str, dict[str, Any]] = {}
+    run_ids: set[str] = set()
     for line_number, row in enumerate(_read_jsonl(path), start=1):
         _validate_review_row(path, line_number, row)
+        run_ids.add(row["run_id"])
         instance_id = row["instance_id"]
         if instance_id in reviews:
             raise ReviewValidationError(f"{path}: 중복 instance_id: {instance_id}")
@@ -96,7 +98,9 @@ def _load_pass(path: Path, expected_ids: frozenset[str]) -> dict[str, dict[str, 
         raise ReviewValidationError(f"{path}: 누락 instance_id: {', '.join(missing)}")
     if unknown:
         raise ReviewValidationError(f"{path}: 알 수 없는 instance_id: {', '.join(unknown)}")
-    return reviews
+    if len(run_ids) != 1:
+        raise ReviewValidationError(f"{path}: 한 pass에는 하나의 run_id만 있어야 합니다")
+    return run_ids.pop(), reviews
 
 
 def _decision_key(review: dict[str, Any]) -> tuple[str, tuple[str, ...]]:
@@ -111,6 +115,15 @@ def _write_jsonl(path: Path, rows: list[dict[str, Any]]) -> None:
     )
 
 
+def _same_file_or_path(first: Path, second: Path) -> bool:
+    if first.resolve(strict=False) == second.resolve(strict=False):
+        return True
+    try:
+        return first.samefile(second)
+    except OSError:
+        return False
+
+
 def compare_review_passes(
     pass_paths: list[Path],
     tasks_path: Path,
@@ -121,9 +134,28 @@ def compare_review_passes(
     """세 개 이상의 독립 검수 결과에서 전원 일치 항목만 제출 후보로 만든다."""
     if len(pass_paths) < 3:
         raise ReviewValidationError("독립 검수 결과가 최소 3개 필요합니다")
+    if any(
+        _same_file_or_path(first, second)
+        for index, first in enumerate(pass_paths)
+        for second in pass_paths[index + 1 :]
+    ):
+        raise ReviewValidationError("같은 검수 파일을 독립 pass로 중복 사용할 수 없습니다")
+    if _same_file_or_path(consensus_path, disagreements_path):
+        raise ReviewValidationError("합의와 불일치 출력 경로는 서로 달라야 합니다")
+    protected_inputs = [*pass_paths, tasks_path]
+    if any(
+        _same_file_or_path(output_path, input_path)
+        for output_path in (consensus_path, disagreements_path)
+        for input_path in protected_inputs
+    ):
+        raise ReviewValidationError("출력 경로가 검수 또는 task 입력 경로와 겹칩니다")
     ordered_ids = _task_ids(tasks_path)
     expected_ids = frozenset(ordered_ids)
-    passes = [_load_pass(path, expected_ids) for path in pass_paths]
+    loaded_passes = [_load_pass(path, expected_ids) for path in pass_paths]
+    run_ids = [run_id for run_id, _ in loaded_passes]
+    if len(run_ids) != len(set(run_ids)):
+        raise ReviewValidationError("같은 run_id를 독립 pass로 중복 사용할 수 없습니다")
+    passes = [review_pass for _, review_pass in loaded_passes]
     consensus: list[dict[str, Any]] = []
     disagreements: list[dict[str, Any]] = []
 
