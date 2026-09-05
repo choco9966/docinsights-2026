@@ -2,10 +2,11 @@
 
 이 저장소는 [DocInsights 2026 Shared Task](https://docinsights-workshop.github.io/docinsights-2026/shared-task/)의 **DocSem** 과제를 수행하고 실험 결과를 관리하기 위한 작업 공간입니다.
 
-> 기준일: 2026-08-29. 일정과 제출 규정은 바뀔 수 있으므로 제출 전에는 공식 워크숍 페이지와 제출 포털을 다시 확인하세요. 제출과 최종 규정의 기준은 공식 포털입니다.
+> 기준일: 2026-09-06. 일정과 제출 규정은 바뀔 수 있으므로 제출 전에는 공식 워크숍 페이지와 제출 포털을 다시 확인하세요. 제출과 최종 규정의 기준은 공식 포털입니다.
 
 ## 연구 기록
 
+- [Validation 복원·최신 Train migration·held-out 전략](docs/research/issue-21-validation-heldout-strategy.md)
 - [소형 OCR 모델 탐색 및 DocSem 고정 사례 비교](research/ocr-small-models/report.md)
 
 ## 과제 개요
@@ -32,10 +33,10 @@ Hugging Face 데이터셋은 canonical source의 participant release를 미러�
 
 재현 가능한 실험의 기준 버전은 다음과 같습니다.
 
-- Canonical release: [`oracle-samples/gsm-sem@332158b`](https://github.com/oracle-samples/gsm-sem/tree/332158b2549e7e8a1186e2ae3a922669e9018808/docsem)
-- Hugging Face mirror: [`amitbcp/docinsights-2026-shared-task-data@b171c5a`](https://huggingface.co/datasets/amitbcp/docinsights-2026-shared-task-data/tree/b171c5ad488f0c8c50df05951a5b288ea50e9501)
+- Canonical release: [`oracle-samples/gsm-sem@971262d`](https://github.com/oracle-samples/gsm-sem/tree/971262d356c1e7fc2da534eeb9d2c828ade42157/docsem)
+- Hugging Face mirror: [`amitbcp/docinsights-2026-shared-task-data@e6c9c75`](https://huggingface.co/datasets/amitbcp/docinsights-2026-shared-task-data/tree/e6c9c75bea7575a64279072dcdf0f6050fef9e9f)
 
-데이터 카드에 따르면 미러의 1,125개 PDF는 canonical release와 byte-identical입니다. 실험 기록에는 사용한 두 revision SHA를 함께 남깁니다.
+Canonical source는 2026-08-31에 train annotation 7건을 정정했고, Hugging Face 미러는 이를 반영한 뒤 2026-09-03에 organizer-only validation label 3건의 정정 공지를 추가했습니다. 로컬 구 HF revision `b171c5a`와 최신본을 해시 비교한 결과 Train PDF 7개와 README만 변경되었으며, 공개 Train `tasks.jsonl`·`labels.jsonl`과 모든 validation 입력은 동일했습니다. 데이터 카드에 따르면 미러의 1,125개 PDF는 canonical release와 byte-identical입니다. 실험 기록에는 사용한 두 revision SHA를 함께 남깁니다.
 
 ## 데이터 구성
 
@@ -111,15 +112,17 @@ from datasets import load_dataset
 from huggingface_hub import hf_hub_download
 
 repo_id = "amitbcp/docinsights-2026-shared-task-data"
+revision = "e6c9c75bea7575a64279072dcdf0f6050fef9e9f"
 
-tasks = load_dataset(repo_id, "tasks")
+tasks = load_dataset(repo_id, "tasks", revision=revision)
 train_tasks = tasks["train"]
 validation_tasks = tasks["validation"]
-train_labels = load_dataset(repo_id, "labels")["train"]
+train_labels = load_dataset(repo_id, "labels", revision=revision)["train"]
 
 first_pdf = hf_hub_download(
     repo_id=repo_id,
     repo_type="dataset",
+    revision=revision,
     filename=train_tasks[0]["document_pdf"],
 )
 ```
@@ -238,10 +241,11 @@ uv run docinsights-ocr cloud-merge artifacts/ocr/validation-manifest.jsonl artif
 
 ## 제출과 주요 일정
 
-- 개발 데이터는 **2026-08-05 릴리스**로 동결되었습니다. 그 전에 내려받았다면 최신 버전으로 갱신해야 합니다.
+- Train annotation은 **2026-08-31에 7건이 정정**되었습니다. 이전 revision으로 내려받은 데이터와 그 파생 산출물은 현재 release 기준 분석에 그대로 재사용하지 말고, 최신 revision으로 갱신한 뒤 무결성과 영향을 다시 확인합니다.
+- Organizer-only validation ground truth는 **2026-09-03에 3건이 정정**되었고 기존 제출도 새 라벨로 재채점되었습니다. 공개 validation 입력과 PDF는 바뀌지 않았습니다.
 - 현재는 217개 validation 인스턴스 전체를 포함한 JSONL을 [공식 제출 포털](https://amitbcp-docsem-docinsights.hf.space/)에 제출합니다.
 - 포털이 다른 JSON 형식을 일부 처리하더라도 canonical participant instructions가 요구하는 표준 형식은 JSONL이므로, 이 저장소에서는 JSONL만 제출 형식으로 사용합니다.
-- 최종 순위는 별도의 held-out test set으로 결정됩니다. 주최 측은 **2026-09-10 최종 제출 마감 5일 전**에 test set을 공개하고 별도 제출을 안내할 예정입니다.
+- 최종 순위는 별도의 held-out test set 결과로 결정됩니다. **2026-09-06 현재 held-out release는 공개되지 않았고**, 주최 측의 release 및 integrity check가 끝날 때까지 test 제출도 닫혀 있습니다. 공개 시 참가자에게 별도 공지됩니다.
 - DocSem 최종 제출 마감은 **2026-09-10**입니다.
 - DocSem 또는 Dr.DocBench 시스템 논문 제출 마감은 **2026-09-15 23:59 UTC**이며, archival/non-archival 제출을 모두 받습니다.
 
