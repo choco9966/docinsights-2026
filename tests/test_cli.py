@@ -1,25 +1,58 @@
 from pathlib import Path
 
+import huggingface_hub
+
 from docinsights_analysis import cli
 from docinsights_analysis.blind_review import ComparisonSummary, ExportSummary
 from docinsights_analysis.consensus import ConsensusSummary
 from docinsights_analysis.submission import SubmissionSummary
 
 
-def test_download_command_forwards_manifest_option(monkeypatch, tmp_path: Path) -> None:
+def test_download_command_uses_latest_release_by_default(monkeypatch, tmp_path: Path) -> None:
     captured: dict[str, object] = {}
 
-    def fake_download(output: Path, *, revision: str, include_pdfs: bool) -> Path:
-        captured.update(output=output, revision=revision, include_pdfs=include_pdfs)
-        return output
+    def fake_snapshot_download(**kwargs: object) -> str:
+        captured.update(kwargs)
+        return str(tmp_path)
 
-    monkeypatch.setattr(cli, "download_dataset", fake_download)
+    monkeypatch.setattr(huggingface_hub, "snapshot_download", fake_snapshot_download)
 
     exit_code = cli.main(["download", "--output", str(tmp_path), "--manifests-only"])
 
     assert exit_code == 0
-    assert captured["output"] == tmp_path
-    assert captured["include_pdfs"] is False
+    assert captured["revision"] == "e6c9c75bea7575a64279072dcdf0f6050fef9e9f"
+    assert captured["local_dir"] == str(tmp_path.resolve())
+    assert not any(
+        pattern.endswith(".pdf") or "documents" in pattern
+        for pattern in captured["allow_patterns"]
+    )
+
+
+def test_download_command_preserves_explicit_historical_revision(
+    monkeypatch, tmp_path: Path
+) -> None:
+    captured: dict[str, object] = {}
+    historical_revision = "b171c5ad488f0c8c50df05951a5b288ea50e9501"
+
+    def fake_snapshot_download(**kwargs: object) -> str:
+        captured.update(kwargs)
+        return str(tmp_path)
+
+    monkeypatch.setattr(huggingface_hub, "snapshot_download", fake_snapshot_download)
+
+    exit_code = cli.main(
+        [
+            "download",
+            "--output",
+            str(tmp_path),
+            "--revision",
+            historical_revision,
+            "--manifests-only",
+        ]
+    )
+
+    assert exit_code == 0
+    assert captured["revision"] == historical_revision
 
 
 def test_validate_submission_command_reports_success(monkeypatch, tmp_path: Path, capsys) -> None:

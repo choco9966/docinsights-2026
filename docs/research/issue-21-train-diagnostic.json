@@ -1,0 +1,133 @@
+{
+  "date": "2026-09-06",
+  "hf_revision": "e6c9c75bea7575a64279072dcdf0f6050fef9e9f",
+  "selection": "All seven Train PDFs changed from b171c5a to e6c9c75; selected by input hash, not random or family-disjoint.",
+  "provenance": "Faithful compact record of two independent native-agent responses, not verbatim full traces. Not a Qwen benchmark. Agents read current PDF images and task queries without public labels, validation artifacts, or each other's outputs. Leader compared with public Train labels only after both responses.",
+  "methods": {
+    "A": "Direct answer with evidence, short reason, confidence and ambiguity note.",
+    "C": "Typed facts, equation, reverse check, evidence, ambiguity note and forced scalar answer. This is one structured trace, not the proposed two-trace consensus system."
+  },
+  "scoring": {
+    "normalization": "Descriptive local comparison only, not official portal scoring: strip obvious units from single-scalar A outputs; cast C numeric answers to decimal strings. A multi-output row is not automatically reduced to its last number.",
+    "C_matches": 6,
+    "C_total": 7,
+    "A_single_scalar_matches": 4,
+    "A_single_scalar_total": 6,
+    "C_common_scalar_matches": 5,
+    "C_common_scalar_total": 6,
+    "A_multi_output_rows": 1,
+    "A_evidence_block_matches": 7,
+    "C_evidence_block_matches": 7,
+    "evidence_total": 7,
+    "limitations": [
+      "Different output instructions confound A/C comparison.",
+      "No uncertainty interval or generalization claim from seven revision-selected cases.",
+      "Label-blind decoding does not make this a sealed family-disjoint test.",
+      "A and C share model-family/runtime risks; neither is an independent human audit."
+    ]
+  },
+  "rows": [
+    {
+      "instance_id": "task_000419",
+      "A_raw_answer": "€240",
+      "A_single_scalar": 240,
+      "C_answer": 360,
+      "benchmark_label": "360",
+      "A_evidence_block": "b13",
+      "C_evidence_block": "b13",
+      "benchmark_evidence": [
+        "b13"
+      ],
+      "diagnostic": "wallet_loss_binding",
+      "C_equation": "720 - 720/3 - (240-240) - 120 = 360"
+    },
+    {
+      "instance_id": "task_000444",
+      "A_raw_answer": "70%",
+      "A_single_scalar": 70,
+      "C_answer": 70,
+      "benchmark_label": "70",
+      "A_evidence_block": "b13",
+      "C_evidence_block": "b13",
+      "benchmark_evidence": [
+        "b13"
+      ],
+      "diagnostic": "multi_day_denominator",
+      "C_equation": "210*20/(10*10*60)*100 = 70"
+    },
+    {
+      "instance_id": "task_000447",
+      "A_raw_answer": "20%",
+      "A_single_scalar": 20,
+      "C_answer": 20,
+      "benchmark_label": "20",
+      "A_evidence_block": "b06",
+      "C_evidence_block": "b06",
+      "benchmark_evidence": [
+        "b06"
+      ],
+      "diagnostic": "same_numbers_different_units",
+      "C_equation": "60*15/(5*15*60)*100 = 20"
+    },
+    {
+      "instance_id": "task_000452",
+      "A_raw_answer": "24 floors per day; 240 minutes (4 hours) cleaning per day; 1/2 of the workday; 50%.",
+      "A_single_scalar": null,
+      "C_answer": 50,
+      "benchmark_label": "50",
+      "A_evidence_block": "b12",
+      "C_evidence_block": "b12",
+      "benchmark_evidence": [
+        "b12"
+      ],
+      "diagnostic": "multiple_requested_outputs",
+      "C_equation": "120*10/(5*8*60)*100 = 50"
+    },
+    {
+      "instance_id": "task_000454",
+      "A_raw_answer": "50%",
+      "A_single_scalar": 50,
+      "C_answer": 50,
+      "benchmark_label": "50",
+      "A_evidence_block": "b09",
+      "C_evidence_block": "b09",
+      "benchmark_evidence": [
+        "b09"
+      ],
+      "diagnostic": "multi_day_denominator",
+      "C_equation": "160*15/(8*10*60)*100 = 50"
+    },
+    {
+      "instance_id": "task_000455",
+      "A_raw_answer": "40%",
+      "A_single_scalar": 40,
+      "C_answer": 40,
+      "benchmark_label": "50",
+      "A_evidence_block": "b06",
+      "C_evidence_block": "b06",
+      "benchmark_evidence": [
+        "b06"
+      ],
+      "diagnostic": "semantic_label_conflict",
+      "C_equation": "160*15/(10*10*60)*100 = 40"
+    },
+    {
+      "instance_id": "task_000857",
+      "A_raw_answer": "41 engineers",
+      "A_single_scalar": 41,
+      "C_answer": 41,
+      "benchmark_label": "41",
+      "A_evidence_block": "b06",
+      "C_evidence_block": "b06",
+      "benchmark_evidence": [
+        "b06"
+      ],
+      "diagnostic": "remaining_vs_departed",
+      "C_equation": "(63+63)*(1-0.5) - 22 = 41"
+    }
+  ],
+  "leader_pdf_review": {
+    "task_000419": "Direct response misbinds the lost wallet to other funding. Visible wording links wallet loss to the preceding own-pocket amount, though 'already covered' still leaves payment-versus-cash ambiguity.",
+    "task_000455": "Rendered page 1 block b06 confirms 160 rooms, 15 minutes per room, 10 days, 10 hours/day: average cleaning fraction 40%. Public label remains 50. Preserve official label and flag conflict; do not train a 50-target rationale or add an ID override."
+  }
+}
