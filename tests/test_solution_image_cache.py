@@ -13,9 +13,9 @@ import pytest
 from PIL import Image
 from PIL import __version__ as pillow_version
 
-sys.path.insert(0, str(Path(__file__).parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).parents[1]))
 
-from solution_image_cache import (  # noqa: E402
+from scripts.solution_image_cache import (  # noqa: E402
     ImageCacheError,
     evict_verified_success_page_jpegs,
     rematerialize_page_jpegs,
@@ -389,7 +389,7 @@ def test_rematerialization_verifies_hashed_pillow_record_members(
             "record_sha256": _sha(record),
         }
     ]
-    monkeypatch.setattr("solution_image_cache.PIL.__file__", str(init))
+    monkeypatch.setattr("scripts.solution_image_cache.PIL.__file__", str(init))
     member.write_text("frozen = False\n")
 
     with (
