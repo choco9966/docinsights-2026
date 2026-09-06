@@ -12,3 +12,5 @@ artifacts/docsem_validation/
 artifacts/submissions/
 data/
 tmp/
+
+artifacts/solution-records/
