@@ -1993,6 +1993,45 @@ def test_bounded_pool_teardown_kills_real_hung_spawn_worker() -> None:
     assert future.cancelled() or future.done()
 
 
+def test_pool_teardown_rechecks_worker_after_manager_thread_reaps_it() -> None:
+    events: list[str] = []
+
+    class Process:
+        pid = 12345
+        alive = True
+
+        def join(self, *, timeout):
+            events.append(f"process-join-{timeout}")
+
+        def is_alive(self):
+            return self.alive
+
+        def terminate(self):
+            events.append("terminate")
+
+        def kill(self):
+            events.append("kill")
+
+    process = Process()
+
+    class ManagerThread:
+        def join(self, *, timeout):
+            events.append(f"manager-join-{timeout}")
+            process.alive = False
+
+    class Pool:
+        _processes = {process.pid: process}
+        _executor_manager_thread = ManagerThread()
+
+        def shutdown(self, **kwargs):
+            events.append(f"shutdown-{kwargs}")
+
+    _MODULE._terminate_ocr_pool(Pool(), grace_seconds=0.01)
+
+    assert "kill" in events
+    assert events[-1] == "manager-join-0.01"
+
+
 def test_paddle_document_broken_pool_is_aborted(monkeypatch: pytest.MonkeyPatch) -> None:
     pool = _MODULE.ProcessPoolExecutor(
         max_workers=1, mp_context=_MODULE.multiprocessing.get_context("spawn")

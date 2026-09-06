@@ -914,9 +914,9 @@ def _terminate_ocr_pool(pool: ProcessPoolExecutor, *, grace_seconds: float) -> N
         process.kill()
     for process in alive:
         process.join(timeout=grace_seconds)
-    remaining = [process for process in alive if process.is_alive()]
     if manager_thread is not None:
         manager_thread.join(timeout=grace_seconds)
+    remaining = [process for process in alive if process.is_alive()]
     if remaining:
         pids = ", ".join(str(process.pid) for process in remaining)
         raise RunnerError(f"could not terminate PaddleOCR worker processes: {pids}")
