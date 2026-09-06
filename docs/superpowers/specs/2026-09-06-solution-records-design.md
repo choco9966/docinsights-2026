@@ -36,6 +36,8 @@ Primary 응답을 해시 고정한 다음 공개 PDF의 해당 페이지를 같�
 
 Checker는 anchor가 포함된 보이는 블록의 heading line과 본문을 전사하고 ID·본문의 판독 가능 여부를 명시한다. 모델의 픽셀 좌표는 요구하지 않는다. 코드가 heading line의 본문 구분 colon을 분리하며, 내부 구두점과 ID의 대소문자는 보존한다. 명확한 단 하나의 블록만 확정 근거로 인정한다. 최종 `evidence`와 `evidence_details`는 이 독립 전사에서 채우므로 OCR/primary 추측과 달라도 된다. 여러 region의 확정 ID가 중복되면 id/page/quote가 바이트 단위로 동일한 경우에만 결정적으로 합치며, 같은 ID의 다른 페이지 또는 인용은 거부한다. Primary의 답·풀이·계산식·원래 불확실성은 변경하지 않는다. 원시 primary, OCR, checker 관측값과 차이를 provenance에 보존한다.
 
+`heading_line`은 별도 서체의 제목에 한정하지 않는다. 블록이 `identifier: body`처럼 시작하면 식별자와 같은 줄의 본문을 포함한 첫 줄을 그대로 전사한다. `body_text`에는 식별자 구분자 뒤의 같은 줄 본문과 이어지는 본문을 포함한다. 특정 ID나 예상 인용은 checker에 전달하지 않는다. 이 일반적인 필드 정의는 실제 inline ID를 body로만 분류해 heading을 null로 반환한 diagnostic 실패에서 명확히 했으며, 이전 실패를 다시 써서 성공으로 바꾸지 않는다.
+
 PDF/renderer/무손실 페이지/context/anchor crop, selector 설정, primary 응답, checker prompt/schema/config/model/executable/raw response를 해시로 묶는다. 최종 근거를 채운 기록도 reference 접근 전에 다시 동결한다. 공개 OCR은 위치 선택과 풀이 입력이고, PDF 픽셀이 최종 출처다. 같은 계열 모델의 독립 호출은 절차적 독립성을 제공하며 사람의 정답 검증이나 완전한 오류 독립성을 뜻하지 않는다.
 
 ## 판독 불가와 완료 집계
