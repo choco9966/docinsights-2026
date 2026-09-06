@@ -70,6 +70,24 @@ Native의 실제 합성된 detector 설정은 `limit_side_len=64`, `limit_type=m
 
 Native baseline 환경과 고정 모델 준비 방법은 [재현 구성](issue-24-native-ocr-reproduction.md)에 정리했다. 교정 끔 candidate SHA-256은 `5e11c32aee2078d6177e63ab4e773ae0cce98eeef8e8c1cca48cb80ebb1cd077`, Native와의 paired comparison SHA-256은 `8d1d99f302601cca9e3af444183a2e1103c692330b7e7552d3a99ce869219f10`이다.
 
+## 같은 가중치의 CPU 실행 후속 비교
+
+선정된 Native 모델을 Paddle2ONNX 2.1.0, opset 11, optimizer 미적용으로 변환하고 PaddleX 전·후처리를 유지한 채 ONNX Runtime 1.23.2 CPU kernel로 실행했다. 같은 60페이지에서 ordered text·box·polygon은 각각 60/60 exact였고 confidence는 전 페이지에서 `atol=1e-5, rtol=1e-4`를 통과했다. 관측한 confidence 최대 절대 차이는 `1.7524e-5`다. 앞선 RapidOCR 배포 가중치를 이 변환 모델로 간주하지 않는다.
+
+다음은 별도의 같은 4페이지 capacity probe다. 모든 설정에서 텍스트·좌표·polygon 4/4 exact를 확인했다. 작은 표본이며 장시간 production 성능을 보장하지 않는다.
+
+| CPU 설정 | 4페이지 wall time | 합계 시간 / 페이지 수 | 관측 최대 RSS |
+|---|---:|---:|---:|
+| 1 worker × intra-op 4 | 49.484초 | 12.371초/페이지 | 1.806 GB |
+| 2 workers × intra-op 4 | 47.536초 | 11.884초/페이지 | 합계 3.538 GB |
+| 2 workers × intra-op 1 | 55.907초 | 13.977초/페이지 | 합계 3.532 GB |
+
+공통 설정은 CPU EP, inter-op 1, sequential execution, graph optimization enable-all이다. 2 workers의 처리량 이득은 약 4.1%이고 메모리 사용은 거의 두 배여서, 16GiB Mac에서 풀이 실행과 병행하는 production 설정은 1 worker × intra-op 4로 선택했다. 12.371초/페이지를 held-out 14,133페이지에 단순 적용하면 OCR만 약 48.6시간이다. 문서별 난이도·경합·초기화·이미지 렌더·모델 호출·실패 복구에 따라 실제 시간이 달라진다. 10시간 내 전수 완료 추정치가 아니다.
+
+Detector 크기를 줄인 4페이지 진단은 text/geometry exact 0/4여서 채택하지 않았다. MLX EP는 한 페이지의 결과가 일치했지만 peak footprint가 약 12.6GB이고 CPU 대비 이득이 제한되어 채택하지 않았다. 이 진단은 baseline 성능표를 대체하지 않는다.
+
+CPU tuning summary SHA-256: `99d94144bffd8e2123443f14ff29317253a4716116e138375e9da859cc9981af`. Exported detector: `d4aa24d408cd70b8b9f66cc758e20f397fc31a9c69d8477cf8887fc53bd5fceb`; recognizer: `4212d483f00f1c8617ba143ba36731e361d8307f49b5fae830d828f64b2162a2`.
+
 ## 감사 해시
 
 - Corpus manifest: `3627ef1d3589e320ea12b353fda907a1ccd283a46b3be8a76e29864e894fafd9`

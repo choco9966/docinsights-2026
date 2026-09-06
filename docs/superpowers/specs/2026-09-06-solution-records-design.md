@@ -46,6 +46,14 @@ PDF/renderer/무손실 페이지/context/anchor crop, selector 설정, primary �
 
 `coverage_complete`는 공식 모든 문항에 실제 답·풀이와 근거 판정 기록이 있음을 뜻한다. 근거 확정 건수, 검토 필요 건수, runtime 실패 건수를 별도로 보고하며 전부 근거가 확정되지 않으면 전체를 정답 검증 완료라고 부르지 않는다. 다음 split의 시작에는 이전 split의 완전한 답·풀이 기록·동결·분리 평가가 필요하다. 유효한 private 답·풀이가 있는 문항 수를 answer_coverage로 별도 집계한다. Primary 형식·산술·anchor 검증 실패는 생성 실패이며 재시도 대상이다. Checker의 timeout·잘못된 응답·출처 파일 누락은 답이 이미 있더라도 runtime_failed이며 terminal 근거 판정을 대신하지 않는다. 동일 설정으로 resume할 때 원래 primary 해시와 모든 입력을 다시 검증하고, 실패한 source check만 제한된 횟수의 fresh 호출로 복구할 수 있다. Primary 답·풀이는 재생성하지 않고 기존 실패 산출물과 새 호출을 모두 보존한다. 실제 판독이 완료된 ambiguous/unreadable 결과에는 이 runtime 재시도를 적용하지 않는다. 이러한 실패가 한 건이라도 있으면 coverage_complete를 충족하지 못하고 다음 split을 열지 못한다. 모든 region이 clear인 기록만 fully_grounded이고, 하나라도 실제 판독 결과가 미확정이면 evidence_unresolved이다. 2026-09-07 확인한 최신 held-out 정책은 `answer: null`, `evidence: []` abstention을 허용하지만 이는 Answer·Joint에서 오답이다. 사용자의 후속 지적에 따라 미확정 근거를 자동으로 null 제출로 바꾸지 않는다. Private 답·풀이와 원본 관측을 보존하고 재검토 대상으로 남긴다. `coverage_complete`와 `submission_ready`를 구분하며 기본 full submission은 모든 문항의 근거가 확정되어야 생성한다. Grounded-only partial artifact와 명시적으로 선택한 abstention export는 별도 모드이며 완전한 풀이 성공으로 부르지 않는다. Test 예외를 Train/Validation 형식에 자동 적용하지 않는다. 제출용 점수와 private 답 비교는 별도로 집계한다. 답이 생성된 검토 필요 행은 답 비교에 포함할 수 있지만 Evidence 비교에서는 미확정으로 표시한다. Runtime 실패에 답을 만들어 넣지 않는다.
 
+## 성공 작업의 페이지 이미지 캐시
+
+전체 PDF 페이지는 기존 175 DPI와 JPEG quality 65로 렌더하여 모두 primary에 제공한다. 성공 작업의 파생 JPEG만 `successful_page_jpegs=exact_regenerable_cache_v1`이라는 frozen run policy 아래 재생 가능한 캐시로 취급한다. 원본 PDF, 순서 있는 이미지 경로·SHA ledger, OCR, raw 응답, 최종 기록과 모든 무손실 Evidence 이미지는 보존한다. Final record·job state·source proof 검증을 먼저 통과한 성공 작업에서만 허용된 `source/page-*.jpg`를 삭제한다. 실패·중단 작업은 삭제하지 않는다.
+
+성공 상태와 해시된 입력 ledger가 있는 경우 JPEG의 일부 또는 전체 누락은 cache miss로 인정한다. 존재하는 파일의 잘못된 해시나 symlink는 항상 오류이며 덮어쓰지 않는다. Cached/prior-split 감사는 이 metadata와 영구 proof를 확인하고 모든 JPEG를 재생성하지 않는다. 실제 이미지가 필요한 경우에만 private temporary directory에 전체 ordered set을 재생성한다. PDF SHA, renderer 경로·버전·binary SHA, DPI, Pillow 버전과 설치 파일 해시, PNG→RGB 및 JPEG 옵션을 고정하고 페이지 수·순서·모든 JPEG SHA가 일치해야 소비할 수 있다. 다른 플랫폼에서 바이트 재현을 보장하지 않는다.
+
+전수 실행 전 선택한 OCR·모델 pilot에서 동시 렌더 임시 파일, Evidence 저장 증가량, 실패 작업 보존 여유를 측정해 저장 공간 stop watermark를 고정한다. 저장 공간 때문에 입력 화질이나 페이지 범위를 줄이지 않는다.
+
 ## 검증
 
 합성 문서로 다중 Evidence·임의 ID, 인용과 페이지 검증, 산술 검산, ID coverage, 변경 입력 재개 거부, 생성/평가 분리를 검사한다. 실제 validation 1건에서 문서 검토와 v24 비교를 완료하고 순차 실행한다. 최종 cleaner 후 재검증, 독립 code-reviewer와 architect 검토 및 불변식 감사를 통과해야 aggregate goal을 완료한다.

@@ -73,9 +73,9 @@ Validation에서 고정한 1건의 공개 query와 PDF/OCR를 읽고, PDF의 관
 
 ## 재현 실행 명령
 
-아래 명령은 `feature/24` worktree에서 실행한다. 실행기는 공개 tasks/PDF만 읽으며 reference 파일 인수를 받지 않는다. 본 실행의 요청 모델은 `gpt-5.6-sol`, reasoning effort는 high로 고정한다. 아래는 실행 순서이며 공개 OCR 환경 설치와 pilot 통과가 선행되어야 한다. Tesseract, Apple Vision, 공개 RapidOCR를 사용한 앞선 세 pilot은 각각 0/2 통과했다. `runs`, `runs-v2`, `runs-v3`의 생성·실패 산출물을 보존한다. v4 출처 계약 구현과 동일 validation 사전 문항 검증을 마친 뒤 새 `runs-v4`에서 pilot을 진행한다. Pilot의 실제 기록·출처 확인이 통과하면 `--limit`을 제거해 재개한다. 아래 명령은 준비 중인 v4 실행 순서를 기술하며 실행 완료를 뜻하지 않는다.
+아래 명령은 `feature/24` worktree에서 실행한다. 실행기는 공개 tasks/PDF만 읽으며 reference 파일 인수를 받지 않는다. 본 실행의 요청 모델은 `gpt-6-astra`, reasoning effort는 high로 고정한다. 별도 CLI 0.153.4의 재현·모델 식별 한계는 [풀이 모델 실행 환경](issue-24-solver-runtime.md)을 따른다. 아래는 실행 순서이며 공개 OCR 환경 설치와 pilot 통과가 선행되어야 한다. Tesseract, Apple Vision, 공개 RapidOCR를 사용한 앞선 세 pilot은 각각 0/2 통과했다. `runs`, `runs-v2`, `runs-v3`의 생성·실패 산출물을 보존한다. v4 출처 계약 구현과 동일 validation 사전 문항 검증을 마친 뒤 새 `runs-v4`에서 pilot을 진행한다. Pilot의 실제 기록·출처 확인이 통과하면 `--limit`을 제거해 재개한다. 아래 명령은 준비 중인 v4 실행 순서를 기술하며 실행 완료를 뜻하지 않는다.
 
-새 환경에는 Python 3.11.6, Poppler의 `pdftoppm`, 인증된 Codex CLI가 필요하다. 현재 Native baseline의 59개 패키지 pin과 공식 모델 준비 명령은 [Native 재현 구성](issue-24-native-ocr-reproduction.md)을 따른다. 실행기는 pinned `ppocr-env` Python을 요구한다. 기존 Rapid 환경과 실패 산출물은 역사적 진단으로 보존한다. 가속 후보가 최종 채택되면 설정을 고정하고 이 명령도 함께 갱신한 뒤 실행한다.
+새 환경에는 Python 3.11.6, Poppler의 `pdftoppm`, 인증된 Codex CLI가 필요하다. 현재 Native baseline의 59개 패키지 pin과 공식 모델 준비 명령은 [Native 재현 구성](issue-24-native-ocr-reproduction.md)을 따른다. 실행기는 pinned `ppocr-env` Python을 요구한다. 선택한 동일 가중치 ONNX CPU 실행은 기존 `rapidocr-env`의 ONNX Runtime 1.23.2 패키지를 추가로 사용하며, Native 전·후처리와 모델 가중치를 유지한다. 기존 실패 산출물은 역사적 진단으로 보존한다. 통합 검증과 저장 정책 pilot을 완료한 뒤 아래 순서로 실행한다.
 
 ```bash
 PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/run_solution_records.py --split heldout --tasks artifacts/solution-records/issue24/inputs/heldout/tasks.jsonl --pdf-root data/issue24 --output-root artifacts/solution-records/issue24/runs-v4 --limit 2 --workers 2
@@ -95,7 +95,7 @@ PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/evaluate_solution_recor
 
 최초 2건 pilot은 Tesseract 200dpi/PSM6의 숫자·Evidence ID 손상 및 응답 형식 문제로 실패했다. 실패한 두 번의 응답과 원래 입력을 `runs`에 보존한다. 후속 Apple Vision 실험은 기존 어댑터를 사용했지만 두 문항 모두 bbox 검증에서 실패했다. 사용자 결정에 따라 Apple Vision을 본 실행에서 제외했으며 이 실험은 실패 이력으로만 남긴다.
 
-175dpi JPEG quality65의 16페이지 표본은 4,419,336 bytes였다. 전체 16,383페이지를 같은 평균으로 추정하면 약 4.52GB지만 실제 문서별 차이는 있으므로 여유 공간을 실행 중 확인한다. 모든 페이지의 JPEG와 OCR를 보존하고 해시로 묶으며, 공식 원본 PDF를 최종 출처로 유지한다. v4에서는 인용한 페이지의 무손실 PNG와 결정적 crop을 출처 증명용으로 추가 보존하므로 실제 저장량은 위 JPEG 추정치보다 크다. 이 설정도 synthetic ID를 완벽하게 읽는다는 보장은 없으므로 시각 확인과 실패 기록을 유지한다.
+175dpi JPEG quality65의 16페이지 표본은 4,419,336 bytes였다. 전체 16,383페이지를 같은 평균으로 추정하면 약 4.52GB지만 실제 문서별 차이는 있으므로 여유 공간을 실행 중 확인한다. 모든 페이지의 JPEG를 primary에 제공하고 ordered SHA ledger와 OCR를 보존하며, 공식 원본 PDF를 최종 출처로 유지한다. 최신 설계는 검증된 성공 작업의 JPEG만 정확히 재생성 가능한 캐시로 취급한다. v4에서는 인용한 페이지의 무손실 PNG와 결정적 crop을 출처 증명용으로 추가 보존하므로 실제 저장량은 위 JPEG 추정치보다 크다. 이 설정도 synthetic ID를 완벽하게 읽는다는 보장은 없으므로 시각 확인과 실패 기록을 유지한다.
 
 Train reference는 생성 전에 라벨 내용을 읽지 않고 [고정 HF revision의 파일 메타데이터](https://huggingface.co/api/datasets/amitbcp/docinsights-2026-shared-task-data/tree/d9e1a394b46d2ac0a4dd87e12dd4a917a69f46e2/train?recursive=false)로 고정했다: `train/labels.jsonl`, 62,030 bytes, Git blob SHA-1 `686429d03b2d4ba5fe4fe6b07398feef7d0cd884`. 생성 동결 후 evaluator가 실제 바이트의 이 메타데이터와 SHA-256을 검증한다. Held-out 평가 파일은 라벨 부재를 `reference_unavailable`로 명시하고 정확도를 만들지 않는다.
 
@@ -107,7 +107,7 @@ Train reference는 생성 전에 라벨 내용을 읽지 않고 [고정 HF revis
 
 공개 OCR 후보의 공식 라이선스와 가중치 접근성을 확인했다. [PP-OCRv5 mobile detector](https://huggingface.co/PaddlePaddle/PP-OCRv5_mobile_det/tree/0d63e78e2b680928f6b1747d76a08db6e645efb7)와 [English mobile recognizer](https://huggingface.co/PaddlePaddle/en_PP-OCRv5_mobile_rec/tree/267c36e24c331595590fe7bd72bde2436fd286f2)의 고정 모델 카드에는 Apache-2.0이 명시되어 있고 공개 추론 가중치를 제공한다. 코드 인용은 upstream이 안내하는 [PaddleOCR 3.0 Technical Report](https://arxiv.org/abs/2507.05595)를 사용한다. 실제 환경의 패키지 버전과 모델 디렉터리 해시를 함께 기록해야 하며, 모델 카드의 설치 예제를 모든 버전 조합의 호환성 보장으로 해석하지 않는다.
 
-추론 LLM의 기본 모델명은 별도 합성 입력 1회에서 CLI 헤더의 `gpt-5.6-sol`로 확인했다. 이후 본 실행에서는 이 요청 모델명을 명시하고 high effort를 사용한다. 과거 `unresolved-default` 기록을 사후 변경하지 않는다. 공개 OCR 선택은 전체 시스템의 LLM 가중치까지 공개된다는 의미가 아니며, 방법 설명에서 OCR과 답 생성 모델을 각각 명시한다.
+이전 추론 LLM의 기본 모델명은 별도 합성 입력 1회에서 CLI 헤더의 `gpt-5.6-sol`로 확인했다. 최신 선택은 별도 CLI 0.153.4에서 `gpt-6-astra`와 high effort를 명시한다. 과거 `unresolved-default` 기록을 사후 변경하지 않는다. 공개 OCR 선택은 전체 시스템의 LLM 가중치까지 공개된다는 의미가 아니며, 방법 설명에서 OCR과 답 생성 모델을 각각 명시한다.
 
 ### 공개 ONNX 실행 후보
 
@@ -157,4 +157,6 @@ OCR 선택과 분리하여 기존 RapidOCR 구성으로 같은 validation `task_
 
 ## OCR 비교 후 최신 선택
 
-60페이지/독립 이미지 전사120회 비교를 완료했고 [실측 성능표와 선택 근거](issue-24-ocr-comparison.md), [상세 CSV](issue-24-ocr-comparison.csv)를 작성했다. Held-out 합의 표본에서 Native Paddle PP-OCRv5의 ID F1 77.21%, CER 3.91%가 가장 좋아 본 실행 후보로 선택했다. 숫자 F1은 Native91.77%와 Apple91.97%의 차이가 불확실하다. 전체 정답률·Evidence set 정확도·대회 순위로 해석하지 않는다. 속도가 느려 동일 품질 가속 가능성을 별도로 검증하며, 검증 전에는 가속 후보에 Native 점수를 적용하지 않는다. 위 공개 OCR/Apple 제외·재허용 문단은 결정 변화의 과거 이력으로 유지한다.
+60페이지/독립 이미지 전사120회 비교를 완료했고 [실측 성능표와 선택 근거](issue-24-ocr-comparison.md), [상세 CSV](issue-24-ocr-comparison.csv)를 작성했다. Held-out 합의 표본에서 Native Paddle PP-OCRv5의 ID F1 77.21%, CER 3.91%가 가장 좋아 본 실행 후보로 선택했다. 숫자 F1은 Native91.77%와 Apple91.97%의 차이가 불확실하다. 전체 정답률·Evidence set 정확도·대회 순위로 해석하지 않는다. 후속 동일 가중치 ONNX Runtime CPU 실행은 60/60페이지에서 텍스트·좌표가 정확히 일치했다. 작은 처리량 probe에서 1 worker × intra-op 4는 12.371초/페이지, RSS 1.806GB였다. 이 설정을 통합하고 최종 실제 문항 pilot을 수행한다. 위 공개 OCR/Apple 제외·재허용 문단은 결정 변화의 과거 이력으로 유지한다.
+
+성공 작업의 all-page JPEG cache policy는 `exact_regenerable_cache_v1`로 동결한다. 성공 final record와 source proof를 검증한 뒤에만 파생 JPEG를 제거할 수 있으며, 원본 PDF·OCR·모든 Evidence PNG/crop·raw 응답은 유지한다. JPEG가 다시 필요한 경우 같은 환경·recipe로 전체 ordered set의 SHA를 재검증한다. 이전 13.56GB free-space 관측 이후 환경 설치와 OS swap으로 여유가 줄었으며, 최종 pilot에서 저장량과 stop watermark를 다시 측정한다.

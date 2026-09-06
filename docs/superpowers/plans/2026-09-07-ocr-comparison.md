@@ -22,6 +22,14 @@ Compare lexical leading-heading tokens and numeric occurrences as region-scoped 
 
 The ten-hour window is for productive measurement and execution, not artificial waiting. A full dataset run may continue beyond the window if observed throughput requires it; report actual coverage and remaining work. No external portal submission or PR merge is included.
 
+## Production integration gates added after measurement
+
+The unchanged native Paddle model weights exported to ONNX Runtime CPU preserve all 60 pages' ordered text and geometry exactly in the paired gate. Integrate this kernel substitution with the same PaddleX preprocessing and postprocessing; freeze exporter, ONNX bytes, CPU provider and session settings. The existing RapidOCR converted weights are not interchangeable with this export. Record confidence tolerances separately from exact text/geometry equality.
+
+Use the isolated verified Codex 0.153.4 with Astra/high for primary and blind source checks. The completed validation and two held-out format diagnostics reused public RapidOCR inputs; they do not replace the selected-OCR production pilot or establish private answer accuracy.
+
+Before full generation, implement and verify the architecture-reviewed `exact_regenerable_cache_v1` policy in the design. Retain every permanent source proof and only evict verified-success derived page JPEGs. Test partial cache misses, tampered present images, failed-job retention and actual separate-process byte-identical rematerialization. Measure the final pilot's transient storage and retained proof growth before setting the production stop watermark. Then execute the same validation gate, the selected-config held-out pilot and full Held-out → Train → Validation sequence.
+
 ## Pre-score protocol corrections
 
 Independent code-only review, before candidate accuracy inspection, found that the initial parser converted leading-decimal or exponent forms into different literals and that the reference harness excluded clear empty-core agreement. Version 3 rederives consensus from the unchanged frozen raw image-reader responses using the corrected common heading/numeric parsers and empty-body eligibility. A later reference-only format failure showed that curated ID arrays also needed symmetric derivation; this too was corrected before scoring. The earliest structurally valid completed raw response is used, without choosing a retry for better consensus. It preserves earlier consensus artifacts as diagnostics and makes no extra reader calls. Numeric and text accuracy reports use only the corrected version.
