@@ -55,6 +55,21 @@ Train 10문서/20페이지에서 본문 35/60, ID 60/60, 숫자 55/60 영역이 
 
 선택한 native 구성을 출처 검증 실행기에 통합하고 동일 validation 한 문항을 다시 동결·비교한 뒤 Held-out 파일럿을 실행한다. Native 속도로 전체 16,383페이지를 처리하는 데에는 상당한 시간이 필요하므로, 같은 가중치·전처리와 출력 품질을 보존할 수 있는 가속 경로도 별도 확인한다. 가속 설정이 실제로 일치하는지 확인하기 전에는 측정된 Native 성능을 그 설정의 성능으로 옮겨 적지 않는다. 전수 결과 생성과 공식 정답률 평가는 아직 완료되지 않았다.
 
+## 후속 구성 실험
+
+아래는 baseline 결과를 본 뒤 수행한 posthoc 실험이다. 같은 60페이지와 동결된 silver reference를 사용했으며 baseline 세 파일과 위 표는 보존했다.
+
+| Apple 설정 | Held-out ID F1 ↑ | 숫자 F1 ↑ | CER ↓ | WER ↓ |
+|---|---:|---:|---:|---:|
+| 언어 교정 켬 (baseline) | 63.22% | 91.97% | 8.46% | 11.63% |
+| 언어 교정 끔 (후속 후보) | 69.57% | 92.04% | 8.71% | 13.04% |
+
+언어 교정을 끄면 ID 점 추정치는 개선됐지만 본문 오류는 늘었다. Native − 교정 끔의 ID F1 차이 95% 구간은 −1.51~+15.86 pp로 우열이 확정되지 않았다. CER/WER 차이 구간은 각각 −7.79~−2.38 pp, −8.25~−2.74 pp로 Native의 본문 우세를 지지한다. 교정 끔 실행은 다른 CPU 실험과 겹쳤으므로 이번 속도를 baseline과 직접 비교하지 않는다. 이 결과로 Native 기준 구성을 교체하지 않았다.
+
+Native의 실제 합성된 detector 설정은 `limit_side_len=64`, `limit_type=min`, `max_side_limit=4000`이며 표본 페이지를 축소하지 않는다. 모델의 `inference.yml`만 읽어 `960/max`라고 해석하면 실제 OCR pipeline과 달라진다. Rapid와의 차이에는 정규화, DB 후처리, 런타임 및 가중치 변환 계보가 함께 있으므로 ONNX 형식 자체를 품질 차이의 원인으로 단정하지 않는다.
+
+Native baseline 환경과 고정 모델 준비 방법은 [재현 구성](issue-24-native-ocr-reproduction.md)에 정리했다. 교정 끔 candidate SHA-256은 `5e11c32aee2078d6177e63ab4e773ae0cce98eeef8e8c1cca48cb80ebb1cd077`, Native와의 paired comparison SHA-256은 `8d1d99f302601cca9e3af444183a2e1103c692330b7e7552d3a99ce869219f10`이다.
+
 ## 감사 해시
 
 - Corpus manifest: `3627ef1d3589e320ea12b353fda907a1ccd283a46b3be8a76e29864e894fafd9`
