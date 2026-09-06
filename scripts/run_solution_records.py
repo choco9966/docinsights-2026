@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any, cast
 
 from PIL import Image
+from PIL import __version__ as PILLOW_VERSION
 
 from docinsights_analysis.solution_records import (
     SolutionRecordError,
@@ -51,6 +52,11 @@ from docinsights_analysis.visual_id_checks import (
 _RUNNER_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _RUNNER_SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _RUNNER_SCRIPTS_DIR)
+from solution_image_cache import (  # noqa: E402
+    ImageCacheError,
+    evict_verified_success_page_jpegs,
+    validate_page_jpeg_cache,
+)
 from solution_paddle_worker import initialize_worker, recognize_document  # noqa: E402
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -89,10 +95,14 @@ DISABLED_FEATURES = (
     "goals",
 )
 COMMAND_CONFIG = {
-    "codex_executable": "codex",
-    "codex_cli_version": "0.144.1",
-    "model": "gpt-5.6-sol",
+    "codex_executable": "data/issue24/codex-0.153.4/node_modules/.bin/codex",
+    "codex_cli_version": "0.153.4",
+    "codex_wrapper_sha256": "61b0194f3bb6534439c8d26a3ed57d0805f84b884588b761795323eeb92fcf70",
+    "codex_native_sha256": "b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3",
+    "model": "gpt-6-astra",
     "model_reasoning_effort": "high",
+    "model_identity_evidence": "requested-model-plus-completed-turn-without-fallback-warning",
+    "backend_model_event_field": None,
     "sandbox": "read-only",
     "web_search": "disabled",
     "disabled_features": list(DISABLED_FEATURES),
@@ -105,9 +115,12 @@ OCR_CONFIG = {
     "retained_image_format": "jpeg",
     "retained_image_extension": "jpg",
     "retained_jpeg_quality": 65,
+    "successful_page_jpegs": "exact_regenerable_cache_v1",
+    "page_jpeg_recipe": "pdftoppm-png-pillow-rgb-jpeg-v1",
+    "pillow_version": PILLOW_VERSION,
     "dpi": 175,
     "minimum_free_bytes": 1_073_741_824,
-    "ocr_backend": "native-paddle-ppocrv5-mobile",
+    "ocr_backend": "paddlex-ppocrv5-onnxruntime-cpu",
     "text_detection_model_name": "PP-OCRv5_mobile_det",
     "text_recognition_model_name": "en_PP-OCRv5_mobile_rec",
     "use_doc_orientation_classify": False,
@@ -117,11 +130,17 @@ OCR_CONFIG = {
     "enable_mkldnn": False,
     "cpu_threads": 2,
     "text_recognition_batch_size": 6,
+    "onnxruntime_version": "1.23.2",
+    "onnxruntime_provider": "CPUExecutionProvider",
+    "onnxruntime_intra_op_num_threads": 4,
+    "onnxruntime_inter_op_num_threads": 1,
+    "onnxruntime_execution_mode": "ORT_SEQUENTIAL",
+    "onnxruntime_graph_optimization_level": "ORT_ENABLE_ALL",
     "detector_effective_limit_side_len": 64,
     "detector_effective_limit_type": "min",
     "detector_effective_max_side_limit": 4000,
     "renderer_parallelism": 2,
-    "ocr_processes": 4,
+    "ocr_processes": 1,
     "ocr_document_base_timeout_seconds": 180,
     "ocr_page_timeout_seconds": 120,
     "ocr_shutdown_grace_seconds": 10,
@@ -158,8 +177,10 @@ RETRY_PROMPT_TEMPLATE = (
     "switch to another passage): {error}"
 )
 SOURCE_CHECK_CONFIG = {
-    "model": "gpt-5.6-sol",
+    "model": "gpt-6-astra",
     "model_reasoning_effort": "high",
+    "model_identity_evidence": "requested-model-plus-completed-turn-without-fallback-warning",
+    "backend_model_event_field": None,
     "timeout_seconds": 300,
     "maximum_attempts": 1,
     "maximum_runtime_attempts": 2,
@@ -222,6 +243,53 @@ _PADDLE_RUNTIME = {
     "recognizer_tree_sha256": "2a3324a89b92f446da343999c922d0fa7a0fa3b0e0a3bbb7034d654c588f1e16",
     "recognizer_repository": "PaddlePaddle/en_PP-OCRv5_mobile_rec",
     "recognizer_revision": "267c36e24c331595590fe7bd72bde2436fd286f2",
+    "detector_source_files": {
+        "inference.json": "05feef1acb00aa4cd7362b15f7f501fc4f99d7b1fa73c1c871e0c7b1504b0f5c",
+        "inference.pdiparams": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b",
+    },
+    "recognizer_source_files": {
+        "inference.json": "fd1b6ec722ea841a72d3ba43e527df1d1066d5d7808e0503ee3eec7265188753",
+        "inference.pdiparams": "3ec8a97ed6cefe8568d3e2ee90bb193299b566a7661aa4fd52d224b96b59f66b",
+    },
+    "detector_onnx_relative_path": "data/issue24/ppocr-onnx-models/detector/inference.onnx",
+    "detector_onnx_sha256": "d4aa24d408cd70b8b9f66cc758e20f397fc31a9c69d8477cf8887fc53bd5fceb",
+    "recognizer_onnx_relative_path": "data/issue24/ppocr-onnx-models/recognizer/inference.onnx",
+    "recognizer_onnx_sha256": "4212d483f00f1c8617ba143ba36731e361d8307f49b5fae830d828f64b2162a2",
+    "onnxruntime_site_packages_relative_path": (
+        "data/issue24/rapidocr-env/lib/python3.11/site-packages"
+    ),
+    "onnxruntime_record_relative_path": (
+        "data/issue24/rapidocr-env/lib/python3.11/site-packages/"
+        "onnxruntime-1.23.2.dist-info/RECORD"
+    ),
+    "onnxruntime_record_sha256": (
+        "e35600cfddbd37c7e0e85394a631480dd6f742c475daf5f6db8f8388637dc968"
+    ),
+    "onnxruntime_module_sha256": (
+        "1ca44e862e236031dde5dfb8a4d217e3770fa43201dadcf0b947fd43ed16d20e"
+    ),
+    "adapter_reference_relative_path": (
+        "artifacts/solution-records/issue24/ocr-benchmark-v2/acceleration-probe/"
+        "probe_paddlex_ort.py"
+    ),
+    "adapter_reference_sha256": (
+        "3f6d644acd02040bf107413569522c134e0f33b013a2ea21cd2d17a9b8de647d"
+    ),
+    "conversion_setup_relative_path": "scripts/setup_solution_paddle_onnx.py",
+    "conversion_setup_sha256": (
+        "78fa67ed47971e4d6507fd252b76003d98214bef043d5ba53ee5b3312707f6ff"
+    ),
+    "conversion_requirements_relative_path": "requirements/solution-paddle-onnx-export.txt",
+    "conversion_requirements_sha256": (
+        "37e194e4021d421c325577c0768d6c04177888032e9c5728979cba171bc10c42"
+    ),
+    "equivalence_shards": {
+        "shard-0-of-2.json": "121b49c2c5ac2d2992a802d4e25eba4c607af8318e0cbe75449c79d05a44f6a3",
+        "shard-1-of-2.json": "ae4c5d2e53e76e6924cdb088fe2e49e2b07e1f15d426377878e8c3f6bf029db4",
+        "cpu-thread-and-pool-tuning.json": (
+            "99d94144bffd8e2123443f14ff29317253a4716116e138375e9da859cc9981af"
+        ),
+    },
     "distributions": {
         "paddlepaddle": "3.2.0",
         "paddleocr": "3.3.2",
@@ -229,6 +297,7 @@ _PADDLE_RUNTIME = {
     },
 }
 _RENDER_SEMAPHORE = threading.BoundedSemaphore(OCR_CONFIG["renderer_parallelism"])
+_OCR_CAPACITY_SEMAPHORE = threading.BoundedSemaphore(OCR_CONFIG["ocr_processes"])
 _OCR_POOL_LOCK = threading.Lock()
 _OCR_POOL: ProcessPoolExecutor | None = None
 _OCR_POOL_BASE_TIMEOUT_SECONDS = float(OCR_CONFIG["ocr_document_base_timeout_seconds"])
@@ -550,6 +619,77 @@ def _resolved_ocr_config() -> dict[str, Any]:
                 f"{role}_revision": _PADDLE_RUNTIME[f"{role}_revision"],
             }
         )
+        for filename, expected_file_sha256 in _PADDLE_RUNTIME[
+            f"{role}_source_files"
+        ].items():
+            source_file = path / filename
+            if not source_file.is_file() or _sha256_file(source_file) != expected_file_sha256:
+                raise RunnerError(f"pinned PaddleOCR {role} source file changed: {filename}")
+        resolved[f"{role}_source_files"] = dict(_PADDLE_RUNTIME[f"{role}_source_files"])
+    for role in (
+        "detector_onnx",
+        "recognizer_onnx",
+        "adapter_reference",
+        "conversion_setup",
+        "conversion_requirements",
+    ):
+        path = REPOSITORY_ROOT / str(_PADDLE_RUNTIME[f"{role}_relative_path"])
+        expected = str(_PADDLE_RUNTIME[f"{role}_sha256"])
+        if not path.is_file() or _sha256_file(path) != expected:
+            raise RunnerError(f"pinned OCR {role} artifact is missing or changed")
+        resolved[f"{role}_path"] = str(path.resolve())
+        resolved[f"{role}_sha256"] = expected
+    acceleration_root = (
+        REPOSITORY_ROOT
+        / "artifacts"
+        / "solution-records"
+        / "issue24"
+        / "ocr-benchmark-v2"
+        / "acceleration-probe"
+    )
+    equivalence_artifacts = []
+    for name, expected in _PADDLE_RUNTIME["equivalence_shards"].items():
+        path = acceleration_root / name
+        if not path.is_file() or _sha256_file(path) != expected:
+            raise RunnerError(f"pinned OCR equivalence artifact changed: {name}")
+        equivalence_artifacts.append({"path": str(path.resolve()), "sha256": expected})
+    onnxruntime_site_packages = REPOSITORY_ROOT / str(
+        _PADDLE_RUNTIME["onnxruntime_site_packages_relative_path"]
+    )
+    onnxruntime_record = REPOSITORY_ROOT / str(
+        _PADDLE_RUNTIME["onnxruntime_record_relative_path"]
+    )
+    onnxruntime_module = onnxruntime_site_packages / "onnxruntime" / "__init__.py"
+    if (
+        not onnxruntime_record.is_file()
+        or _sha256_file(onnxruntime_record)
+        != _PADDLE_RUNTIME["onnxruntime_record_sha256"]
+    ):
+        raise RunnerError("pinned OCR onnxruntime RECORD is missing or changed")
+    if (
+        not onnxruntime_module.is_file()
+        or _sha256_file(onnxruntime_module) != _PADDLE_RUNTIME["onnxruntime_module_sha256"]
+    ):
+        raise RunnerError("pinned OCR onnxruntime module is missing or changed")
+    resolved.update(
+        {
+            "onnxruntime_site_packages": str(onnxruntime_site_packages.resolve()),
+            "onnxruntime_record_path": str(onnxruntime_record.resolve()),
+            "onnxruntime_record_sha256": _PADDLE_RUNTIME["onnxruntime_record_sha256"],
+            "onnxruntime_module_path": str(onnxruntime_module.resolve()),
+            "onnxruntime_module_sha256": _PADDLE_RUNTIME["onnxruntime_module_sha256"],
+            "converter_version": "2.1.0",
+            "conversion_opset_version": 11,
+            "conversion_enable_onnx_checker": True,
+            "conversion_optimize_tool": "None",
+            "equivalence_artifacts": equivalence_artifacts,
+            "equivalence_page_count": 60,
+            "equivalence_text_boxes_polygons": "exact",
+            "equivalence_confidence_max_abs": 0.000017524,
+            "ocr_capacity_selection": "pool1-ort-intra4-memory-bounded",
+            "ocr_capacity_reference_rss_bytes": 1_805_910_016,
+        }
+    )
     lock_path = REPOSITORY_ROOT / "requirements" / "solution-paddle-ocr.txt"
     distributions = _installed_distribution_records(environment_root, lock_path)
     renderer_path_value = shutil.which(str(OCR_CONFIG["renderer"]))
@@ -564,6 +704,7 @@ def _resolved_ocr_config() -> dict[str, Any]:
         raise RunnerError("could not identify the pdftoppm renderer version")
     renderer_version = version_lines[0]
     worker_path = REPOSITORY_ROOT / "scripts" / "solution_paddle_worker.py"
+    image_cache_helper_path = REPOSITORY_ROOT / "scripts" / "solution_image_cache.py"
     resolved.update(
         {
             "renderer_path": str(renderer_path.resolve()),
@@ -574,10 +715,15 @@ def _resolved_ocr_config() -> dict[str, Any]:
             "runtime_lock_sha256": _sha256_file(lock_path),
             "worker_path": str(worker_path.resolve()),
             "worker_sha256": _sha256_file(worker_path),
+            "image_cache_helper_path": str(image_cache_helper_path.resolve()),
+            "image_cache_helper_sha256": _sha256_file(image_cache_helper_path),
         }
     )
     resolved["engine_init_config_sha256"] = _sha256_bytes(
         _canonical_bytes(_paddle_engine_config(resolved))
+    )
+    resolved["worker_init_config_sha256"] = _sha256_bytes(
+        _canonical_bytes(_paddle_worker_config(resolved))
     )
     return resolved
 
@@ -591,7 +737,21 @@ def _verify_locked_runtime(config: dict[str, Any]) -> None:
     lock_path = Path(config["runtime_lock_path"])
     if not lock_path.is_file() or _sha256_file(lock_path) != config["runtime_lock_sha256"]:
         raise RunnerError("pinned PaddleOCR runtime lock changed")
-    for role in ("python", "renderer", "worker"):
+    for role in ("python", "renderer", "worker", "image_cache_helper"):
+        path = Path(config[f"{role}_path"])
+        if not path.is_file() or _sha256_file(path) != config[f"{role}_sha256"]:
+            raise RunnerError(f"pinned OCR {role} artifact changed")
+    for artifact in config["equivalence_artifacts"]:
+        path = Path(artifact["path"])
+        if not path.is_file() or _sha256_file(path) != artifact["sha256"]:
+            raise RunnerError(f"pinned OCR equivalence artifact changed: {path.name}")
+    for role in (
+        "detector_onnx",
+        "recognizer_onnx",
+        "adapter_reference",
+        "conversion_setup",
+        "conversion_requirements",
+    ):
         path = Path(config[f"{role}_path"])
         if not path.is_file() or _sha256_file(path) != config[f"{role}_sha256"]:
             raise RunnerError(f"pinned OCR {role} artifact changed")
@@ -641,6 +801,40 @@ def _verify_locked_runtime(config: dict[str, Any]) -> None:
                     size_field and member.stat().st_size != int(size_field)
                 ):
                     raise RunnerError(f"pinned OCR runtime member changed: {relative_name}")
+    _verify_external_record(
+        Path(config["onnxruntime_record_path"]),
+        str(config["onnxruntime_record_sha256"]),
+        Path(config["onnxruntime_site_packages"]),
+    )
+    onnxruntime_module = Path(config["onnxruntime_module_path"])
+    if (
+        not onnxruntime_module.is_file()
+        or _sha256_file(onnxruntime_module) != config["onnxruntime_module_sha256"]
+    ):
+        raise RunnerError("pinned ONNX Runtime import module changed")
+
+
+def _verify_external_record(record_path: Path, expected_sha256: str, site_packages: Path) -> None:
+    if not record_path.is_file() or _sha256_file(record_path) != expected_sha256:
+        raise RunnerError(f"pinned external OCR RECORD changed: {record_path}")
+    environment_root = site_packages.parents[2]
+    with record_path.open(encoding="utf-8", newline="") as source:
+        for relative_name, digest_field, size_field in csv.reader(source):
+            if not digest_field or ".." in Path(relative_name).parts:
+                continue
+            algorithm, separator, encoded = digest_field.partition("=")
+            if algorithm != "sha256" or not separator:
+                raise RunnerError("pinned external OCR RECORD has an unsupported digest")
+            member = (site_packages / relative_name).resolve()
+            try:
+                member.relative_to(environment_root)
+            except ValueError as error:
+                raise RunnerError("pinned external OCR member escapes its environment") from error
+            expected = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).hex()
+            if not member.is_file() or _sha256_file(member) != expected or (
+                size_field and member.stat().st_size != int(size_field)
+            ):
+                raise RunnerError(f"pinned external OCR runtime member changed: {relative_name}")
 
 
 def _paddle_engine_config(config: dict[str, Any]) -> dict[str, Any]:
@@ -656,6 +850,27 @@ def _paddle_engine_config(config: dict[str, Any]) -> dict[str, Any]:
         "enable_mkldnn": config["enable_mkldnn"],
         "cpu_threads": config["cpu_threads"],
         "text_recognition_batch_size": config["text_recognition_batch_size"],
+    }
+
+
+def _paddle_worker_config(config: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "paddle": _paddle_engine_config(config),
+        "onnxruntime": {
+            "site_packages": config["onnxruntime_site_packages"],
+            "version": config["onnxruntime_version"],
+            "module_path": config["onnxruntime_module_path"],
+            "module_sha256": config["onnxruntime_module_sha256"],
+            "detector_model": config["detector_onnx_path"],
+            "detector_sha256": config["detector_onnx_sha256"],
+            "recognizer_model": config["recognizer_onnx_path"],
+            "recognizer_sha256": config["recognizer_onnx_sha256"],
+            "intra_op_num_threads": config["onnxruntime_intra_op_num_threads"],
+            "inter_op_num_threads": config["onnxruntime_inter_op_num_threads"],
+            "execution_mode": config["onnxruntime_execution_mode"],
+            "graph_optimization_level": config["onnxruntime_graph_optimization_level"],
+            "providers": [config["onnxruntime_provider"]],
+        },
     }
 
 
@@ -677,7 +892,7 @@ def _start_ocr_pool(config: dict[str, Any]) -> None:
             max_workers=int(config["ocr_processes"]),
             mp_context=multiprocessing.get_context("spawn"),
             initializer=initialize_worker,
-            initargs=(_paddle_engine_config(config),),
+            initargs=(_paddle_worker_config(config),),
         )
 
 
@@ -725,22 +940,25 @@ def _shutdown_ocr_pool() -> None:
 
 
 def _paddle_document(images: Sequence[Path]) -> list[dict[str, Any]]:
-    with _OCR_POOL_LOCK:
-        pool = _OCR_POOL
-    if pool is None:
-        raise RunnerError("PaddleOCR process pool is not running")
-    timeout = _OCR_POOL_BASE_TIMEOUT_SECONDS + len(images) * _OCR_POOL_PAGE_TIMEOUT_SECONDS
-    try:
-        future = pool.submit(recognize_document, [str(image) for image in images])
-        return future.result(timeout=timeout)
-    except TimeoutError as error:
-        _abort_ocr_pool(pool)
-        raise RunnerError(
-            f"PaddleOCR document timed out after {timeout:g}s; resume with a fresh pool"
-        ) from error
-    except BrokenProcessPool as error:
-        _abort_ocr_pool(pool)
-        raise RunnerError("PaddleOCR worker process failed; resume with a fresh pool") from error
+    with _OCR_CAPACITY_SEMAPHORE:
+        with _OCR_POOL_LOCK:
+            pool = _OCR_POOL
+        if pool is None:
+            raise RunnerError("PaddleOCR process pool is not running")
+        timeout = _OCR_POOL_BASE_TIMEOUT_SECONDS + len(images) * _OCR_POOL_PAGE_TIMEOUT_SECONDS
+        try:
+            future = pool.submit(recognize_document, [str(image) for image in images])
+            return future.result(timeout=timeout)
+        except TimeoutError as error:
+            _abort_ocr_pool(pool)
+            raise RunnerError(
+                f"PaddleOCR document timed out after {timeout:g}s; resume with a fresh pool"
+            ) from error
+        except BrokenProcessPool as error:
+            _abort_ocr_pool(pool)
+            raise RunnerError(
+                "PaddleOCR worker process failed; resume with a fresh pool"
+            ) from error
 
 
 def _paddle_page(
@@ -934,6 +1152,7 @@ def _native_codex_executable(wrapper: Path) -> tuple[Path, str]:
         raise RunnerError("configured Codex wrapper target is unsupported")
     platform_package, target_triple = target
     package_root = wrapper.parent.parent.resolve()
+    installation_node_modules = package_root.parents[1]
     candidates = (
         package_root
         / "node_modules"
@@ -943,20 +1162,37 @@ def _native_codex_executable(wrapper: Path) -> tuple[Path, str]:
         / "bin"
         / "codex",
         package_root / "vendor" / target_triple / "bin" / "codex",
+        installation_node_modules
+        / platform_package
+        / "vendor"
+        / target_triple
+        / "bin"
+        / "codex",
     )
     for candidate in candidates:
         resolved = candidate.resolve()
-        if resolved.is_file() and resolved.is_relative_to(package_root):
+        if resolved.is_file() and resolved.is_relative_to(installation_node_modules):
             return resolved, "openai-node-wrapper-vendor-layout-v1"
     raise RunnerError("configured Codex wrapper native executable is unavailable")
 
 
 def _resolved_codex_runtime() -> dict[str, str]:
-    executable_value = shutil.which(str(COMMAND_CONFIG["codex_executable"]))
+    configured = Path(str(COMMAND_CONFIG["codex_executable"]))
+    executable_value = (
+        str((REPOSITORY_ROOT / configured).resolve())
+        if configured.parent != Path(".")
+        else shutil.which(str(configured))
+    )
     if executable_value is None:
         raise RunnerError("configured Codex executable is unavailable")
     wrapper = Path(executable_value).resolve()
+    if not wrapper.is_file():
+        raise RunnerError("configured Codex executable is unavailable")
     executable, resolution_method = _native_codex_executable(wrapper)
+    if _sha256_file(wrapper) != COMMAND_CONFIG["codex_wrapper_sha256"]:
+        raise RunnerError("configured Codex wrapper does not match the pinned hash")
+    if _sha256_file(executable) != COMMAND_CONFIG["codex_native_sha256"]:
+        raise RunnerError("configured Codex native executable does not match the pinned hash")
     version = subprocess.run(
         [str(executable), "--version"],
         capture_output=True,
@@ -1114,6 +1350,8 @@ def _verified_job_input(
     command_config_sha256: str,
     expected_input_sha256: Any,
     expected_ocr: dict[str, Any],
+    *,
+    allow_missing_page_jpegs: bool = False,
 ) -> dict[str, Any] | None:
     input_path = job_dir / "input.json"
     if not input_path.is_file():
@@ -1132,17 +1370,15 @@ def _verified_job_input(
     images = job_input.get("page_images")
     if not isinstance(images, list) or not images:
         return None
-    source_dir = (job_dir / "source").resolve()
-    for image in images:
-        if not isinstance(image, dict) or not isinstance(image.get("path"), str):
-            return None
-        image_path = Path(image["path"])
-        try:
-            image_path.resolve().relative_to(source_dir)
-        except ValueError:
-            return None
-        if not image_path.is_file() or image.get("sha256") != _sha256_file(image_path):
-            return None
+    try:
+        validate_page_jpeg_cache(
+            source_dir=job_dir / "source",
+            page_images=images,
+            cache_config=expected_ocr,
+            allow_missing_for_verified_success=allow_missing_page_jpegs,
+        )
+    except ImageCacheError:
+        return None
     if not isinstance(job_input.get("source_pages"), list):
         return None
     source_pages_path = job_dir / "source" / "source_pages.json"
@@ -1316,6 +1552,7 @@ def _verified_cached_record(
         command_config_sha256,
         state.get("job_input_sha256"),
         expected_config["ocr"],
+        allow_missing_page_jpegs=True,
     )
     if job_input is None:
         return None
@@ -1380,6 +1617,60 @@ def _verified_cached_record(
     if provenance.get("ocr") != expected_config["ocr"]:
         return None
     return normalized
+
+
+def _evict_verified_record_page_jpegs(
+    job_dir: Path, record: dict[str, Any], ocr_config: dict[str, Any]
+) -> None:
+    provenance = record.get("provenance")
+    page_images = provenance.get("page_images") if isinstance(provenance, dict) else None
+    if not isinstance(page_images, list):
+        raise RunnerError("verified record does not contain a page image ledger")
+    try:
+        evict_verified_success_page_jpegs(
+            source_dir=job_dir / "source",
+            page_images=page_images,
+            cache_config=ocr_config,
+            success_verified=True,
+        )
+    except ImageCacheError as error:
+        raise RunnerError(f"verified page JPEG cache could not be evicted: {error}") from error
+
+
+def _postcommit_success(
+    job_dir: Path,
+    entry: dict[str, Any],
+    manifest: dict[str, Any],
+    *,
+    verified: dict[str, Any] | None = None,
+) -> bool:
+    record = verified or _verified_cached_record(
+        job_dir,
+        entry,
+        manifest["command_config_sha256"],
+        manifest["command_config"],
+    )
+    if record is None:
+        raise RunnerError("new success record failed frozen verification")
+    warning_path = job_dir / "cache-cleanup-warning.json"
+    try:
+        _evict_verified_record_page_jpegs(
+            job_dir, record, manifest["command_config"]["ocr"]
+        )
+    except OSError as error:
+        _write_json(
+            warning_path,
+            {
+                "status": "verified_success_cache_cleanup_failed",
+                "error_kind": "page_jpeg_cleanup_os_error",
+                "error": str(error),
+                "record_sha256": _sha256_file(job_dir / "record.json"),
+                "timestamp": datetime.now(UTC).isoformat(),
+            },
+        )
+        return True
+    warning_path.unlink(missing_ok=True)
+    return True
 
 
 def _read_jsonl(path: Path, description: str) -> list[dict[str, Any]]:
@@ -1703,6 +1994,33 @@ def _event_summary(events_text: str) -> tuple[bool, dict[str, Any] | None]:
     return completed, usage
 
 
+def _model_fallback_warning(events_text: str, stderr: str) -> str | None:
+    diagnostics = [stderr]
+    for line in events_text.splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        if event.get("type") in {"error", "turn.failed"}:
+            diagnostics.append(json.dumps(event, ensure_ascii=False))
+        item = event.get("item")
+        if (
+            event.get("type") == "item.completed"
+            and isinstance(item, dict)
+            and item.get("type") == "error"
+        ):
+            diagnostics.append(json.dumps(item, ensure_ascii=False))
+    combined = "\n".join(diagnostics).casefold()
+    indicators = (
+        "defaulting to fallback metadata",
+        "unknown model gpt-6-astra",
+        "requires a newer version of codex",
+    )
+    return next((indicator for indicator in indicators if indicator in combined), None)
+
+
 def _invoke_source_checker(
     *,
     prompt: str,
@@ -1757,6 +2075,11 @@ def _invoke_source_checker(
     stderr = completed.stderr or ""
     _write_private(output_dir / "events.jsonl", events)
     _write_private(output_dir / "stderr.txt", stderr)
+    fallback_warning = _model_fallback_warning(events, stderr)
+    if fallback_warning is not None:
+        raise SourceRegionCheckError(
+            f"source checker could not verify requested model: {fallback_warning}"
+        )
     turn_completed, _ = _event_summary(events)
     if completed.returncode != 0 or not turn_completed:
         raise SourceRegionCheckError("source checker did not complete successfully")
@@ -1917,7 +2240,7 @@ def _resume_source_check(
     }
     _write_json(job_dir / "job.json", state)
     (job_dir / "error.json").unlink(missing_ok=True)
-    return True
+    return _postcommit_success(job_dir, entry, manifest)
 
 
 def _run_one(
@@ -1946,7 +2269,7 @@ def _run_one(
             command_config,
         )
         if cached is not None:
-            return True
+            return _postcommit_success(job_dir, entry, manifest, verified=cached)
         error_path = job_dir / "error.json"
         if error_path.is_file():
             previous_error = _load_json(error_path, f"{instance_id} error")
@@ -2042,6 +2365,7 @@ def _run_one(
 
     attempts: list[dict[str, Any]] = []
     last_error: Exception | None = None
+    success_committed = False
     for attempt_number in range(1, command_config["maximum_attempts"] + 1):
         attempt_dir = job_dir / "attempts" / str(attempt_number)
         _private_dir(attempt_dir)
@@ -2071,6 +2395,12 @@ def _run_one(
             _write_private(attempt_dir / "events.jsonl", events)
             _write_private(attempt_dir / "stderr.txt", stderr)
             response_path = attempt_dir / "response.json"
+            fallback_warning = _model_fallback_warning(events, stderr)
+            if fallback_warning is not None:
+                raise AttemptFailure(
+                    f"Codex could not verify requested model: {fallback_warning}",
+                    "model_fallback_warning",
+                )
             turn_completed, usage = _event_summary(events)
             if completed.returncode != 0:
                 raise AttemptFailure(
@@ -2101,6 +2431,10 @@ def _run_one(
                         "output_sha256": _sha256_bytes(raw_response),
                         "config_sha256": manifest["command_config_sha256"],
                         "model": command_config["model"],
+                        "model_identity_evidence": command_config["model_identity_evidence"],
+                        "backend_model_event_field": command_config[
+                            "backend_model_event_field"
+                        ],
                         "method": "codex-cli-schema-v1",
                         "ocr": job_input["ocr"],
                         "attempt": attempt_number,
@@ -2163,7 +2497,8 @@ def _run_one(
             }
             _write_json(state_path, state)
             (job_dir / "error.json").unlink(missing_ok=True)
-            return True
+            success_committed = True
+            break
         except Exception as error:  # noqa: BLE001 - one audited retry for any invalid completion
             error_kind = getattr(error, "error_kind", _classify_exception(error))
             if isinstance(error, subprocess.TimeoutExpired):
@@ -2199,6 +2534,9 @@ def _run_one(
             last_error = error
             if isinstance(error, SourceRegionCheckError):
                 break
+
+    if success_committed:
+        return _postcommit_success(job_dir, entry, manifest)
 
     record_path.unlink(missing_ok=True)
     failure = {

@@ -6,10 +6,12 @@ import json
 import os
 import subprocess
 import sys
+import threading
 import time
+import types
 from pathlib import Path
 
-import pytest
+import pytest  # pyright: ignore[reportMissingImports]
 
 _SCRIPT = Path(__file__).parents[1] / "scripts" / "run_solution_records.py"
 _SPEC = importlib.util.spec_from_file_location("run_solution_records", _SCRIPT)
@@ -17,6 +19,7 @@ assert _SPEC is not None and _SPEC.loader is not None
 _MODULE = importlib.util.module_from_spec(_SPEC)
 sys.modules[_SPEC.name] = _MODULE
 _SPEC.loader.exec_module(_MODULE)
+_WORKER = sys.modules["solution_paddle_worker"]
 PageBundle = _MODULE.PageBundle
 RunnerError = _MODULE.RunnerError
 run_pipeline = _MODULE.run_pipeline
@@ -66,7 +69,7 @@ def _public_inputs(tmp_path: Path, rows: list[dict[str, object]]) -> tuple[Path,
 
 
 def _pages(_task: dict[str, object], _pdf: Path, cache: Path) -> PageBundle:
-    image = cache / "page-0001.png"
+    image = cache / "page-1.jpg"
     image.parent.mkdir(parents=True, exist_ok=True)
     image.write_bytes(b"png")
     return PageBundle(
@@ -379,6 +382,7 @@ def test_failed_or_empty_completion_is_recorded_without_a_solution(tmp_path: Pat
     assert "empty final response" in prompts[1]
     assert (job / "attempts" / "1" / "events.jsonl").is_file()
     assert (job / "attempts" / "2" / "events.jsonl").is_file()
+    assert (job / "source" / "page-1.jpg").is_file()
     assert not (job / "record.json").exists()
     assert not (tmp_path / "private" / "heldout" / "complete.json").exists()
     failures = json.loads(
@@ -443,18 +447,99 @@ def test_jobs_are_private_and_codex_sees_only_current_public_input(tmp_path: Pat
     assert argv[0] == manifest["command_config"]["codex_executable_path"]
     assert manifest["command_config"]["codex_executable_sha256"]
     assert 'model_reasoning_effort="high"' in argv
-    assert argv[argv.index("--model") + 1] == "gpt-5.6-sol"
+    assert argv[argv.index("--model") + 1] == "gpt-6-astra"
     assert 'features.shell_tool=false' in argv
     assert argv.count("--image") == 1
     job = tmp_path / "private" / "heldout" / "jobs" / "h1"
     assert (job.stat().st_mode & 0o077) == 0
     provenance = json.loads((job / "record.json").read_text(encoding="utf-8"))["provenance"]
-    assert provenance["model"] == "gpt-5.6-sol"
+    assert provenance["model"] == "gpt-6-astra"
+    assert provenance["model_identity_evidence"] == (
+        "requested-model-plus-completed-turn-without-fallback-warning"
+    )
     assert provenance["pdf_sha256"]
     assert provenance["input_sha256"]
     assert provenance["output_sha256"]
     assert provenance["page_images"][0]["sha256"]
+    assert not (job / "source" / "page-1.jpg").exists()
+    assert manifest["command_config"]["ocr"]["successful_page_jpegs"] == (
+        "exact_regenerable_cache_v1"
+    )
+    assert manifest["command_config"]["ocr"]["image_cache_helper_sha256"]
     assert provenance["usage"]["input_tokens"] == 10
+
+
+def test_partial_page_jpeg_cleanup_failure_preserves_verified_success_without_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
+    _pin("heldout", tasks, 1)
+    output = tmp_path / "private"
+    primary_calls: list[dict[str, object]] = []
+
+    def two_pages(task, pdf, cache):
+        bundle = _pages(task, pdf, cache)
+        second = cache / "page-2.jpg"
+        second.write_bytes(b"jpeg-2")
+        bundle.pages.append({"page_number": 2, "text": "Additional public source text."})
+        bundle.images.append(second)
+        bundle.geometry.append(
+            {
+                "page_number": 2,
+                "width": 100,
+                "height": 100,
+                "ocr_image_sha256": hashlib.sha256(b"ocr-2").hexdigest(),
+                "lines": [],
+            }
+        )
+        return bundle
+
+    def partial_cleanup(*, page_images, **_kwargs):
+        first_present = next(
+            (Path(image["path"]) for image in page_images if Path(image["path"]).exists()),
+            None,
+        )
+        if first_present is not None:
+            first_present.unlink()
+        raise OSError("simulated cleanup interruption")
+
+    monkeypatch.setattr(_MODULE, "evict_verified_success_page_jpegs", partial_cleanup)
+    first = run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=output,
+        page_loader=two_pages,
+        command_runner=_successful_codex(primary_calls),
+    )
+
+    job = output / "heldout" / "jobs" / "h1"
+    state_before_resume = (job / "job.json").read_bytes()
+    record_before_resume = (job / "record.json").read_bytes()
+    warning = json.loads((job / "cache-cleanup-warning.json").read_text())
+    assert first["succeeded"] == 1
+    assert len(primary_calls) == 1
+    assert json.loads(state_before_resume)["status"] == "succeeded"
+    assert warning["status"] == "verified_success_cache_cleanup_failed"
+    assert not (job / "error.json").exists()
+    assert not (job / "source" / "page-1.jpg").exists()
+    assert (job / "source" / "page-2.jpg").is_file()
+
+    resumed = run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=output,
+        resume=True,
+        page_loader=two_pages,
+        command_runner=_successful_codex(primary_calls),
+    )
+
+    assert resumed["succeeded"] == 1
+    assert len(primary_calls) == 1
+    assert (job / "job.json").read_bytes() == state_before_resume
+    assert (job / "record.json").read_bytes() == record_before_resume
+    assert not (job / "source" / "page-2.jpg").exists()
 
 
 @pytest.mark.parametrize(
@@ -1171,6 +1256,7 @@ def test_isolated_command_timeout_kills_parent_and_grandchild_and_preserves_stre
     assert caught.value.stderr == "partial stderr\n"
     parent_pid, grandchild_pid = (int(value) for value in pid_file.read_text().split())
     deadline = time.monotonic() + 3
+    states: dict[int, str] = {}
     while time.monotonic() < deadline:
         states = {
             pid: subprocess.run(
@@ -1240,9 +1326,20 @@ def test_resolved_codex_runtime_executes_and_pins_native_binary(
 
     def version(argv, **_kwargs):
         calls.append(list(argv))
-        return subprocess.CompletedProcess(argv, 0, stdout="codex-cli 0.144.1\n", stderr="")
+        return subprocess.CompletedProcess(argv, 0, stdout="codex-cli 0.153.4\n", stderr="")
 
     monkeypatch.setattr(_MODULE.subprocess, "run", version)
+    monkeypatch.setitem(_MODULE.COMMAND_CONFIG, "codex_executable", "codex")
+    monkeypatch.setitem(
+        _MODULE.COMMAND_CONFIG,
+        "codex_wrapper_sha256",
+        hashlib.sha256(wrapper.read_bytes()).hexdigest(),
+    )
+    monkeypatch.setitem(
+        _MODULE.COMMAND_CONFIG,
+        "codex_native_sha256",
+        hashlib.sha256(native.read_bytes()).hexdigest(),
+    )
 
     resolved = _MODULE._resolved_codex_runtime()
 
@@ -1251,6 +1348,108 @@ def test_resolved_codex_runtime_executes_and_pins_native_binary(
     assert resolved["codex_executable_sha256"] == hashlib.sha256(b"native codex").hexdigest()
     assert resolved["codex_wrapper_path"] == str(wrapper.resolve())
     assert resolved["codex_wrapper_sha256"] == hashlib.sha256(wrapper.read_bytes()).hexdigest()
+
+
+def test_production_codex_runtime_is_isolated_astra() -> None:
+    resolved = _MODULE._resolved_codex_runtime()
+
+    assert _MODULE.COMMAND_CONFIG["model"] == "gpt-6-astra"
+    assert _MODULE.COMMAND_CONFIG["model_reasoning_effort"] == "high"
+    assert _MODULE.SOURCE_CHECK_CONFIG["model"] == "gpt-6-astra"
+    assert _MODULE.SOURCE_CHECK_CONFIG["model_reasoning_effort"] == "high"
+    assert resolved["codex_observed_version"] == "codex-cli 0.153.4"
+    assert resolved["codex_wrapper_path"].endswith(
+        "data/issue24/codex-0.153.4/node_modules/@openai/codex/bin/codex.js"
+    )
+    assert resolved["codex_wrapper_sha256"] == (
+        "61b0194f3bb6534439c8d26a3ed57d0805f84b884588b761795323eeb92fcf70"
+    )
+    assert resolved["codex_executable_sha256"] == (
+        "b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3"
+    )
+
+
+def test_model_fallback_warning_is_detected() -> None:
+    old_cli_events = (
+        '{"type":"item.completed","item":{"type":"error","message":'
+        '"Model metadata for `gpt-6-astra` not found. Defaulting to fallback metadata"}}\n'
+    )
+
+    assert _MODULE._model_fallback_warning(old_cli_events, "") is not None
+    assert _MODULE._model_fallback_warning(
+        '{"type":"turn.started"}\n{"type":"turn.completed","usage":{}}\n', ""
+    ) is None
+
+
+def test_primary_rejects_model_fallback_warning(tmp_path: Path) -> None:
+    tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
+    _pin("heldout", tasks, 1)
+    successful = _successful_codex([])
+
+    def fallback(argv, **kwargs):
+        completed = successful(argv, **kwargs)
+        warning = (
+            '{"type":"item.completed","item":{"type":"error","message":'
+            '"Model metadata for `gpt-6-astra` not found. Defaulting to fallback metadata"}}\n'
+        )
+        return subprocess.CompletedProcess(
+            argv,
+            completed.returncode,
+            stdout=warning + completed.stdout,
+            stderr=completed.stderr,
+        )
+
+    result = run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=tmp_path / "private",
+        limit=1,
+        page_loader=_pages,
+        command_runner=fallback,
+    )
+
+    error = json.loads(
+        (tmp_path / "private" / "heldout" / "jobs" / "h1" / "error.json").read_text()
+    )
+    assert result["failed"] == 1
+    assert error["error_kind"] == "model_fallback_warning"
+    assert len(error["attempts"]) == 2
+
+
+def test_source_checker_uses_astra_and_rejects_fallback_warning(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    observed: list[str] = []
+
+    def fallback(argv, **_kwargs):
+        observed.extend(argv)
+        return subprocess.CompletedProcess(
+            argv,
+            0,
+            stdout=(
+                '{"type":"item.completed","item":{"type":"error","message":'
+                '"Model metadata for `gpt-6-astra` not found. Defaulting to fallback metadata"}}\n'
+                '{"type":"turn.completed","usage":{}}\n'
+            ),
+            stderr="",
+        )
+
+    monkeypatch.setattr(_MODULE, "_verify_codex_runtime", lambda _config: None)
+    with pytest.raises(_MODULE.SourceRegionCheckError, match="fallback metadata"):
+        _MODULE._invoke_source_checker(
+            prompt="inspect pixels",
+            images=[],
+            output_schema={"type": "object"},
+            output_dir=tmp_path / "checker",
+            checker_config={
+                **_MODULE.SOURCE_CHECK_CONFIG,
+                "codex_executable_path": "/isolated/codex",
+            },
+            command_runner=fallback,
+        )
+
+    assert observed[observed.index("--model") + 1] == "gpt-6-astra"
 
 
 def test_source_runtime_resume_rejects_tampered_frozen_primary(tmp_path: Path) -> None:
@@ -1548,9 +1747,31 @@ def test_paddle_production_config_matches_frozen_benchmark() -> None:
         resolved["detector_effective_limit_type"],
         resolved["detector_effective_max_side_limit"],
     ) == (64, "min", 4000)
+    assert resolved["ocr_backend"] == "paddlex-ppocrv5-onnxruntime-cpu"
+    assert resolved["onnxruntime_version"] == "1.23.2"
+    assert resolved["onnxruntime_provider"] == "CPUExecutionProvider"
+    assert resolved["onnxruntime_intra_op_num_threads"] == 4
+    assert resolved["onnxruntime_inter_op_num_threads"] == 1
+    assert resolved["onnxruntime_execution_mode"] == "ORT_SEQUENTIAL"
+    assert resolved["onnxruntime_graph_optimization_level"] == "ORT_ENABLE_ALL"
+    assert resolved["onnxruntime_module_path"].endswith("onnxruntime/__init__.py")
+    assert resolved["ocr_processes"] == 1
+    assert resolved["successful_page_jpegs"] == "exact_regenerable_cache_v1"
+    assert resolved["image_cache_helper_sha256"] == hashlib.sha256(
+        Path(resolved["image_cache_helper_path"]).read_bytes()
+    ).hexdigest()
+    assert resolved["detector_onnx_sha256"] == (
+        "d4aa24d408cd70b8b9f66cc758e20f397fc31a9c69d8477cf8887fc53bd5fceb"
+    )
+    assert resolved["recognizer_onnx_sha256"] == (
+        "4212d483f00f1c8617ba143ba36731e361d8307f49b5fae830d828f64b2162a2"
+    )
+    worker_config = _MODULE._paddle_worker_config(resolved)
+    assert worker_config["paddle"] == engine_config
+    assert worker_config["onnxruntime"]["providers"] == ["CPUExecutionProvider"]
 
 
-def test_paddle_pool_uses_four_spawn_workers_and_shuts_down(
+def test_paddle_pool_uses_one_spawn_worker_and_shuts_down(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls: dict[str, object] = {}
@@ -1571,15 +1792,101 @@ def test_paddle_pool_uses_four_spawn_workers_and_shuts_down(
     monkeypatch.setattr(_MODULE, "ProcessPoolExecutor", FakePool)
     monkeypatch.setattr(_MODULE, "_OCR_POOL", None)
     monkeypatch.setattr(_MODULE, "_verify_locked_runtime", lambda _config: None)
+    monkeypatch.setattr(_MODULE, "_paddle_worker_config", lambda _config: {"worker": True})
 
     _MODULE._start_ocr_pool(config)
     _MODULE._shutdown_ocr_pool()
 
-    assert calls["max_workers"] == 4
-    assert calls["mp_context"].get_start_method() == "spawn"
+    assert calls["max_workers"] == 1
+    assert calls["mp_context"] is _MODULE.multiprocessing.get_context("spawn")
     assert calls["initializer"] is _MODULE.initialize_worker
-    assert calls["initargs"] == (_MODULE._paddle_engine_config(config),)
+    assert calls["initargs"] == ({"worker": True},)
     assert calls["shutdown"] == {"wait": False, "cancel_futures": True}
+
+
+def test_worker_replaces_only_paddlex_infer_with_pinned_ort(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    rapid_site = tmp_path / "rapid-site"
+    ort_package = rapid_site / "onnxruntime"
+    ort_package.mkdir(parents=True)
+    ort_init = ort_package / "__init__.py"
+    ort_init.write_text("# fake", encoding="utf-8")
+    det_model = tmp_path / "det.onnx"
+    rec_model = tmp_path / "rec.onnx"
+    det_model.write_bytes(b"det")
+    rec_model.write_bytes(b"rec")
+    sessions = []
+
+    class Options:
+        pass
+
+    class Session:
+        def __init__(self, model, *, sess_options, providers):
+            self.model = model
+            self.options = sess_options
+            self.providers = providers
+            sessions.append(self)
+
+        def get_inputs(self):
+            return [types.SimpleNamespace(name="x")]
+
+        def get_providers(self):
+            return self.providers
+
+        def run(self, _outputs, feed):
+            return [feed["x"]]
+
+    fake_ort = types.SimpleNamespace(
+        __file__=str(ort_init),
+        __version__="1.23.2",
+        SessionOptions=Options,
+        ExecutionMode=types.SimpleNamespace(ORT_SEQUENTIAL="sequential"),
+        GraphOptimizationLevel=types.SimpleNamespace(ORT_ENABLE_ALL="all"),
+        InferenceSession=Session,
+    )
+    pipeline = types.SimpleNamespace(
+        text_det_model=types.SimpleNamespace(infer="native-det"),
+        text_rec_model=types.SimpleNamespace(infer="native-rec"),
+    )
+    engine = types.SimpleNamespace(
+        paddlex_pipeline=types.SimpleNamespace(_pipeline=pipeline)
+    )
+    fake_paddle = types.SimpleNamespace(PaddleOCR=lambda **_kwargs: engine)
+
+    def import_module(name):
+        return {"paddleocr": fake_paddle, "onnxruntime": fake_ort}[name]
+
+    monkeypatch.setattr(_WORKER.importlib, "import_module", import_module)
+    monkeypatch.setattr(_WORKER, "_ENGINE", None)
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    _WORKER.initialize_worker(
+        {
+            "paddle": {"device": "cpu"},
+            "onnxruntime": {
+                "site_packages": str(rapid_site),
+                "version": "1.23.2",
+                "module_path": str(ort_init),
+                "module_sha256": hashlib.sha256(ort_init.read_bytes()).hexdigest(),
+                "detector_model": str(det_model),
+                "detector_sha256": hashlib.sha256(b"det").hexdigest(),
+                "recognizer_model": str(rec_model),
+                "recognizer_sha256": hashlib.sha256(b"rec").hexdigest(),
+                "intra_op_num_threads": 4,
+                "inter_op_num_threads": 1,
+                "execution_mode": "ORT_SEQUENTIAL",
+                "graph_optimization_level": "ORT_ENABLE_ALL",
+                "providers": ["CPUExecutionProvider"],
+            },
+        }
+    )
+
+    assert isinstance(pipeline.text_det_model.infer, _WORKER.OrtInfer)
+    assert isinstance(pipeline.text_rec_model.infer, _WORKER.OrtInfer)
+    assert [session.model for session in sessions] == [str(det_model), str(rec_model)]
+    assert all(session.options.intra_op_num_threads == 4 for session in sessions)
+    assert all(session.providers == ["CPUExecutionProvider"] for session in sessions)
+    pipeline.text_det_model.infer(x=[_WORKER.np.zeros((1, 1), dtype="float32")])
 
 
 def test_paddle_document_timeout_aborts_shared_pool(
@@ -1606,6 +1913,47 @@ def test_paddle_document_timeout_aborts_shared_pool(
         _MODULE._paddle_document([Path("one.png"), Path("two.png")])
 
     assert calls == {"timeout": 420, "aborted": pool}
+
+
+def test_paddle_document_timeout_starts_after_ocr_capacity_is_acquired(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first_started = threading.Event()
+    release_first = threading.Event()
+    second_submitted = threading.Event()
+    submit_count = 0
+
+    class FakeFuture:
+        def __init__(self, number: int) -> None:
+            self.number = number
+
+        def result(self, *, timeout):
+            assert timeout == 300
+            if self.number == 1:
+                first_started.set()
+                assert release_first.wait(timeout=2)
+            return [{"document": self.number}]
+
+    class FakePool:
+        def submit(self, *_args):
+            nonlocal submit_count
+            submit_count += 1
+            if submit_count == 2:
+                second_submitted.set()
+            return FakeFuture(submit_count)
+
+    monkeypatch.setattr(_MODULE, "_OCR_POOL", FakePool())
+    monkeypatch.setattr(_MODULE, "_OCR_CAPACITY_SEMAPHORE", threading.BoundedSemaphore(1))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        first = executor.submit(_MODULE._paddle_document, [Path("first.png")])
+        assert first_started.wait(timeout=1)
+        second = executor.submit(_MODULE._paddle_document, [Path("second.png")])
+        assert not second_submitted.wait(timeout=0.1)
+        release_first.set()
+        assert first.result(timeout=2) == [{"document": 1}]
+        assert second.result(timeout=2) == [{"document": 2}]
+
+    assert submit_count == 2
 
 
 def test_stale_ocr_failure_does_not_terminate_replacement_pool(
@@ -1708,7 +2056,17 @@ def test_locked_runtime_rejects_mutated_distribution_member(
     lock.parent.mkdir()
     lock.write_text("demo==1.0\n", encoding="utf-8")
     artifacts = {}
-    for role in ("python", "renderer", "worker"):
+    for role in (
+        "python",
+        "renderer",
+        "worker",
+        "image_cache_helper",
+        "detector_onnx",
+        "recognizer_onnx",
+        "adapter_reference",
+        "conversion_setup",
+        "conversion_requirements",
+    ):
         artifact = tmp_path / f"{role}.bin"
         artifact.write_bytes(role.encode())
         artifacts[f"{role}_path"] = str(artifact)
@@ -1719,6 +2077,17 @@ def test_locked_runtime_rejects_mutated_distribution_member(
         (model / "model.bin").write_bytes(role.encode())
         artifacts[f"{role}_path"] = str(model)
         artifacts[f"{role}_tree_sha256"] = _MODULE._directory_content_hash(model)
+    external_site = tmp_path / "external-env" / "lib" / "python3.11" / "site-packages"
+    external_site.mkdir(parents=True)
+    external_record = external_site / "external-1.0.dist-info" / "RECORD"
+    external_record.parent.mkdir()
+    external_record.write_text("", encoding="utf-8")
+    external_record_sha256 = hashlib.sha256(external_record.read_bytes()).hexdigest()
+    external_module = external_site / "onnxruntime" / "__init__.py"
+    external_module.parent.mkdir()
+    external_module.write_text("# test", encoding="utf-8")
+    equivalence = tmp_path / "equivalence.json"
+    equivalence.write_text("{}", encoding="utf-8")
     config = {
         **artifacts,
         "environment_root": str(site_packages.parents[2]),
@@ -1731,7 +2100,18 @@ def test_locked_runtime_rejects_mutated_distribution_member(
                 "record_path": str(record),
                 "record_sha256": hashlib.sha256(record.read_bytes()).hexdigest(),
             }
-        ]
+        ],
+        "onnxruntime_site_packages": str(external_site),
+        "onnxruntime_record_path": str(external_record),
+        "onnxruntime_record_sha256": external_record_sha256,
+        "onnxruntime_module_path": str(external_module),
+        "onnxruntime_module_sha256": hashlib.sha256(external_module.read_bytes()).hexdigest(),
+        "equivalence_artifacts": [
+            {
+                "path": str(equivalence),
+                "sha256": hashlib.sha256(equivalence.read_bytes()).hexdigest(),
+            }
+        ],
     }
     monkeypatch.setattr(
         _MODULE.subprocess,
