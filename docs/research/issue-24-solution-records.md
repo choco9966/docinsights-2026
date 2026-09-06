@@ -75,22 +75,16 @@ Validation에서 고정한 1건의 공개 query와 PDF/OCR를 읽고, PDF의 관
 
 아래 명령은 `feature/24` worktree에서 실행한다. 실행기는 공개 tasks/PDF만 읽으며 reference 파일 인수를 받지 않는다. 본 실행의 요청 모델은 `gpt-5.6-sol`, reasoning effort는 high로 고정한다. 아래는 실행 순서이며 공개 OCR 환경 설치와 pilot 통과가 선행되어야 한다. Tesseract, Apple Vision, 공개 RapidOCR를 사용한 앞선 세 pilot은 각각 0/2 통과했다. `runs`, `runs-v2`, `runs-v3`의 생성·실패 산출물을 보존한다. v4 출처 계약 구현과 동일 validation 사전 문항 검증을 마친 뒤 새 `runs-v4`에서 pilot을 진행한다. Pilot의 실제 기록·출처 확인이 통과하면 `--limit`을 제거해 재개한다. 아래 명령은 준비 중인 v4 실행 순서를 기술하며 실행 완료를 뜻하지 않는다.
 
-새 환경에는 Python 3.11, Poppler의 `pdftoppm`, 인증된 Codex CLI가 필요하다. 아래 설치 명령은 새 환경을 위한 것이며 기존 환경을 덮어쓰는 지시가 아니다. 공개 OCR 모델만 설치하는 스크립트는 기존 파일의 해시가 다르면 덮어쓰지 않고 실패한다. 실제 시험 환경의 전이 의존성까지 `requirements/solution-ocr.txt`에 고정했다. 다른 OS에서 동일 품질이 검증되었다는 뜻은 아니다.
+새 환경에는 Python 3.11.6, Poppler의 `pdftoppm`, 인증된 Codex CLI가 필요하다. 현재 Native baseline의 59개 패키지 pin과 공식 모델 준비 명령은 [Native 재현 구성](issue-24-native-ocr-reproduction.md)을 따른다. 실행기는 pinned `ppocr-env` Python을 요구한다. 기존 Rapid 환경과 실패 산출물은 역사적 진단으로 보존한다. 가속 후보가 최종 채택되면 설정을 고정하고 이 명령도 함께 갱신한 뒤 실행한다.
 
 ```bash
-python3.11 -m venv data/issue24/rapidocr-env
-data/issue24/rapidocr-env/bin/python -m pip install -r requirements/solution-ocr.txt
-data/issue24/rapidocr-env/bin/python scripts/setup_solution_ocr.py --model-dir data/issue24/rapidocr-models
-```
-
-```bash
-PYTHONPATH=src data/issue24/rapidocr-env/bin/python scripts/run_solution_records.py --split heldout --tasks artifacts/solution-records/issue24/inputs/heldout/tasks.jsonl --pdf-root data/issue24 --output-root artifacts/solution-records/issue24/runs-v4 --limit 2 --workers 2
-PYTHONPATH=src data/issue24/rapidocr-env/bin/python scripts/run_solution_records.py --split heldout --tasks artifacts/solution-records/issue24/inputs/heldout/tasks.jsonl --pdf-root data/issue24 --output-root artifacts/solution-records/issue24/runs-v4 --workers 4 --resume
-PYTHONPATH=src data/issue24/rapidocr-env/bin/python scripts/evaluate_solution_records.py --split-dir artifacts/solution-records/issue24/runs-v4/heldout --no-reference
-PYTHONPATH=src data/issue24/rapidocr-env/bin/python scripts/run_solution_records.py --split train --tasks artifacts/solution-records/issue24/inputs/train/tasks.jsonl --pdf-root /Users/choco/Documents/project/docinsights-2026/data/raw/docsem --output-root artifacts/solution-records/issue24/runs-v4 --workers 4
-PYTHONPATH=src data/issue24/rapidocr-env/bin/python scripts/evaluate_solution_records.py --split-dir artifacts/solution-records/issue24/runs-v4/train --reference /Users/choco/Documents/project/docinsights-2026/data/raw/docsem/train/labels.jsonl --reference-kind train-public-labels
-PYTHONPATH=src data/issue24/rapidocr-env/bin/python scripts/run_solution_records.py --split validation --tasks artifacts/solution-records/issue24/inputs/validation/tasks.jsonl --pdf-root /Users/choco/Documents/project/docinsights-2026/data/raw/docsem --output-root artifacts/solution-records/issue24/runs-v4 --workers 4
-PYTHONPATH=src data/issue24/rapidocr-env/bin/python scripts/evaluate_solution_records.py --split-dir artifacts/solution-records/issue24/runs-v4/validation --reference /Users/choco/Documents/project/docinsights-2026/artifacts/submissions/v24-sep03-check-05.jsonl --reference-kind validation-v24-reference
+PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/run_solution_records.py --split heldout --tasks artifacts/solution-records/issue24/inputs/heldout/tasks.jsonl --pdf-root data/issue24 --output-root artifacts/solution-records/issue24/runs-v4 --limit 2 --workers 2
+PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/run_solution_records.py --split heldout --tasks artifacts/solution-records/issue24/inputs/heldout/tasks.jsonl --pdf-root data/issue24 --output-root artifacts/solution-records/issue24/runs-v4 --workers 4 --resume
+PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/evaluate_solution_records.py --split-dir artifacts/solution-records/issue24/runs-v4/heldout --no-reference
+PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/run_solution_records.py --split train --tasks artifacts/solution-records/issue24/inputs/train/tasks.jsonl --pdf-root /Users/choco/Documents/project/docinsights-2026/data/raw/docsem --output-root artifacts/solution-records/issue24/runs-v4 --workers 4
+PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/evaluate_solution_records.py --split-dir artifacts/solution-records/issue24/runs-v4/train --reference /Users/choco/Documents/project/docinsights-2026/data/raw/docsem/train/labels.jsonl --reference-kind train-public-labels
+PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/run_solution_records.py --split validation --tasks artifacts/solution-records/issue24/inputs/validation/tasks.jsonl --pdf-root /Users/choco/Documents/project/docinsights-2026/data/raw/docsem --output-root artifacts/solution-records/issue24/runs-v4 --workers 4
+PYTHONPATH=src data/issue24/ppocr-env/bin/python scripts/evaluate_solution_records.py --split-dir artifacts/solution-records/issue24/runs-v4/validation --reference /Users/choco/Documents/project/docinsights-2026/artifacts/submissions/v24-sep03-check-05.jsonl --reference-kind validation-v24-reference
 ```
 
 `--limit 2`는 전체 manifest 중 앞의 2건만 실행하며 전체 완료 표식은 만들지 않는다. 이전 split의 완전한 입력/출력 검증이 없으면 다음 split 실행은 거부된다. 생성 후 비교는 별도 evaluator에서 동결된 export 해시와 reference 해시를 묶어 기록한다. Train 비교가 확인되기 전에는 Validation을 시작하지 않는다. 구형 `docinsights validate-submission`의 bNN 검증은 Train/Validation에만 사용하고, 임의 ID를 가진 Held-out은 이번 source-grounded export 계약으로 검증한다.

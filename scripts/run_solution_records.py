@@ -5,19 +5,25 @@ from __future__ import annotations
 
 import argparse
 import base64
+import contextlib
 import csv
 import hashlib
 import importlib.util
 import json
 import math
+import multiprocessing
+import os
 import platform
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import threading
+import time
 from collections.abc import Callable, Sequence
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -41,6 +47,11 @@ from docinsights_analysis.visual_id_checks import (
     SourceRegionCheckError,
     check_source_regions,
 )
+
+_RUNNER_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _RUNNER_SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _RUNNER_SCRIPTS_DIR)
+from solution_paddle_worker import initialize_worker, recognize_document  # noqa: E402
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 SPLIT_ORDER = ("heldout", "train", "validation")
@@ -96,17 +107,24 @@ OCR_CONFIG = {
     "retained_jpeg_quality": 65,
     "dpi": 175,
     "minimum_free_bytes": 1_073_741_824,
-    "ocr_backend": "rapidocr-ppocrv5-onnxruntime",
-    "rapidocr_version": "3.9.2",
-    "onnxruntime_version": "1.23.2",
-    "pillow_version": "12.3.0",
-    "det_limit_side_len": 736,
-    "det_limit_type": "min",
-    "classification_enabled": False,
-    "recognition_batch_size": 6,
-    "intra_op_num_threads": 2,
-    "inter_op_num_threads": 1,
-    "cpu_memory_arena": False,
+    "ocr_backend": "native-paddle-ppocrv5-mobile",
+    "text_detection_model_name": "PP-OCRv5_mobile_det",
+    "text_recognition_model_name": "en_PP-OCRv5_mobile_rec",
+    "use_doc_orientation_classify": False,
+    "use_doc_unwarping": False,
+    "use_textline_orientation": False,
+    "device": "cpu",
+    "enable_mkldnn": False,
+    "cpu_threads": 2,
+    "text_recognition_batch_size": 6,
+    "detector_effective_limit_side_len": 64,
+    "detector_effective_limit_type": "min",
+    "detector_effective_max_side_limit": 4000,
+    "renderer_parallelism": 2,
+    "ocr_processes": 4,
+    "ocr_document_base_timeout_seconds": 180,
+    "ocr_page_timeout_seconds": 120,
+    "ocr_shutdown_grace_seconds": 10,
 }
 PROMPT_INSTRUCTIONS = (
     "Solve this single document question using only the public source pages and attached "
@@ -194,14 +212,28 @@ OUTPUT_SCHEMA = {
 }
 _SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _PAGE_IMAGE = re.compile(r"^(?:ocr-)?page-(\d+)\.(?:jpg|jpeg|png)$", re.IGNORECASE)
-_OCR_THREAD_LOCAL = threading.local()
-_RAPID_RUNTIME = {
-    "python_relative_path": "data/issue24/rapidocr-env/bin/python",
-    "detector_relative_path": "data/issue24/rapidocr-models/ch_PP-OCRv5_det_mobile.onnx",
-    "detector_sha256": "4d97c44a20d30a81aad087d6a396b08f786c4635742afc391f6621f5c6ae78ae",
-    "recognizer_relative_path": "data/issue24/rapidocr-models/en_PP-OCRv5_rec_mobile.onnx",
-    "recognizer_sha256": "c3461add59bb4323ecba96a492ab75e06dda42467c9e3d0c18db5d1d21924be8",
+_PADDLE_RUNTIME = {
+    "python_relative_path": "data/issue24/ppocr-env/bin/python",
+    "detector_relative_path": "data/issue24/ppocr-models/detector",
+    "detector_tree_sha256": "b3ca5a167f80b79e8433df9cb931c578f384f7f8867b960748022ee1b1826916",
+    "detector_repository": "PaddlePaddle/PP-OCRv5_mobile_det",
+    "detector_revision": "0d63e78e2b680928f6b1747d76a08db6e645efb7",
+    "recognizer_relative_path": "data/issue24/ppocr-models/recognizer",
+    "recognizer_tree_sha256": "2a3324a89b92f446da343999c922d0fa7a0fa3b0e0a3bbb7034d654c588f1e16",
+    "recognizer_repository": "PaddlePaddle/en_PP-OCRv5_mobile_rec",
+    "recognizer_revision": "267c36e24c331595590fe7bd72bde2436fd286f2",
+    "distributions": {
+        "paddlepaddle": "3.2.0",
+        "paddleocr": "3.3.2",
+        "paddlex": "3.3.13",
+    },
 }
+_RENDER_SEMAPHORE = threading.BoundedSemaphore(OCR_CONFIG["renderer_parallelism"])
+_OCR_POOL_LOCK = threading.Lock()
+_OCR_POOL: ProcessPoolExecutor | None = None
+_OCR_POOL_BASE_TIMEOUT_SECONDS = float(OCR_CONFIG["ocr_document_base_timeout_seconds"])
+_OCR_POOL_PAGE_TIMEOUT_SECONDS = float(OCR_CONFIG["ocr_page_timeout_seconds"])
+_OCR_POOL_SHUTDOWN_GRACE_SECONDS = float(OCR_CONFIG["ocr_shutdown_grace_seconds"])
 
 
 class RunnerError(ValueError):
@@ -374,80 +406,112 @@ def _run_checked(argv: Sequence[str], *, timeout: int = 300) -> subprocess.Compl
         raise RunnerError(f"command timed out after {timeout}s: {argv[0]}") from error
 
 
-def _resolved_ocr_config() -> dict[str, Any]:
-    resolved: dict[str, Any] = {**OCR_CONFIG, "operating_system": platform.platform()}
-    for role in ("python", "detector", "recognizer"):
-        path = REPOSITORY_ROOT / str(_RAPID_RUNTIME[f"{role}_relative_path"])
-        if not path.is_file():
-            raise RunnerError(f"pinned RapidOCR {role} runtime artifact is missing or changed")
-        observed = _sha256_file(path)
-        expected = _RAPID_RUNTIME.get(f"{role}_sha256")
-        if expected is not None and observed != expected:
-            raise RunnerError(f"pinned RapidOCR {role} runtime artifact is missing or changed")
-        resolved[f"{role}_path"] = str(path.absolute())
-        resolved[f"{role}_sha256"] = observed
-    lock_path = REPOSITORY_ROOT / "requirements" / "solution-ocr.txt"
-    distributions = _locked_distribution_records(lock_path)
-    renderer_path_value = shutil.which(str(OCR_CONFIG["renderer"]))
-    if renderer_path_value is None:
-        raise RunnerError("pinned pdftoppm renderer is unavailable")
-    renderer_path = Path(renderer_path_value)
-    version = subprocess.run(
-        [str(renderer_path), "-v"], capture_output=True, text=True, timeout=30, check=False
+def _run_isolated(
+    argv: Sequence[str],
+    *,
+    input: str | None = None,
+    capture_output: bool = False,
+    text: bool = False,
+    timeout: float | None = None,
+    check: bool = False,
+) -> subprocess.CompletedProcess[str]:
+    process = subprocess.Popen(
+        list(argv),
+        stdin=subprocess.PIPE if input is not None else None,
+        stdout=subprocess.PIPE if capture_output else None,
+        stderr=subprocess.PIPE if capture_output else None,
+        text=text,
+        start_new_session=True,
     )
-    version_lines = (version.stderr or version.stdout).splitlines()
-    if version.returncode != 0 or not version_lines:
-        raise RunnerError("could not identify the pdftoppm renderer version")
-    renderer_version = version_lines[0]
-    resolved.update(
-        {
-            "renderer_path": str(renderer_path.resolve()),
-            "renderer_sha256": _sha256_file(renderer_path),
-            "renderer_version": renderer_version,
-            "runtime_lock_path": str(lock_path.resolve()),
-            "runtime_lock_sha256": _sha256_file(lock_path),
-            "runtime_distributions": distributions,
-        }
-    )
-    return resolved
+    try:
+        stdout, stderr = process.communicate(input=input, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        assert timeout is not None
+        with contextlib.suppress(ProcessLookupError):
+            os.killpg(process.pid, signal.SIGTERM)
+        try:
+            stdout, stderr = process.communicate(timeout=1)
+        except subprocess.TimeoutExpired:
+            with contextlib.suppress(ProcessLookupError):
+                os.killpg(process.pid, signal.SIGKILL)
+            stdout, stderr = process.communicate()
+        raise subprocess.TimeoutExpired(
+            cmd=list(argv), timeout=timeout, output=stdout, stderr=stderr
+        ) from None
+    completed = subprocess.CompletedProcess(list(argv), process.returncode, stdout, stderr)
+    if check and completed.returncode:
+        raise subprocess.CalledProcessError(
+            completed.returncode,
+            completed.args,
+            output=completed.stdout,
+            stderr=completed.stderr,
+        )
+    return completed
 
 
-def _locked_distribution_records(lock_path: Path) -> list[dict[str, str]]:
-    site_packages = (
-        REPOSITORY_ROOT
-        / "data"
-        / "issue24"
-        / "rapidocr-env"
-        / "lib"
-        / "python3.11"
-        / "site-packages"
+def _directory_content_hash(path: Path) -> str:
+    files = sorted(
+        file
+        for file in path.rglob("*")
+        if file.is_file()
+        and not any(part.startswith(".") for part in file.relative_to(path).parts)
     )
-    installed: dict[tuple[str, str], Path] = {}
-    for metadata_path in site_packages.glob("*.dist-info/METADATA"):
-        fields: dict[str, str] = {}
-        for line in metadata_path.read_text(encoding="utf-8").splitlines():
-            if ": " in line:
-                key, value = line.split(": ", 1)
-                if key in {"Name", "Version"} and key not in fields:
-                    fields[key] = value
-            if len(fields) == 2:
-                break
-        if set(fields) == {"Name", "Version"}:
-            installed[(fields["Name"].casefold().replace("_", "-"), fields["Version"])] = (
-                metadata_path.parent / "RECORD"
-            )
-    records = []
+    if not files:
+        raise RunnerError(f"pinned model directory is empty: {path}")
+    digest = hashlib.sha256()
+    for file in files:
+        digest.update(file.relative_to(path).as_posix().encode())
+        digest.update(b"\0")
+        with file.open("rb") as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(chunk)
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _installed_distribution_records(
+    environment_root: Path, lock_path: Path
+) -> list[dict[str, str]]:
+    site_package_roots = list((environment_root / "lib").glob("python*/site-packages"))
+    if len(site_package_roots) != 1:
+        raise RunnerError("pinned PaddleOCR environment has an unexpected layout")
+    site_packages = site_package_roots[0]
+    locked = []
     for line in lock_path.read_text(encoding="utf-8").splitlines():
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
         name, separator, version = stripped.partition("==")
         if not separator:
-            raise RunnerError("solution OCR lock must contain exact versions")
-        key = (name.casefold().replace("_", "-"), version)
-        record_path = installed.get(key)
-        if record_path is None or not record_path.is_file():
-            raise RunnerError(f"pinned OCR distribution is missing: {stripped}")
+            raise RunnerError("PaddleOCR lock must contain exact versions")
+        locked.append((name, version))
+    if not locked:
+        raise RunnerError("PaddleOCR lock is empty")
+    for name, version in _PADDLE_RUNTIME["distributions"].items():
+        if (name, version) not in locked:
+            raise RunnerError(f"PaddleOCR lock is missing {name}=={version}")
+    installed: dict[tuple[str, str], Path] = {}
+    for metadata_path in site_packages.glob("*.dist-info/METADATA"):
+        fields: dict[str, str] = {}
+        for line in metadata_path.read_text(encoding="utf-8").splitlines():
+            if ": " in line:
+                field, value = line.split(": ", 1)
+                if field in {"Name", "Version"} and field not in fields:
+                    fields[field] = value
+            if len(fields) == 2:
+                break
+        if set(fields) == {"Name", "Version"}:
+            normalized = re.sub(r"[-_.]+", "-", fields["Name"]).casefold()
+            installed[(normalized, fields["Version"])] = metadata_path
+    records = []
+    for name, version in locked:
+        normalized_name = re.sub(r"[-_.]+", "-", name).casefold()
+        metadata_path = installed.get((normalized_name, version))
+        if metadata_path is None:
+            raise RunnerError(f"pinned OCR distribution is missing: {name}=={version}")
+        record_path = metadata_path.parent / "RECORD"
+        if not record_path.is_file():
+            raise RunnerError(f"pinned OCR RECORD is missing: {name}=={version}")
         records.append(
             {
                 "name": name,
@@ -459,16 +523,82 @@ def _locked_distribution_records(lock_path: Path) -> list[dict[str, str]]:
     return records
 
 
+def _resolved_ocr_config() -> dict[str, Any]:
+    resolved: dict[str, Any] = {**OCR_CONFIG, "operating_system": platform.platform()}
+    environment_root = (REPOSITORY_ROOT / "data" / "issue24" / "ppocr-env").resolve()
+    python_path = REPOSITORY_ROOT / str(_PADDLE_RUNTIME["python_relative_path"])
+    if not python_path.is_file():
+        raise RunnerError("pinned PaddleOCR Python runtime is missing")
+    resolved.update(
+        {
+            "environment_root": str(environment_root),
+            "python_path": str(python_path.absolute()),
+            "python_sha256": _sha256_file(python_path),
+        }
+    )
+    for role in ("detector", "recognizer"):
+        path = REPOSITORY_ROOT / str(_PADDLE_RUNTIME[f"{role}_relative_path"])
+        observed = _directory_content_hash(path)
+        expected = str(_PADDLE_RUNTIME[f"{role}_tree_sha256"])
+        if observed != expected:
+            raise RunnerError(f"pinned PaddleOCR {role} model tree changed")
+        resolved.update(
+            {
+                f"{role}_path": str(path.resolve()),
+                f"{role}_tree_sha256": observed,
+                f"{role}_repository": _PADDLE_RUNTIME[f"{role}_repository"],
+                f"{role}_revision": _PADDLE_RUNTIME[f"{role}_revision"],
+            }
+        )
+    lock_path = REPOSITORY_ROOT / "requirements" / "solution-paddle-ocr.txt"
+    distributions = _installed_distribution_records(environment_root, lock_path)
+    renderer_path_value = shutil.which(str(OCR_CONFIG["renderer"]))
+    if renderer_path_value is None:
+        raise RunnerError("pinned pdftoppm renderer is unavailable")
+    renderer_path = Path(renderer_path_value)
+    version = subprocess.run(
+        [str(renderer_path), "-v"], capture_output=True, text=True, timeout=30, check=False
+    )
+    version_lines = (version.stderr or version.stdout).splitlines()
+    if version.returncode != 0 or not version_lines:
+        raise RunnerError("could not identify the pdftoppm renderer version")
+    renderer_version = version_lines[0]
+    worker_path = REPOSITORY_ROOT / "scripts" / "solution_paddle_worker.py"
+    resolved.update(
+        {
+            "renderer_path": str(renderer_path.resolve()),
+            "renderer_sha256": _sha256_file(renderer_path),
+            "renderer_version": renderer_version,
+            "runtime_distributions": distributions,
+            "runtime_lock_path": str(lock_path.resolve()),
+            "runtime_lock_sha256": _sha256_file(lock_path),
+            "worker_path": str(worker_path.resolve()),
+            "worker_sha256": _sha256_file(worker_path),
+        }
+    )
+    resolved["engine_init_config_sha256"] = _sha256_bytes(
+        _canonical_bytes(_paddle_engine_config(resolved))
+    )
+    return resolved
+
+
 def _verify_locked_runtime(config: dict[str, Any]) -> None:
-    environment_root = (REPOSITORY_ROOT / "data" / "issue24" / "rapidocr-env").resolve()
-    site_packages = (environment_root / "lib" / "python3.11" / "site-packages").resolve()
+    environment_root = Path(config["environment_root"]).resolve()
+    site_package_roots = list((environment_root / "lib").glob("python*/site-packages"))
+    if len(site_package_roots) != 1:
+        raise RunnerError("pinned PaddleOCR environment has an unexpected layout")
+    site_packages = site_package_roots[0].resolve()
     lock_path = Path(config["runtime_lock_path"])
     if not lock_path.is_file() or _sha256_file(lock_path) != config["runtime_lock_sha256"]:
-        raise RunnerError("pinned OCR runtime lock changed")
-    for role in ("python", "renderer", "detector", "recognizer"):
+        raise RunnerError("pinned PaddleOCR runtime lock changed")
+    for role in ("python", "renderer", "worker"):
         path = Path(config[f"{role}_path"])
         if not path.is_file() or _sha256_file(path) != config[f"{role}_sha256"]:
             raise RunnerError(f"pinned OCR {role} artifact changed")
+    for role in ("detector", "recognizer"):
+        path = Path(config[f"{role}_path"])
+        if _directory_content_hash(path) != config[f"{role}_tree_sha256"]:
+            raise RunnerError(f"pinned OCR {role} model tree changed")
     renderer_version = subprocess.run(
         [config["renderer_path"], "-v"],
         capture_output=True,
@@ -499,6 +629,11 @@ def _verify_locked_runtime(config: dict[str, Any]) -> None:
                     member.relative_to(environment_root)
                 except ValueError as error:
                     raise RunnerError("pinned OCR RECORD member escapes its environment") from error
+                if ".." in Path(relative_name).parts:
+                    # Console-script shebangs contain the environment's absolute path and are
+                    # rewritten by installers. The pinned RECORD itself still freezes the wheel
+                    # inventory; importable runtime members below site-packages remain verified.
+                    continue
                 if not member.is_file():
                     raise RunnerError(f"pinned OCR runtime member is missing: {relative_name}")
                 expected = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).hex()
@@ -508,82 +643,151 @@ def _verify_locked_runtime(config: dict[str, Any]) -> None:
                     raise RunnerError(f"pinned OCR runtime member changed: {relative_name}")
 
 
-def _rapidocr_engine() -> Any:
-    existing = getattr(_OCR_THREAD_LOCAL, "engine", None)
-    if existing is not None:
-        return existing
-    config = _resolved_ocr_config()
-    if Path(sys.executable).absolute() != Path(config["python_path"]).absolute():
-        raise RunnerError(f"RapidOCR runner must use pinned Python: {config['python_path']}")
-    try:
-        rapidocr = importlib.import_module("rapidocr")
-    except ImportError as error:
-        raise RunnerError("pinned RapidOCR runtime is unavailable") from error
-    params = {
-        "Global.use_cls": False,
-        "Global.log_level": "error",
-        "EngineConfig.onnxruntime.intra_op_num_threads": config["intra_op_num_threads"],
-        "EngineConfig.onnxruntime.inter_op_num_threads": config["inter_op_num_threads"],
-        "EngineConfig.onnxruntime.enable_cpu_mem_arena": config["cpu_memory_arena"],
-        "Det.engine_type": rapidocr.EngineType.ONNXRUNTIME,
-        "Det.ocr_version": rapidocr.OCRVersion.PPOCRV5,
-        "Det.lang_type": rapidocr.LangDet.CH,
-        "Det.model_type": rapidocr.ModelType.MOBILE,
-        "Det.model_path": config["detector_path"],
-        "Det.limit_side_len": config["det_limit_side_len"],
-        "Det.limit_type": config["det_limit_type"],
-        "Rec.engine_type": rapidocr.EngineType.ONNXRUNTIME,
-        "Rec.ocr_version": rapidocr.OCRVersion.PPOCRV5,
-        "Rec.lang_type": rapidocr.LangRec.EN,
-        "Rec.model_type": rapidocr.ModelType.MOBILE,
-        "Rec.model_path": config["recognizer_path"],
-        "Rec.rec_batch_num": config["recognition_batch_size"],
+def _paddle_engine_config(config: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "text_detection_model_name": config["text_detection_model_name"],
+        "text_detection_model_dir": config["detector_path"],
+        "text_recognition_model_name": config["text_recognition_model_name"],
+        "text_recognition_model_dir": config["recognizer_path"],
+        "use_doc_orientation_classify": config["use_doc_orientation_classify"],
+        "use_doc_unwarping": config["use_doc_unwarping"],
+        "use_textline_orientation": config["use_textline_orientation"],
+        "device": config["device"],
+        "enable_mkldnn": config["enable_mkldnn"],
+        "cpu_threads": config["cpu_threads"],
+        "text_recognition_batch_size": config["text_recognition_batch_size"],
     }
-    engine = rapidocr.RapidOCR(params=params)
-    _OCR_THREAD_LOCAL.engine = engine
-    return engine
 
 
-def _rapidocr_page(
-    engine: Any, image: Path, page_number: int
-) -> tuple[dict[str, Any], dict[str, Any]]:
-    result = engine(image, use_cls=False)
-    raw_boxes: Any = [] if result.boxes is None else result.boxes
-    tolist = getattr(raw_boxes, "tolist", None)
-    boxes = cast(list[Any], tolist() if callable(tolist) else raw_boxes)
-    texts = [] if result.txts is None else list(result.txts)
-    scores = [] if result.scores is None else [float(value) for value in result.scores]
-    if not (len(boxes) == len(texts) == len(scores)):
-        raise RunnerError("RapidOCR returned misaligned boxes, text, and confidence values")
+def _start_ocr_pool(config: dict[str, Any]) -> None:
+    global _OCR_POOL
+    global _OCR_POOL_BASE_TIMEOUT_SECONDS
+    global _OCR_POOL_PAGE_TIMEOUT_SECONDS
+    global _OCR_POOL_SHUTDOWN_GRACE_SECONDS
+    with _OCR_POOL_LOCK:
+        if _OCR_POOL is not None:
+            raise RunnerError("PaddleOCR process pool is already running")
+        _verify_locked_runtime(config)
+        if Path(sys.executable).absolute() != Path(config["python_path"]).absolute():
+            raise RunnerError(f"PaddleOCR runner must use pinned Python: {config['python_path']}")
+        _OCR_POOL_BASE_TIMEOUT_SECONDS = float(config["ocr_document_base_timeout_seconds"])
+        _OCR_POOL_PAGE_TIMEOUT_SECONDS = float(config["ocr_page_timeout_seconds"])
+        _OCR_POOL_SHUTDOWN_GRACE_SECONDS = float(config["ocr_shutdown_grace_seconds"])
+        _OCR_POOL = ProcessPoolExecutor(
+            max_workers=int(config["ocr_processes"]),
+            mp_context=multiprocessing.get_context("spawn"),
+            initializer=initialize_worker,
+            initargs=(_paddle_engine_config(config),),
+        )
+
+
+def _terminate_ocr_pool(pool: ProcessPoolExecutor, *, grace_seconds: float) -> None:
+    processes = list((getattr(pool, "_processes", None) or {}).values())
+    manager_thread = getattr(pool, "_executor_manager_thread", None)
+    pool.shutdown(wait=False, cancel_futures=True)
+    deadline = time.monotonic() + grace_seconds
+    for process in processes:
+        process.join(timeout=max(0.0, deadline - time.monotonic()))
+    alive = [process for process in processes if process.is_alive()]
+    for process in alive:
+        process.terminate()
+    deadline = time.monotonic() + grace_seconds
+    for process in alive:
+        process.join(timeout=max(0.0, deadline - time.monotonic()))
+    alive = [process for process in alive if process.is_alive()]
+    for process in alive:
+        process.kill()
+    for process in alive:
+        process.join(timeout=grace_seconds)
+    remaining = [process for process in alive if process.is_alive()]
+    if manager_thread is not None:
+        manager_thread.join(timeout=grace_seconds)
+    if remaining:
+        pids = ", ".join(str(process.pid) for process in remaining)
+        raise RunnerError(f"could not terminate PaddleOCR worker processes: {pids}")
+
+
+def _abort_ocr_pool(expected: ProcessPoolExecutor) -> None:
+    global _OCR_POOL
+    with _OCR_POOL_LOCK:
+        if _OCR_POOL is not expected:
+            return
+        _OCR_POOL = None
+    _terminate_ocr_pool(expected, grace_seconds=_OCR_POOL_SHUTDOWN_GRACE_SECONDS)
+
+
+def _shutdown_ocr_pool() -> None:
+    global _OCR_POOL
+    with _OCR_POOL_LOCK:
+        pool, _OCR_POOL = _OCR_POOL, None
+    if pool is not None:
+        _terminate_ocr_pool(pool, grace_seconds=_OCR_POOL_SHUTDOWN_GRACE_SECONDS)
+
+
+def _paddle_document(images: Sequence[Path]) -> list[dict[str, Any]]:
+    with _OCR_POOL_LOCK:
+        pool = _OCR_POOL
+    if pool is None:
+        raise RunnerError("PaddleOCR process pool is not running")
+    timeout = _OCR_POOL_BASE_TIMEOUT_SECONDS + len(images) * _OCR_POOL_PAGE_TIMEOUT_SECONDS
     try:
-        height, width = int(result.img.shape[0]), int(result.img.shape[1])
-    except (AttributeError, IndexError, TypeError, ValueError) as error:
-        raise RunnerError("RapidOCR returned invalid source image dimensions") from error
+        future = pool.submit(recognize_document, [str(image) for image in images])
+        return future.result(timeout=timeout)
+    except TimeoutError as error:
+        _abort_ocr_pool(pool)
+        raise RunnerError(
+            f"PaddleOCR document timed out after {timeout:g}s; resume with a fresh pool"
+        ) from error
+    except BrokenProcessPool as error:
+        _abort_ocr_pool(pool)
+        raise RunnerError("PaddleOCR worker process failed; resume with a fresh pool") from error
+
+
+def _paddle_page(
+    payload: dict[str, Any], image: Path, page_number: int
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    texts = payload["texts"]
+    scores = payload["scores"]
+    boxes = payload["boxes"]
+    polygons = payload["polygons"]
+    if not (len(texts) == len(scores) == len(boxes) == len(polygons)):
+        raise RunnerError("PaddleOCR returned misaligned geometry, text, and confidence values")
+    with Image.open(image) as pixels:
+        width, height = pixels.size
     lines = []
-    for line_index, (quad, text, confidence) in enumerate(zip(boxes, texts, scores, strict=True)):
+    for line_index, (text, confidence, raw_box, polygon) in enumerate(
+        zip(texts, scores, boxes, polygons, strict=True)
+    ):
         try:
-            points = [[float(point[0]), float(point[1])] for point in quad]
-        except (IndexError, TypeError, ValueError) as error:
-            raise RunnerError("RapidOCR returned an invalid text quadrilateral") from error
-        if len(points) != 4:
-            raise RunnerError("RapidOCR text quadrilateral must contain four points")
-        left = max(0, math.floor(min(point[0] for point in points)))
-        top = max(0, math.floor(min(point[1] for point in points)))
-        right = min(width, math.ceil(max(point[0] for point in points)))
-        bottom = min(height, math.ceil(max(point[1] for point in points)))
-        if left >= right or top >= bottom:
-            raise RunnerError("RapidOCR returned an empty or out-of-bounds text box")
+            x0, y0, x1, y1 = (float(value) for value in raw_box)
+        except (TypeError, ValueError) as error:
+            raise RunnerError("PaddleOCR returned an invalid text box") from error
+        clipped = [
+            min(max(x0, 0.0), float(width)),
+            min(max(y0, 0.0), float(height)),
+            min(max(x1, 0.0), float(width)),
+            min(max(y1, 0.0), float(height)),
+        ]
+        left, top, right, bottom = clipped
+        raw_geometry = (
+            {"quadrilateral": polygon}
+            if polygon is not None
+            else {"axis_aligned_box": [x0, y0, x1, y1]}
+        )
         lines.append(
             {
                 "line_index": line_index,
+                "source_order": line_index,
                 "text": str(text),
-                "confidence": confidence,
-                "quadrilateral": points,
+                "confidence": float(confidence),
+                "raw_bbox": [x0, y0, x1, y1],
+                "raw_geometry": raw_geometry,
+                "clipped_bbox": clipped,
                 "bbox": {
-                    "left": left,
-                    "top": top,
-                    "width": right - left,
-                    "height": bottom - top,
+                    "left": math.floor(left),
+                    "top": math.floor(top),
+                    "width": max(0, math.ceil(right) - math.floor(left)),
+                    "height": max(0, math.ceil(bottom) - math.floor(top)),
                 },
             }
         )
@@ -607,23 +811,23 @@ def _page_image_number(path: Path) -> int:
 
 
 def load_pages(task: dict[str, Any], pdf_path: Path, cache_dir: Path) -> PageBundle:
-    """OCR lossless renders with pinned RapidOCR and retain derived solver JPEGs."""
+    """OCR lossless renders with pinned PaddleOCR and retain derived solver JPEGs."""
     _private_dir(cache_dir)
     if shutil.disk_usage(cache_dir).free < OCR_CONFIG["minimum_free_bytes"]:
         raise RunnerError("insufficient free disk space for retained page images")
     ocr_provenance = _resolved_ocr_config()
-    _verify_locked_runtime(ocr_provenance)
     prefix = cache_dir / "ocr-page"
-    rendered = _run_checked(
-        [
-            str(ocr_provenance["renderer_path"]),
-            f"-{OCR_CONFIG['ocr_input_format']}",
-            "-r",
-            str(OCR_CONFIG["dpi"]),
-            str(pdf_path),
-            str(prefix),
-        ]
-    )
+    with _RENDER_SEMAPHORE:
+        rendered = _run_checked(
+            [
+                str(ocr_provenance["renderer_path"]),
+                f"-{OCR_CONFIG['ocr_input_format']}",
+                "-r",
+                str(OCR_CONFIG["dpi"]),
+                str(pdf_path),
+                str(prefix),
+            ]
+        )
     if rendered.returncode != 0:
         raise RunnerError(f"pdftoppm failed: {rendered.stderr.strip()}")
     ocr_images = sorted(cache_dir.glob("ocr-page-*.png"), key=_page_image_number)
@@ -649,13 +853,18 @@ def load_pages(task: dict[str, Any], pdf_path: Path, cache_dir: Path) -> PageBun
         pages = supplied
     else:
         pages = []
-        engine = _rapidocr_engine()
-        for image in ocr_images:
+        try:
+            payloads = _paddle_document(ocr_images)
+        except Exception as error:  # noqa: BLE001 - normalize process-pool failures
+            raise RunnerError(f"PaddleOCR failed: {error}") from error
+        if len(payloads) != len(ocr_images):
+            raise RunnerError("PaddleOCR returned the wrong number of pages")
+        for image, payload in zip(ocr_images, payloads, strict=True):
             page_number = _page_image_number(image)
             try:
-                page, page_geometry = _rapidocr_page(engine, image, page_number)
+                page, page_geometry = _paddle_page(payload, image, page_number)
             except Exception as error:  # noqa: BLE001 - normalize pinned OCR failures
-                raise RunnerError(f"RapidOCR failed on page {page_number}: {error}") from error
+                raise RunnerError(f"PaddleOCR failed on page {page_number}: {error}") from error
             pages.append(page)
             geometry.append(page_geometry)
     for image in ocr_images:
@@ -696,11 +905,58 @@ def _generation_config() -> dict[str, Any]:
     }
 
 
+_CODEX_NODE_TARGETS = {
+    ("Darwin", "arm64"): ("@openai/codex-darwin-arm64", "aarch64-apple-darwin"),
+    ("Darwin", "x86_64"): ("@openai/codex-darwin-x64", "x86_64-apple-darwin"),
+}
+
+
+def _native_codex_executable(wrapper: Path) -> tuple[Path, str]:
+    if wrapper.name != "codex.js":
+        return wrapper, "direct-executable-v1"
+    try:
+        wrapper_source = wrapper.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise RunnerError("configured Codex wrapper cannot be inspected") from error
+    required_markers = (
+        "#!/usr/bin/env node",
+        "PLATFORM_PACKAGE_BY_TARGET",
+        "findCodexExecutable",
+        "vendorRoot",
+        "targetTriple",
+        "const codexExecutable = path.join(",
+        'process.platform === "win32"',
+    )
+    if not all(marker in wrapper_source for marker in required_markers):
+        raise RunnerError("configured Codex wrapper layout is not recognized")
+    target = _CODEX_NODE_TARGETS.get((platform.system(), platform.machine()))
+    if target is None:
+        raise RunnerError("configured Codex wrapper target is unsupported")
+    platform_package, target_triple = target
+    package_root = wrapper.parent.parent.resolve()
+    candidates = (
+        package_root
+        / "node_modules"
+        / platform_package
+        / "vendor"
+        / target_triple
+        / "bin"
+        / "codex",
+        package_root / "vendor" / target_triple / "bin" / "codex",
+    )
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if resolved.is_file() and resolved.is_relative_to(package_root):
+            return resolved, "openai-node-wrapper-vendor-layout-v1"
+    raise RunnerError("configured Codex wrapper native executable is unavailable")
+
+
 def _resolved_codex_runtime() -> dict[str, str]:
     executable_value = shutil.which(str(COMMAND_CONFIG["codex_executable"]))
     if executable_value is None:
         raise RunnerError("configured Codex executable is unavailable")
-    executable = Path(executable_value).resolve()
+    wrapper = Path(executable_value).resolve()
+    executable, resolution_method = _native_codex_executable(wrapper)
     version = subprocess.run(
         [str(executable), "--version"],
         capture_output=True,
@@ -717,13 +973,25 @@ def _resolved_codex_runtime() -> dict[str, str]:
         "codex_executable_path": str(executable),
         "codex_executable_sha256": _sha256_file(executable),
         "codex_observed_version": observed_version,
+        "codex_wrapper_path": str(wrapper),
+        "codex_wrapper_sha256": _sha256_file(wrapper),
+        "codex_resolution_method": resolution_method,
     }
 
 
 def _verify_codex_runtime(config: dict[str, Any]) -> None:
+    wrapper = Path(config["codex_wrapper_path"])
+    if not wrapper.is_file() or _sha256_file(wrapper) != config["codex_wrapper_sha256"]:
+        raise RunnerError("pinned Codex wrapper changed")
     executable = Path(config["codex_executable_path"])
     if not executable.is_file() or _sha256_file(executable) != config["codex_executable_sha256"]:
         raise RunnerError("pinned Codex executable changed")
+    resolved_executable, resolution_method = _native_codex_executable(wrapper.resolve())
+    if (
+        resolved_executable != executable.resolve()
+        or resolution_method != config["codex_resolution_method"]
+    ):
+        raise RunnerError("pinned Codex wrapper resolution changed")
     version = subprocess.run(
         [str(executable), "--version"],
         capture_output=True,
@@ -1460,14 +1728,31 @@ def _invoke_source_checker(
         executable=str(checker_config["codex_executable_path"]),
     )
     _write_json(output_dir / "command.json", {"argv": argv, "config": checker_config})
-    completed = command_runner(
-        argv,
-        input=prompt,
-        capture_output=True,
-        text=True,
-        timeout=checker_config["timeout_seconds"],
-        check=False,
-    )
+    try:
+        completed = command_runner(
+            argv,
+            input=prompt,
+            capture_output=True,
+            text=True,
+            timeout=checker_config["timeout_seconds"],
+            check=False,
+        )
+    except subprocess.TimeoutExpired as error:
+        stdout = (
+            error.stdout.decode(errors="replace")
+            if isinstance(error.stdout, bytes)
+            else error.stdout or ""
+        )
+        stderr = (
+            error.stderr.decode(errors="replace")
+            if isinstance(error.stderr, bytes)
+            else error.stderr or ""
+        )
+        _write_private(output_dir / "events.jsonl", stdout)
+        _write_private(output_dir / "stderr.txt", stderr)
+        raise SourceRegionCheckError(
+            f"source checker timed out after {checker_config['timeout_seconds']}s"
+        ) from error
     events = completed.stdout or ""
     stderr = completed.stderr or ""
     _write_private(output_dir / "events.jsonl", events)
@@ -1984,19 +2269,20 @@ def run_pipeline(
     smoke: bool = False,
     smoke_instance_id: str | None = None,
     page_loader: PageLoader = load_pages,
-    command_runner: CommandRunner = subprocess.run,
+    command_runner: CommandRunner | None = None,
     source_checker: SourceChecker | None = None,
 ) -> dict[str, Any]:
     if split not in SPLIT_ORDER:
         raise RunnerError(f"unknown split: {split}")
-    if workers < 1 or workers > 4:
-        raise RunnerError("workers must be between 1 and 4")
+    if workers < 1 or workers > 8:
+        raise RunnerError("workers must be between 1 and 8")
     if limit is not None and limit < 1:
         raise RunnerError("limit must be positive")
     if smoke and (split != "validation" or limit != 1):
         raise RunnerError("smoke runs require --split validation and --limit 1")
     if smoke_instance_id is not None and not smoke:
         raise RunnerError("--smoke-instance-id requires --smoke")
+    command_runner = command_runner or _run_isolated
     source_checker = source_checker or check_source_regions
     output_root = output_root.resolve()
     _private_dir(output_root)
@@ -2030,24 +2316,31 @@ def run_pipeline(
     else:
         selected = entries[:limit] if limit is not None else entries
     succeeded = 0
-    with ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = [
-            executor.submit(
-                _run_one,
-                split,
-                entry,
-                split_dir,
-                manifest,
-                resume,
-                page_loader,
-                command_runner,
-                source_checker,
-            )
-            for entry in selected
-        ]
-        for future in as_completed(futures):
-            if future.result():
-                succeeded += 1
+    uses_paddle_pool = page_loader is load_pages
+    if uses_paddle_pool:
+        _start_ocr_pool(manifest["command_config"]["ocr"])
+    try:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = [
+                executor.submit(
+                    _run_one,
+                    split,
+                    entry,
+                    split_dir,
+                    manifest,
+                    resume,
+                    page_loader,
+                    command_runner,
+                    source_checker,
+                )
+                for entry in selected
+            ]
+            for future in as_completed(futures):
+                if future.result():
+                    succeeded += 1
+    finally:
+        if uses_paddle_pool:
+            _shutdown_ocr_pool()
     failed = len(selected) - succeeded
     failure_summary = _failure_summary(split_dir, selected)
     _write_json(split_dir / "failures.json", failure_summary)
@@ -2134,7 +2427,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--pdf-root", required=True, type=Path)
     parser.add_argument("--output-root", required=True, type=Path)
     parser.add_argument("--limit", type=int)
-    parser.add_argument("--workers", type=int, default=2, choices=range(1, 5))
+    parser.add_argument("--workers", type=int, default=2, choices=range(1, 9))
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--smoke-instance-id")

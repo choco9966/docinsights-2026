@@ -43,3 +43,7 @@ Files: scripts/run_solution_records.py, tests/test_solution_runner.py, .omx/ultr
 - [ ] Held-out 전체 coverage 통과 후 Train, Train 전체 coverage 통과 후 Validation을 실행한다.
 - [ ] 각 단계에서 fresh get_goal snapshot과 실제 출력/검증으로 checkpoint한다.
 - [ ] cleaner 이후 재검증, 독립 code-reviewer/architect 및 불변식 증명을 완료하고 코드·문서만 PR로 게시한다.
+
+## 후속 공개 OCR 및 heading 검증 보완
+
+사용자 지시에 따라 Apple Vision을 본 실행에서 제외하고 고정 PP-OCRv5 가중치·패키지·전처리를 사용한다. 모든 공개 페이지의 원문과 bbox를 먼저 동결하고, 원문과 풀이 ID가 다를 때는 인용의 단일 블록 일치가 증명된 경우에 한해 후보를 보여주지 않는 별도 시각 검증으로 heading만 확인한다. 원래 답·풀이·OCR를 수정하지 않고 검증 증거를 저장한다. source contract, checker, runner를 독립 파일 책임으로 구현하고 테스트·독립 검토 후 새 runs-v3의 동일 두 문항을 실행한다. 전체 split 순서와 별도 reference 비교 조건은 유지한다.

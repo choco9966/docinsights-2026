@@ -1,9 +1,12 @@
 import base64
+import concurrent.futures
 import hashlib
 import importlib.util
 import json
+import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -1100,6 +1103,156 @@ def test_source_checker_runtime_failure_resumes_from_frozen_primary_without_prim
     assert not (job / "error.json").exists()
 
 
+def test_source_checker_timeout_preserves_partial_streams_and_uses_source_recovery(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output_dir = tmp_path / "source-check"
+    timeout = subprocess.TimeoutExpired(
+        cmd=["codex"],
+        timeout=1,
+        output='{"type":"turn.started"}\n',
+        stderr="checker still running\n",
+    )
+
+    def timed_out(*_args, **_kwargs):
+        raise timeout
+
+    monkeypatch.setattr(_MODULE, "_verify_codex_runtime", lambda _config: None)
+
+    with pytest.raises(_MODULE.SourceRegionCheckError, match="timed out"):
+        _MODULE._invoke_source_checker(
+            prompt="check source",
+            images=[],
+            output_schema={"type": "object"},
+            output_dir=output_dir,
+            checker_config={
+                "model": "gpt-test",
+                "codex_executable_path": "/tmp/codex",
+                "timeout_seconds": 1,
+            },
+            command_runner=timed_out,
+        )
+
+    assert (output_dir / "events.jsonl").read_text() == '{"type":"turn.started"}\n'
+    assert (output_dir / "stderr.txt").read_text() == "checker still running\n"
+
+
+def test_isolated_command_timeout_kills_parent_and_grandchild_and_preserves_streams(
+    tmp_path: Path,
+) -> None:
+    pid_file = tmp_path / "pids.txt"
+    child = tmp_path / "parent.py"
+    child.write_text(
+        "\n".join(
+            (
+                "import os, pathlib, subprocess, sys, time",
+                "grandchild = subprocess.Popen("
+                "[sys.executable, '-c', 'import time; time.sleep(60)'])",
+                "pathlib.Path(sys.argv[1]).write_text(f'{os.getpid()} {grandchild.pid}')",
+                "print('partial stdout', flush=True)",
+                "print('partial stderr', file=sys.stderr, flush=True)",
+                "time.sleep(60)",
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(subprocess.TimeoutExpired) as caught:
+        _MODULE._run_isolated(
+            [sys.executable, str(child), str(pid_file)],
+            capture_output=True,
+            text=True,
+            timeout=1,
+            check=False,
+        )
+
+    assert caught.value.stdout == "partial stdout\n"
+    assert caught.value.stderr == "partial stderr\n"
+    parent_pid, grandchild_pid = (int(value) for value in pid_file.read_text().split())
+    deadline = time.monotonic() + 3
+    while time.monotonic() < deadline:
+        states = {
+            pid: subprocess.run(
+                ["ps", "-o", "stat=", "-p", str(pid)], capture_output=True, text=True
+            ).stdout.strip()
+            for pid in (parent_pid, grandchild_pid)
+        }
+        if all(not state or state.startswith("Z") for state in states.values()):
+            break
+        time.sleep(0.05)
+    assert all(not state or state.startswith("Z") for state in states.values())
+
+
+def test_pipeline_uses_isolated_command_runner_by_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
+    _pin("heldout", tasks, 1)
+    calls: list[dict[str, object]] = []
+    monkeypatch.setattr(_MODULE, "_run_isolated", _successful_codex(calls))
+
+    result = run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=tmp_path / "private",
+        limit=1,
+        page_loader=_pages,
+    )
+
+    assert result["succeeded"] == 1
+    assert len(calls) == 1
+
+
+def test_resolved_codex_runtime_executes_and_pins_native_binary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    package_root = tmp_path / "node_modules" / "@openai" / "codex"
+    wrapper = package_root / "bin" / "codex.js"
+    wrapper.parent.mkdir(parents=True)
+    wrapper.write_text(
+        "#!/usr/bin/env node\n"
+        "const PLATFORM_PACKAGE_BY_TARGET = {};\n"
+        "function findCodexExecutable() {}\n"
+        "const vendorRoot = 'vendor';\n"
+        "const targetTriple = 'aarch64-apple-darwin';\n"
+        "const codexExecutable = path.join(vendorRoot, targetTriple, 'bin',\n"
+        '  process.platform === "win32" ? "codex.exe" : "codex");\n',
+        encoding="utf-8",
+    )
+    native = (
+        package_root
+        / "node_modules"
+        / "@openai"
+        / "codex-darwin-arm64"
+        / "vendor"
+        / "aarch64-apple-darwin"
+        / "bin"
+        / "codex"
+    )
+    native.parent.mkdir(parents=True)
+    native.write_bytes(b"native codex")
+    monkeypatch.setattr(_MODULE.shutil, "which", lambda _name: str(wrapper))
+    monkeypatch.setattr(_MODULE.platform, "system", lambda: "Darwin")
+    monkeypatch.setattr(_MODULE.platform, "machine", lambda: "arm64")
+    calls: list[list[str]] = []
+
+    def version(argv, **_kwargs):
+        calls.append(list(argv))
+        return subprocess.CompletedProcess(argv, 0, stdout="codex-cli 0.144.1\n", stderr="")
+
+    monkeypatch.setattr(_MODULE.subprocess, "run", version)
+
+    resolved = _MODULE._resolved_codex_runtime()
+
+    assert calls == [[str(native.resolve()), "--version"]]
+    assert resolved["codex_executable_path"] == str(native.resolve())
+    assert resolved["codex_executable_sha256"] == hashlib.sha256(b"native codex").hexdigest()
+    assert resolved["codex_wrapper_path"] == str(wrapper.resolve())
+    assert resolved["codex_wrapper_sha256"] == hashlib.sha256(wrapper.read_bytes()).hexdigest()
+
+
 def test_source_runtime_resume_rejects_tampered_frozen_primary(tmp_path: Path) -> None:
     tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
     _pin("heldout", tasks, 1)
@@ -1276,7 +1429,7 @@ def test_frozen_job_ocr_provenance_is_reverified(
             )
 
 
-def test_rapidocr_loader_uses_lossless_ocr_and_retained_jpeg_in_numeric_order(
+def test_paddle_loader_uses_lossless_ocr_and_retained_jpeg_in_numeric_order(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     pdf = tmp_path / "document.pdf"
@@ -1290,26 +1443,29 @@ def test_rapidocr_loader_uses_lossless_ocr_and_retained_jpeg_in_numeric_order(
         _MODULE.Image.new("RGB", (200, 100), "white").save(f"{argv[-1]}-2.png")
         return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
 
-    class FakeImage:
-        shape = (100, 200, 3)
-
-    class FakeResult:
-        boxes = [[[10.2, 20.4], [80.7, 20.1], [80.2, 31.9], [10.0, 32.0]]]
-        txts: tuple[str, ...]
-        scores = (0.99,)
-        img = FakeImage()
-
-    class FakeEngine:
-        def __call__(self, image, *, use_cls):
-            assert use_cls is False
+    def fake_document(images):
+        results = []
+        for image in images:
             image_path = Path(image)
             ocr_calls.append(image_path)
-            result = FakeResult()
-            result.txts = (image_path.stem.replace("ocr-page", "page"),)
-            return result
+            results.append(
+                {
+                    "texts": [
+                        "TRAINING COPY",
+                        f" {image_path.stem.replace('ocr-page', 'page')} ",
+                    ],
+                    "scores": [0.99, 0.98],
+                    "boxes": [[10.2, 20.4, 80.7, 32.0], [15.0, 40.0, 90.0, 52.0]],
+                    "polygons": [
+                        [[10.2, 20.4], [80.7, 20.1], [80.2, 31.9], [10.0, 32.0]],
+                        [[15.0, 40.0], [90.0, 40.0], [90.0, 52.0], [15.0, 52.0]],
+                    ],
+                }
+            )
+        return results
 
     monkeypatch.setattr(_MODULE, "_run_checked", fake_render)
-    monkeypatch.setattr(_MODULE, "_rapidocr_engine", lambda: FakeEngine())
+    monkeypatch.setattr(_MODULE, "_paddle_document", fake_document)
     bundle = load_pages(_task("h1"), pdf, tmp_path / "split" / "jobs" / "h1" / "source")
 
     assert render_calls == [
@@ -1323,7 +1479,10 @@ def test_rapidocr_loader_uses_lossless_ocr_and_retained_jpeg_in_numeric_order(
         ],
     ]
     assert [page["page_number"] for page in bundle.pages] == [2, 10]
-    assert [page["text"] for page in bundle.pages] == ["page-2", "page-10"]
+    assert [page["text"] for page in bundle.pages] == [
+        "TRAINING COPY\n page-2 ",
+        "TRAINING COPY\n page-10 ",
+    ]
     assert [path.stem for path in ocr_calls] == ["ocr-page-2", "ocr-page-10"]
     assert not any(path.exists() for path in ocr_calls)
     assert bundle.geometry[0]["lines"][0]["bbox"] == {
@@ -1332,13 +1491,17 @@ def test_rapidocr_loader_uses_lossless_ocr_and_retained_jpeg_in_numeric_order(
         "width": 71,
         "height": 12,
     }
+    assert bundle.geometry[0]["lines"][0]["raw_bbox"] == [10.2, 20.4, 80.7, 32.0]
+    assert bundle.geometry[0]["lines"][0]["raw_geometry"] == {
+        "quadrilateral": [[10.2, 20.4], [80.7, 20.1], [80.2, 31.9], [10.0, 32.0]]
+    }
     assert bundle.geometry[0]["ocr_image_sha256"]
     assert all("tesseract" not in call for call in render_calls)
-    assert bundle.ocr_provenance["detector_sha256"]
-    assert bundle.ocr_provenance["recognizer_sha256"]
+    assert bundle.ocr_provenance["detector_tree_sha256"]
+    assert bundle.ocr_provenance["recognizer_tree_sha256"]
 
 
-def test_rapidocr_failure_has_no_fallback(
+def test_paddle_failure_has_no_fallback(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     pdf = tmp_path / "document.pdf"
@@ -1350,17 +1513,171 @@ def test_rapidocr_failure_has_no_fallback(
         _MODULE.Image.new("RGB", (200, 100), "white").save(f"{argv[-1]}-1.png")
         return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
 
-    class FailingEngine:
-        def __call__(self, _image, *, use_cls):
-            assert use_cls is False
-            raise RuntimeError("RapidOCR failed")
+    def failing_document(_images):
+        raise RuntimeError("PaddleOCR failed")
 
     monkeypatch.setattr(_MODULE, "_run_checked", fake_render)
-    monkeypatch.setattr(_MODULE, "_rapidocr_engine", lambda: FailingEngine())
+    monkeypatch.setattr(_MODULE, "_paddle_document", failing_document)
 
-    with pytest.raises(RunnerError, match="RapidOCR failed"):
+    with pytest.raises(RunnerError, match="PaddleOCR failed"):
         load_pages(_task("h1"), pdf, tmp_path / "split" / "jobs" / "h1" / "source")
     assert all("tesseract" not in call for call in calls)
+
+
+def test_paddle_production_config_matches_frozen_benchmark() -> None:
+    resolved = _MODULE._resolved_ocr_config()
+    engine_config = {
+        "text_detection_model_name": "PP-OCRv5_mobile_det",
+        "text_detection_model_dir": resolved["detector_path"],
+        "text_recognition_model_name": "en_PP-OCRv5_mobile_rec",
+        "text_recognition_model_dir": resolved["recognizer_path"],
+        "use_doc_orientation_classify": False,
+        "use_doc_unwarping": False,
+        "use_textline_orientation": False,
+        "device": "cpu",
+        "enable_mkldnn": False,
+        "cpu_threads": 2,
+        "text_recognition_batch_size": 6,
+    }
+    assert _MODULE._paddle_engine_config(resolved) == engine_config
+    assert resolved["engine_init_config_sha256"] == hashlib.sha256(
+        _MODULE._canonical_bytes(engine_config)
+    ).hexdigest()
+    assert (
+        resolved["detector_effective_limit_side_len"],
+        resolved["detector_effective_limit_type"],
+        resolved["detector_effective_max_side_limit"],
+    ) == (64, "min", 4000)
+
+
+def test_paddle_pool_uses_four_spawn_workers_and_shuts_down(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: dict[str, object] = {}
+
+    class FakePool:
+        def __init__(self, **kwargs):
+            calls.update(kwargs)
+
+        def shutdown(self, **kwargs):
+            calls["shutdown"] = kwargs
+
+    config = {
+        **_MODULE.OCR_CONFIG,
+        "python_path": str(Path(sys.executable).absolute()),
+        "detector_path": "/models/detector",
+        "recognizer_path": "/models/recognizer",
+    }
+    monkeypatch.setattr(_MODULE, "ProcessPoolExecutor", FakePool)
+    monkeypatch.setattr(_MODULE, "_OCR_POOL", None)
+    monkeypatch.setattr(_MODULE, "_verify_locked_runtime", lambda _config: None)
+
+    _MODULE._start_ocr_pool(config)
+    _MODULE._shutdown_ocr_pool()
+
+    assert calls["max_workers"] == 4
+    assert calls["mp_context"].get_start_method() == "spawn"
+    assert calls["initializer"] is _MODULE.initialize_worker
+    assert calls["initargs"] == (_MODULE._paddle_engine_config(config),)
+    assert calls["shutdown"] == {"wait": False, "cancel_futures": True}
+
+
+def test_paddle_document_timeout_aborts_shared_pool(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: dict[str, object] = {}
+
+    class TimedOutFuture:
+        def result(self, *, timeout):
+            calls["timeout"] = timeout
+            raise concurrent.futures.TimeoutError
+
+    class FakePool:
+        def submit(self, *_args):
+            return TimedOutFuture()
+
+    pool = FakePool()
+    monkeypatch.setattr(_MODULE, "_OCR_POOL", pool)
+    monkeypatch.setattr(
+        _MODULE, "_abort_ocr_pool", lambda expected: calls.setdefault("aborted", expected)
+    )
+
+    with pytest.raises(RunnerError, match="timed out"):
+        _MODULE._paddle_document([Path("one.png"), Path("two.png")])
+
+    assert calls == {"timeout": 420, "aborted": pool}
+
+
+def test_stale_ocr_failure_does_not_terminate_replacement_pool(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stale_pool = object()
+    replacement_pool = object()
+    terminated: list[object] = []
+    monkeypatch.setattr(_MODULE, "_OCR_POOL", replacement_pool)
+    monkeypatch.setattr(
+        _MODULE,
+        "_terminate_ocr_pool",
+        lambda pool, *, grace_seconds: terminated.append(pool),
+    )
+
+    _MODULE._abort_ocr_pool(stale_pool)
+
+    assert _MODULE._OCR_POOL is replacement_pool
+    assert terminated == []
+
+
+def test_bounded_pool_teardown_kills_real_hung_spawn_worker() -> None:
+    pool = _MODULE.ProcessPoolExecutor(
+        max_workers=1, mp_context=_MODULE.multiprocessing.get_context("spawn")
+    )
+    future = pool.submit(time.sleep, 60)
+    deadline = time.monotonic() + 5
+    while not getattr(pool, "_processes", {}) and time.monotonic() < deadline:
+        time.sleep(0.01)
+    processes = list(pool._processes.values())
+
+    started = time.monotonic()
+    _MODULE._terminate_ocr_pool(pool, grace_seconds=0.2)
+
+    assert time.monotonic() - started < 3
+    assert processes and all(not process.is_alive() for process in processes)
+    assert future.cancelled() or future.done()
+
+
+def test_paddle_document_broken_pool_is_aborted(monkeypatch: pytest.MonkeyPatch) -> None:
+    pool = _MODULE.ProcessPoolExecutor(
+        max_workers=1, mp_context=_MODULE.multiprocessing.get_context("spawn")
+    )
+    crashed = pool.submit(os._exit, 17)
+    with pytest.raises(concurrent.futures.process.BrokenProcessPool):
+        crashed.result(timeout=5)
+    calls: list[object] = []
+    monkeypatch.setattr(_MODULE, "_OCR_POOL", pool)
+    monkeypatch.setattr(_MODULE, "_abort_ocr_pool", calls.append)
+
+    with pytest.raises(RunnerError, match="worker process failed"):
+        _MODULE._paddle_document([Path("page.png")])
+
+    assert calls == [pool]
+
+
+def test_pipeline_accepts_eight_workers(tmp_path: Path) -> None:
+    tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
+    _pin("heldout", tasks, 1)
+
+    result = run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=tmp_path / "private",
+        limit=1,
+        workers=8,
+        page_loader=_pages,
+        command_runner=_successful_codex([]),
+    )
+
+    assert result["succeeded"] == 1
 
 
 def test_locked_runtime_rejects_mutated_distribution_member(
@@ -1371,7 +1688,7 @@ def test_locked_runtime_rejects_mutated_distribution_member(
         tmp_path
         / "data"
         / "issue24"
-        / "rapidocr-env"
+        / "ppocr-env"
         / "lib"
         / "python3.11"
         / "site-packages"
@@ -1387,17 +1704,24 @@ def test_locked_runtime_rejects_mutated_distribution_member(
     record = site_packages / "demo-1.0.dist-info" / "RECORD"
     record.parent.mkdir()
     record.write_text(f"demo.py,sha256={digest},{member.stat().st_size}\n", encoding="utf-8")
-    lock = tmp_path / "requirements" / "solution-ocr.txt"
+    lock = tmp_path / "requirements" / "solution-paddle-ocr.txt"
     lock.parent.mkdir()
     lock.write_text("demo==1.0\n", encoding="utf-8")
     artifacts = {}
-    for role in ("python", "renderer", "detector", "recognizer"):
+    for role in ("python", "renderer", "worker"):
         artifact = tmp_path / f"{role}.bin"
         artifact.write_bytes(role.encode())
         artifacts[f"{role}_path"] = str(artifact)
         artifacts[f"{role}_sha256"] = hashlib.sha256(artifact.read_bytes()).hexdigest()
+    for role in ("detector", "recognizer"):
+        model = tmp_path / role
+        model.mkdir()
+        (model / "model.bin").write_bytes(role.encode())
+        artifacts[f"{role}_path"] = str(model)
+        artifacts[f"{role}_tree_sha256"] = _MODULE._directory_content_hash(model)
     config = {
         **artifacts,
+        "environment_root": str(site_packages.parents[2]),
         "renderer_version": "pdftoppm test version",
         "runtime_lock_path": str(lock),
         "runtime_lock_sha256": hashlib.sha256(lock.read_bytes()).hexdigest(),
