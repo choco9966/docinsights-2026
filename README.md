@@ -2,10 +2,13 @@
 
 이 저장소는 [DocInsights 2026 Shared Task](https://docinsights-workshop.github.io/docinsights-2026/shared-task/)의 **DocSem** 과제를 수행하고 실험 결과를 관리하기 위한 작업 공간입니다.
 
-> 기준일: 2026-09-06. 일정과 제출 규정은 바뀔 수 있으므로 제출 전에는 공식 워크숍 페이지와 제출 포털을 다시 확인하세요. 제출과 최종 규정의 기준은 공식 포털입니다.
+> 기준일: 2026-09-07. 일정과 제출 규정은 바뀔 수 있으므로 제출 전에는 공식 워크숍 페이지와 제출 포털을 다시 확인하세요. 제출과 최종 규정의 기준은 공식 포털입니다.
 
 ## 연구 기록
 
+- [전체 split 풀이 기록·validation 시행착오 감사](docs/research/issue-24-solution-records.md)
+- [Issue #24 OCR 실측 비교와 선택](docs/research/issue-24-ocr-comparison.md) · [성능표 CSV](docs/research/issue-24-ocr-comparison.csv)
+- [동일 PDF 기반 OCR 비교 계획](docs/superpowers/plans/2026-09-07-ocr-comparison.md)
 - [Validation 복원·최신 Train migration·held-out 전략](docs/research/issue-21-validation-heldout-strategy.md)
 - [소형 OCR 모델 탐색 및 DocSem 고정 사례 비교](research/ocr-small-models/report.md)
 
@@ -31,12 +34,14 @@ DocSem은 **근거 귀속(evidence attribution)을 포함한 문서 기반 정�
 
 Hugging Face 데이터셋은 canonical source의 participant release를 미러링합니다. 원본 규칙을 판단할 때는 canonical source와 participant instructions를 우선하고, 편리한 다운로드와 Python 로딩에는 Hugging Face 미러를 사용할 수 있습니다.
 
-재현 가능한 실험의 기준 버전은 다음과 같습니다.
+기존 Train/Validation 실험의 기준 버전은 다음과 같습니다.
 
 - Canonical release: [`oracle-samples/gsm-sem@971262d`](https://github.com/oracle-samples/gsm-sem/tree/971262d356c1e7fc2da534eeb9d2c828ade42157/docsem)
 - Hugging Face mirror: [`amitbcp/docinsights-2026-shared-task-data@e6c9c75`](https://huggingface.co/datasets/amitbcp/docinsights-2026-shared-task-data/tree/e6c9c75bea7575a64279072dcdf0f6050fef9e9f)
 
 Canonical source는 2026-08-31에 train annotation 7건을 정정했고, Hugging Face 미러는 이를 반영한 뒤 2026-09-03에 organizer-only validation label 3건의 정정 공지를 추가했습니다. 로컬 구 HF revision `b171c5a`와 최신본을 해시 비교한 결과 Train PDF 7개와 README만 변경되었으며, 공개 Train `tasks.jsonl`·`labels.jsonl`과 모든 validation 입력은 동일했습니다. 데이터 카드에 따르면 미러의 1,125개 PDF는 canonical release와 byte-identical입니다. 실험 기록에는 사용한 두 revision SHA를 함께 남깁니다.
+
+Held-out 공개 입력은 별도 [HF revision `d9e1a394`](https://huggingface.co/datasets/amitbcp/docinsights-2026-shared-task-data/tree/d9e1a394b46d2ac0a4dd87e12dd4a917a69f46e2)의 `docsem-test-a4205880-r1` release에 고정했다. 이 고정 데이터 카드의 포털 closed 설명은 당시 상태이며, 현재 제출 상태는 [최신 워크숍 공지](https://docinsights-workshop.github.io/docinsights-2026/shared-task/)를 따른다.
 
 ## 데이터 구성
 
@@ -44,10 +49,11 @@ Canonical source는 2026-08-31에 train annotation 7건을 정정했고, Hugging
 | --- | ---: | --- | --- |
 | `train` | 908 | 있음 | 로컬 개발과 평가 |
 | `validation` / `val` | 217 | 없음 | 공식 validation 리더보드 제출 |
+| `test` / Held-out | 1,730 | 없음 | 최종 순위 평가 |
 
-공개 패키지에는 총 1,125개 PDF가 포함됩니다. Hugging Face의 `tasks` config는 train/validation 입력을, `labels` config는 train 라벨을 제공합니다. Validation 라벨은 주최 측이 비공개로 보관합니다.
+Held-out을 포함한 공개 패키지에는 총 2,855개 PDF가 포함됩니다. 새 HF revision의 `tasks` config는 train/validation/test 입력을, `labels` config는 train 라벨만 제공합니다. Validation과 test 라벨은 비공개입니다.
 
-Canonical source의 주요 파일은 다음과 같습니다.
+기존 Canonical Train/Validation 파일 구조는 다음과 같습니다. Held-out은 위 HF release의 `test/tasks.jsonl`과 `test/documents/*.pdf`에 있다.
 
 ```text
 docsem/
@@ -90,15 +96,15 @@ Train 라벨과 제출 예측은 다음 형태를 사용합니다.
 
 - `instance_id`는 입력의 값과 정확히 일치해야 합니다.
 - `answer`에는 설명을 붙이지 말고 최종 답만 넣습니다. 답 자체에 단위가 필요한 경우가 아니라면 단위도 제외합니다.
-- `evidence`는 비어 있지 않은 블록 ID 목록이어야 합니다.
+- 답을 제출하는 행의 `evidence`는 문서에 실제 보이는 블록 ID 목록이어야 합니다. Held-out은 bNN 형태에 한정하지 않습니다.
 - 목표 질문과 계산 입력을 직접 제시하는 데 필요한 블록을 모두 포함합니다.
-- 제출 대상 split의 모든 인스턴스를 정확히 한 번씩 포함합니다.
+- 완전한 예측 파일은 대상 split의 모든 인스턴스를 정확히 한 번씩 포함합니다. Test 포털은 부분 파일과 `answer: null`, `evidence: []` abstention도 허용하지만, 누락·abstention은 전체 1,730건 기준 오답으로 처리됩니다.
 
 시스템 논문과 실험 기록에는 사용한 모델, 외부 학습 데이터, 검색 리소스, 도구, 프롬프트 전략을 문서화합니다.
 
 ## 평가
 
-주 평가지표는 정규화된 `answer` exact-match accuracy입니다. 정규화 과정은 앞뒤 공백과 대소문자를 무시하고, 선행 final-answer 표식을 제거하며, 적용 가능한 경우 수치적으로 같은 소수 표현을 동일하게 취급합니다.
+기존 참가 안내의 답 지표는 정규화된 `answer` exact-match accuracy입니다. 최신 최종 Test 순위는 **Joint Exact Accuracy → Answer Exact Accuracy → Evidence F1** 순서로 결정됩니다. 정규화 과정은 앞뒤 공백과 대소문자를 무시하고, 선행 final-answer 표식을 제거하며, 적용 가능한 경우 수치적으로 같은 소수 표현을 동일하게 취급합니다.
 
 근거는 별도로 평가합니다.
 
@@ -243,10 +249,10 @@ uv run docinsights-ocr cloud-merge artifacts/ocr/validation-manifest.jsonl artif
 
 - Train annotation은 **2026-08-31에 7건이 정정**되었습니다. 이전 revision으로 내려받은 데이터와 그 파생 산출물은 현재 release 기준 분석에 그대로 재사용하지 말고, 최신 revision으로 갱신한 뒤 무결성과 영향을 다시 확인합니다.
 - Organizer-only validation ground truth는 **2026-09-03에 3건이 정정**되었고 기존 제출도 새 라벨로 재채점되었습니다. 공개 validation 입력과 PDF는 바뀌지 않았습니다.
-- 현재는 217개 validation 인스턴스 전체를 포함한 JSONL을 [공식 제출 포털](https://amitbcp-docsem-docinsights.hf.space/)에 제출합니다.
+- [공식 제출 포털](https://huggingface.co/spaces/amitbcp/docsem-docinsights)의 Held-out 제출이 열렸습니다. Validation과 Final test 리더보드는 별도입니다.
 - 포털이 다른 JSON 형식을 일부 처리하더라도 canonical participant instructions가 요구하는 표준 형식은 JSONL이므로, 이 저장소에서는 JSONL만 제출 형식으로 사용합니다.
-- 최종 순위는 별도의 held-out test set 결과로 결정됩니다. **2026-09-06 현재 held-out release는 공개되지 않았고**, 주최 측의 release 및 integrity check가 끝날 때까지 test 제출도 닫혀 있습니다. 공개 시 참가자에게 별도 공지됩니다.
-- DocSem 최종 제출 마감은 **2026-09-10**입니다.
+- Test 제출에는 Hugging Face 로그인이 필요합니다. 계정당 accepted attempt 최대 3회, 서로 다른 accepted attempt 사이 최소 6시간입니다. 첫 시도만 개인 점수를 공개하며 2~3회는 점수를 숨깁니다. 대회 중 공개 순위표에는 순위만 표시하고, 최종 순위는 가장 좋은 eligible attempt를 사용합니다.
+- DocSem 최종 제출 마감은 **2026-09-10 AoE**, 즉 **2026-09-11 12:00 UTC**입니다.
 - DocSem 또는 Dr.DocBench 시스템 논문 제출 마감은 **2026-09-15 23:59 UTC**이며, archival/non-archival 제출을 모두 받습니다.
 
 제출 전에 JSONL의 스키마, ID 중복·누락, 대상 split과의 일치 여부를 검사합니다.
@@ -257,10 +263,10 @@ uv run docinsights-ocr cloud-merge artifacts/ocr/validation-manifest.jsonl artif
 uv run docinsights validate-submission artifacts/submissions/validation.jsonl
 ```
 
-다른 split이나 경로를 검증할 때는 기준 `tasks.jsonl`을 직접 지정합니다.
+다른 Train/Validation 경로를 검증할 때는 기준 `tasks.jsonl`을 직접 지정합니다. 기존 검증기는 bNN 계약을 사용하므로 임의 Evidence ID가 있는 새 Held-out에는 [Issue #24 출처 기반 검증](docs/research/issue-24-solution-records.md)을 사용합니다.
 
 ```bash
-uv run docinsights validate-submission artifacts/submissions/test.jsonl --tasks data/raw/docsem/test/tasks.jsonl
+uv run docinsights validate-submission artifacts/submissions/train.jsonl --tasks data/raw/docsem/train/tasks.jsonl
 ```
 
 세 개 이상의 독립 검수 파일은 각 행에 파일별로 고유한 `run_id`와 `instance_id`, `answer`, `evidence`, `rationale`, `confidence`를 기록하고 다음 명령으로 비교합니다. 도구는 중복된 실제 경로와 `run_id`, 입력과 겹치는 출력 경로를 거부하며 답과 Evidence가 전원 일치한 항목만 `consensus.jsonl`에 기록합니다. 하나라도 다른 항목은 `disagreements.jsonl`로 분리됩니다. `run_id`와 경로 검사는 실수로 같은 결과를 재사용하는 일을 막기 위한 장치이며, 독립 실행 자체의 증명은 아니므로 모델·프롬프트·실행 시각과 원시 응답의 해시는 비공개 실행 기록에 별도로 남깁니다.
