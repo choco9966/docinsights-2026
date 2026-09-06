@@ -29,15 +29,17 @@ from docinsights_analysis.solution_records import (
     SolutionRecordError,
     ensure_private_directory,
     export_records,
+    finalize_solution,
     input_digest,
+    primary_record_digest,
+    validate_primary_solution,
     validate_solution,
-    visual_evidence_candidates,
     write_private_atomic,
 )
 from docinsights_analysis.visual_id_checks import (
-    VISUAL_CHECK_SCHEMA,
-    VisualIDCheckError,
-    run_visual_id_checks,
+    SOURCE_CHECK_SCHEMA,
+    SourceRegionCheckError,
+    check_source_regions,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -109,15 +111,27 @@ OCR_CONFIG = {
 PROMPT_INSTRUCTIONS = (
     "Solve this single document question using only the public source pages and attached "
     "images for this document. Align the answer to every constraint in the question, including "
-    "revised-scenario wording, and do not substitute a nearby distractor passage. Return a "
-    "concise, source-grounded derivation. The evidence array must contain only opaque Evidence "
-    "IDs copied exactly from the document, never prose. Each evidence quote must copy only the "
-    "body text after its Evidence ID heading and must occur verbatim in source_pages; "
-    "include every block directly needed to state the target question and its inputs. "
-    "if an image disagrees with OCR, describe the mismatch in uncertainties instead of "
-    "silently correcting the OCR. Calculations may contain only numeric literals, "
-    "parentheses, and the + - * / operators; the final calculation result must equal a "
-    "numeric answer. Do not provide hidden reasoning logs."
+    "revised-scenario wording, and do not substitute a nearby distractor passage. Check whose "
+    "quantity is requested, its time span and rate denominator, and whether it is remaining or "
+    "removed. Return a "
+    "concise, source-grounded derivation. Use the smallest set of distinct source regions "
+    "directly needed to state the "
+    "target question and its inputs, return its page and an ocr_anchor copied exactly from that "
+    "page's source_pages text. Each anchor must occur exactly once on its page and is only a "
+    "location marker; do not guess an Evidence ID or quote. "
+    "The PDF page images are authoritative for answer inputs. If a clearly legible image "
+    "value disagrees with OCR, use the image value in the answer and calculations and record "
+    "the mismatch in uncertainties. Do not rewrite source_pages or ocr_anchor; anchors must "
+    "still match OCR exactly. If the image is not legible, state the uncertainty and do not "
+    "invent a value. Calculation operands may contain only numeric literals, parentheses, "
+    "and the + - * / operators. For a required rounded result, use only top-level "
+    "round(expression, places) with a literal places integer 0 through 12; it applies HALF_UP. "
+    "State the requested rounding or approximation precision in solution.summary. Never "
+    "provide an approximate result for an unrounded nonterminating expression. The final "
+    "calculation result must equal a "
+    "numeric answer. Answer must always contain only the numeric result (for example, 7.5), "
+    "with no units or prose, including when calculations is empty; put units and context in "
+    "solution.summary. Do not provide hidden reasoning logs."
 )
 BASE_PROMPT_TEMPLATE = "{instructions}\n\nPUBLIC INPUT:\n{public_input}"
 RETRY_PROMPT_TEMPLATE = (
@@ -125,19 +139,21 @@ RETRY_PROMPT_TEMPLATE = (
     "frozen public input only, preserve the question's semantic target, and do not "
     "switch to another passage): {error}"
 )
-VISUAL_CHECK_CONFIG = {
+SOURCE_CHECK_CONFIG = {
     "model": "gpt-5.6-sol",
     "model_reasoning_effort": "high",
     "timeout_seconds": 300,
     "maximum_attempts": 1,
-    "crop_padding_pixels": 12,
-    "method": "codex-cli-blind-visual-id-v1",
+    "maximum_runtime_attempts": 2,
+    "context_vertical_padding_pixels": 200,
+    "anchor_padding_pixels": 12,
+    "method": "codex-cli-blind-source-region-v1",
 }
 OUTPUT_SCHEMA = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "additionalProperties": False,
-    "required": ["answer", "solution", "evidence", "evidence_details", "uncertainties"],
+    "required": ["answer", "solution", "evidence_regions", "uncertainties"],
     "properties": {
         "answer": {"type": "string"},
         "solution": {
@@ -160,17 +176,16 @@ OUTPUT_SCHEMA = {
                 },
             },
         },
-        "evidence": {"type": "array", "items": {"type": "string"}},
-        "evidence_details": {
+        "evidence_regions": {
             "type": "array",
+            "minItems": 1,
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["id", "page", "quote"],
+                "required": ["page", "ocr_anchor"],
                 "properties": {
-                    "id": {"type": "string"},
                     "page": {"type": "integer"},
-                    "quote": {"type": "string"},
+                    "ocr_anchor": {"type": "string", "minLength": 1},
                 },
             },
         },
@@ -211,6 +226,7 @@ class PageBundle:
 
 CommandRunner = Callable[..., subprocess.CompletedProcess[str]]
 PageLoader = Callable[[dict[str, Any], Path, Path], PageBundle]
+SourceChecker = Callable[..., list[dict[str, Any]]]
 
 
 def validate_cli_output_root(output_root: Path) -> Path:
@@ -444,18 +460,8 @@ def _locked_distribution_records(lock_path: Path) -> list[dict[str, str]]:
 
 
 def _verify_locked_runtime(config: dict[str, Any]) -> None:
-    environment_root = (
-        REPOSITORY_ROOT
-        / "data"
-        / "issue24"
-        / "rapidocr-env"
-    ).resolve()
-    site_packages = (
-        environment_root
-        / "lib"
-        / "python3.11"
-        / "site-packages"
-    ).resolve()
+    environment_root = (REPOSITORY_ROOT / "data" / "issue24" / "rapidocr-env").resolve()
+    site_packages = (environment_root / "lib" / "python3.11" / "site-packages").resolve()
     lock_path = Path(config["runtime_lock_path"])
     if not lock_path.is_file() or _sha256_file(lock_path) != config["runtime_lock_sha256"]:
         raise RunnerError("pinned OCR runtime lock changed")
@@ -554,9 +560,7 @@ def _rapidocr_page(
     except (AttributeError, IndexError, TypeError, ValueError) as error:
         raise RunnerError("RapidOCR returned invalid source image dimensions") from error
     lines = []
-    for line_index, (quad, text, confidence) in enumerate(
-        zip(boxes, texts, scores, strict=True)
-    ):
+    for line_index, (quad, text, confidence) in enumerate(zip(boxes, texts, scores, strict=True)):
         try:
             points = [[float(point[0]), float(point[1])] for point in quad]
         except (IndexError, TypeError, ValueError) as error:
@@ -679,6 +683,7 @@ def load_pages(task: dict[str, Any], pdf_path: Path, cache_dir: Path) -> PageBun
 
 def _generation_config() -> dict[str, Any]:
     codex_runtime = _resolved_codex_runtime()
+    ocr = _resolved_ocr_config()
     return {
         **COMMAND_CONFIG,
         **codex_runtime,
@@ -686,8 +691,8 @@ def _generation_config() -> dict[str, Any]:
         "base_prompt_template_sha256": _sha256_bytes(BASE_PROMPT_TEMPLATE.encode("utf-8")),
         "retry_prompt_template_sha256": _sha256_bytes(RETRY_PROMPT_TEMPLATE.encode("utf-8")),
         "output_schema_sha256": _sha256_bytes(_canonical_bytes(OUTPUT_SCHEMA)),
-        "ocr": _resolved_ocr_config(),
-        "visual_id_checker": _resolved_visual_check_config(codex_runtime),
+        "ocr": ocr,
+        "source_checker": _resolved_source_check_config(codex_runtime, ocr),
     }
 
 
@@ -731,16 +736,23 @@ def _verify_codex_runtime(config: dict[str, Any]) -> None:
         raise RunnerError("pinned Codex executable version changed")
 
 
-def _resolved_visual_check_config(codex_runtime: dict[str, str]) -> dict[str, Any]:
+def _resolved_source_check_config(
+    codex_runtime: dict[str, str], ocr: dict[str, Any]
+) -> dict[str, Any]:
     module_path = REPOSITORY_ROOT / "src" / "docinsights_analysis" / "visual_id_checks.py"
     if not module_path.is_file():
-        raise RunnerError("visual ID checker implementation is missing")
+        raise RunnerError("source-region checker implementation is missing")
     return {
-        **VISUAL_CHECK_CONFIG,
+        **SOURCE_CHECK_CONFIG,
         **codex_runtime,
+        "renderer_path": ocr["renderer_path"],
+        "renderer_sha256": ocr["renderer_sha256"],
+        "renderer_version": ocr["renderer_version"],
+        "dpi": ocr["dpi"],
+        "ocr_input_format": ocr["ocr_input_format"],
         "module_path": str(module_path.resolve()),
         "module_sha256": _sha256_file(module_path),
-        "output_schema_sha256": _sha256_bytes(_canonical_bytes(VISUAL_CHECK_SCHEMA)),
+        "output_schema_sha256": _sha256_bytes(_canonical_bytes(SOURCE_CHECK_SCHEMA)),
     }
 
 
@@ -781,7 +793,7 @@ def _load_json(path: Path, description: str) -> Any:
 def _attempt_artifacts(attempt_dir: Path) -> dict[str, str | None]:
     required = ("command.json", "prompt.txt", "events.jsonl", "stderr.txt")
     artifacts: dict[str, str | None] = {}
-    for name in (*required, "response.json", "primary-response.json"):
+    for name in (*required, "response.json", "primary-response.json", "primary-record.json"):
         path = attempt_dir / name
         if name in required and not path.is_file():
             raise RunnerError(f"attempt artifact is missing: {path}")
@@ -819,8 +831,8 @@ def _verify_attempt_artifacts(job_dir: Path, attempts: Any) -> bool:
         try:
             if artifacts != _attempt_artifacts(attempt_dir):
                 return False
-            if attempt.get("visual_artifacts", []) != _directory_artifacts(
-                attempt_dir / "visual-id-checks"
+            if attempt.get("source_check_artifacts", []) != _directory_artifacts(
+                attempt_dir / "source-checks"
             ):
                 return False
         except RunnerError:
@@ -845,6 +857,8 @@ def _verified_job_input(
         return None
     if job_input.get("pdf_sha256") != entry["pdf_sha256"]:
         return None
+    if job_input.get("pdf_path") != entry["pdf_path"]:
+        return None
     if job_input.get("command_config_sha256") != command_config_sha256:
         return None
     images = job_input.get("page_images")
@@ -866,22 +880,17 @@ def _verified_job_input(
     source_pages_path = job_dir / "source" / "source_pages.json"
     images_path = job_dir / "source" / "images.json"
     geometry_path = job_dir / "source" / "ocr_geometry.json"
-    if (
-        not source_pages_path.is_file()
-        or not images_path.is_file()
-        or not geometry_path.is_file()
-    ):
+    if not source_pages_path.is_file() or not images_path.is_file() or not geometry_path.is_file():
         return None
-    if _load_json(source_pages_path, f"{job_dir.name} source pages") != job_input[
-        "source_pages"
-    ]:
+    if _load_json(source_pages_path, f"{job_dir.name} source pages") != job_input["source_pages"]:
         return None
     if _load_json(images_path, f"{job_dir.name} image inventory") != images:
         return None
     geometry = job_input.get("ocr_geometry")
-    if not isinstance(geometry, list) or _load_json(
-        geometry_path, f"{job_dir.name} OCR geometry"
-    ) != geometry:
+    if (
+        not isinstance(geometry, list)
+        or _load_json(geometry_path, f"{job_dir.name} OCR geometry") != geometry
+    ):
         return None
     if job_input.get("ocr_geometry_sha256") != _sha256_bytes(_canonical_bytes(geometry)):
         return None
@@ -907,28 +916,29 @@ def _verified_job_input(
     return job_input
 
 
-def _verified_visual_checks(
+def _verified_source_checks(
     proofs: Any,
     job_dir: Path,
     job_input: dict[str, Any],
     checker_config: dict[str, Any],
+    primary: dict[str, Any],
+    primary_response_sha256: str,
 ) -> list[dict[str, Any]] | None:
     if proofs is None:
         return []
     if not isinstance(proofs, list):
         return None
     expected_config_sha256 = _sha256_bytes(_canonical_bytes(checker_config))
-    page_images = {
-        image["sha256"]: Path(image["path"])
-        for image in job_input["page_images"]
-        if isinstance(image, dict)
-        and isinstance(image.get("sha256"), str)
-        and isinstance(image.get("path"), str)
+    expected_primary_sha256 = primary_record_digest(primary)
+    geometry_by_page = {
+        page["page_number"]: page
+        for page in job_input["ocr_geometry"]
+        if isinstance(page, dict) and isinstance(page.get("page_number"), int)
     }
-    visual_root = (job_dir / "attempts").resolve()
+    source_root = (job_dir / "attempts").resolve()
 
-    def intact(artifact: Any, *, page_image: bool = False) -> bool:
-        if not isinstance(artifact, dict) or set(artifact) != {"path", "sha256"}:
+    def intact(artifact: Any) -> bool:
+        if not isinstance(artifact, dict) or set(artifact) != {"kind", "path", "sha256"}:
             return False
         path_value = artifact.get("path")
         digest = artifact.get("sha256")
@@ -937,35 +947,77 @@ def _verified_visual_checks(
         path = Path(path_value)
         if path.is_symlink() or not path.is_file() or _sha256_file(path) != digest:
             return False
-        if page_image:
-            return digest in page_images and page_images[digest].resolve() == path.resolve()
+        external_paths = {
+            Path(job_input["pdf_path"]).resolve(),
+            Path(checker_config["renderer_path"]).resolve(),
+            Path(checker_config["codex_executable_path"]).resolve(),
+        }
+        if path.resolve() in external_paths:
+            return True
         try:
-            path.resolve().relative_to(visual_root)
+            path.resolve().relative_to(source_root)
         except ValueError:
             return False
-        return "visual-id-checks" in path.parts
+        return "source-checks" in path.parts
 
     for proof in proofs:
         if not isinstance(proof, dict):
             return None
         if proof.get("checker_config_sha256") != expected_config_sha256:
             return None
-        if proof.get("model") != checker_config["model"] or proof.get(
-            "method"
-        ) != checker_config["method"]:
+        if (
+            proof.get("primary_record_sha256") != expected_primary_sha256
+            or proof.get("primary_response_sha256") != primary_response_sha256
+            or proof.get("pdf_sha256") != job_input["pdf_sha256"]
+        ):
             return None
-        if not intact(proof.get("page_image_artifact"), page_image=True):
+        geometry = geometry_by_page.get(proof.get("page"))
+        if not isinstance(geometry, dict) or proof.get("ocr_image_sha256") != geometry.get(
+            "ocr_image_sha256"
+        ):
             return None
-        if not intact(proof.get("crop_artifact")) or not intact(
-            proof.get("raw_response_artifact")
+        if proof.get("page_image_sha256") != proof.get("ocr_image_sha256"):
+            return None
+        if (
+            proof.get("model") != checker_config["model"]
+            or proof.get("method") != checker_config["method"]
+        ):
+            return None
+        named = {
+            "pdf_artifact": "pdf_sha256",
+            "renderer_artifact": "renderer_sha256",
+            "page_image_artifact": "page_image_sha256",
+            "context_crop_artifact": "context_crop_sha256",
+            "anchor_crop_artifact": "anchor_crop_sha256",
+            "checker_executable_artifact": "checker_executable_sha256",
+            "raw_response_artifact": "raw_response_sha256",
+        }
+        for artifact_field, digest_field in named.items():
+            artifact = proof.get(artifact_field)
+            if (
+                not isinstance(artifact, dict)
+                or not intact(artifact)
+                or artifact.get("sha256") != proof.get(digest_field)
+            ):
+                return None
+        expected_external = {
+            "pdf_artifact": Path(job_input["pdf_path"]).resolve(),
+            "renderer_artifact": Path(checker_config["renderer_path"]).resolve(),
+            "checker_executable_artifact": Path(checker_config["codex_executable_path"]).resolve(),
+        }
+        if any(
+            Path(proof[field]["path"]).resolve() != expected_path
+            for field, expected_path in expected_external.items()
         ):
             return None
         artifacts = proof.get("artifacts")
-        if not isinstance(artifacts, list) or not artifacts or not all(
-            intact(artifact) for artifact in artifacts
+        if (
+            not isinstance(artifacts, list)
+            or not artifacts
+            or not all(intact(artifact) for artifact in artifacts)
         ):
             return None
-        if proof.get("raw_response_artifact") not in artifacts:
+        if any(proof.get(field) not in artifacts for field in named):
             return None
     return proofs
 
@@ -1003,9 +1055,7 @@ def _verified_cached_record(
     attempts = state.get("attempts")
     if not _verify_attempt_artifacts(job_dir, attempts):
         return None
-    successful_attempts = [
-        attempt for attempt in attempts if attempt.get("status") == "succeeded"
-    ]
+    successful_attempts = [attempt for attempt in attempts if attempt.get("status") == "succeeded"]
     if len(successful_attempts) != 1:
         return None
     selected_attempt = successful_attempts[0]
@@ -1015,50 +1065,44 @@ def _verified_cached_record(
     raw_output_sha256 = _sha256_file(response_path)
     if state.get("raw_output_sha256") != raw_output_sha256:
         return None
-    record_provenance = record.get("provenance") if isinstance(record, dict) else None
-    raw_proofs = (
-        record_provenance.get("visual_id_checks")
-        if isinstance(record_provenance, dict)
-        else None
-    )
-    visual_checks = _verified_visual_checks(
-        raw_proofs, job_dir, job_input, expected_config["visual_id_checker"]
-    )
-    if visual_checks is None:
-        return None
-    if state.get("visual_id_checks_sha256") != _sha256_bytes(
-        _canonical_bytes(visual_checks)
-    ):
-        return None
     try:
-        normalized = validate_solution(
-            record,
-            entry["task"],
-            pages,
-            visual_id_checks=visual_checks or None,
-        )
         generated = json.loads(response_path.read_text(encoding="utf-8"))
-        raw_record = dict(normalized)
-        for field in (
-            "solution",
-            "answer",
-            "evidence",
-            "evidence_details",
-            "uncertainties",
-        ):
-            raw_record[field] = generated[field]
-        normalized_raw = validate_solution(
-            raw_record,
+        provenance = dict(record["provenance"])
+        raw_proofs = provenance.pop("source_checks")
+        primary = validate_primary_solution(
+            {
+                "instance_id": entry["task"]["instance_id"],
+                "split": record["split"],
+                "question": entry["task"]["user_query"],
+                "solution": generated["solution"],
+                "answer": generated["answer"],
+                "evidence_regions": generated["evidence_regions"],
+                "source_pages": pages,
+                "provenance": provenance,
+                "uncertainties": generated["uncertainties"],
+            },
             entry["task"],
             pages,
-            visual_id_checks=visual_checks or None,
         )
+        source_checks = _verified_source_checks(
+            raw_proofs,
+            job_dir,
+            job_input,
+            expected_config["source_checker"],
+            primary,
+            raw_output_sha256,
+        )
+        if source_checks is None or state.get("source_checks_sha256") != _sha256_bytes(
+            _canonical_bytes(source_checks)
+        ):
+            return None
+        normalized = validate_solution(record, entry["task"], pages, source_checks=source_checks)
     except (json.JSONDecodeError, KeyError, SolutionRecordError, TypeError):
         return None
-    for field in ("solution", "answer", "evidence", "evidence_details", "uncertainties"):
-        if normalized_raw[field] != normalized[field]:
+    for field_name in ("solution", "answer", "evidence_regions", "uncertainties"):
+        if primary[field_name] != normalized[field_name]:
             return None
-    provenance = normalized["provenance"]
+    provenance = primary["provenance"]
     if provenance.get("pdf_sha256") != entry["pdf_sha256"]:
         return None
     if provenance.get("config_sha256") != command_config_sha256:
@@ -1099,31 +1143,48 @@ def _verify_complete_export(
     expected_ids = sorted(entry["task"]["instance_id"] for entry in entries)
     if (
         complete.get("status") != "generation_complete"
+        or complete.get("coverage_complete") is not True
         or complete.get("split") != split
         or complete.get("total") != len(entries)
-        or complete.get("input_manifest_sha256")
-        != run_manifest["input_manifest_sha256"]
-        or complete.get("command_config_sha256")
-        != run_manifest["command_config_sha256"]
+        or complete.get("input_manifest_sha256") != run_manifest["input_manifest_sha256"]
+        or complete.get("command_config_sha256") != run_manifest["command_config_sha256"]
         or complete.get("record_ids_sha256")
-        != _sha256_bytes(
-            _canonical_bytes([entry["task"]["instance_id"] for entry in entries])
-        )
+        != _sha256_bytes(_canonical_bytes([entry["task"]["instance_id"] for entry in entries]))
         or complete.get("export_manifest_sha256") != _sha256_file(export_manifest_path)
     ):
         raise RunnerError(f"{split} does not have a complete export binding")
+    count_fields = (
+        "answer_coverage",
+        "fully_grounded_count",
+        "evidence_unresolved_count",
+        "runtime_failed_count",
+        "submission_ready",
+        "submission_mode",
+        "submission_count",
+        "grounded_submission_count",
+        "submission_abstention_count",
+    )
+    if any(complete.get(field) != export_manifest.get(field) for field in count_fields):
+        raise RunnerError(f"{split} completion counts do not match its export")
     if (
         export_manifest.get("private") is not True
         or export_manifest.get("split") != split
         or export_manifest.get("total") != len(entries)
+        or export_manifest.get("coverage_complete") is not True
+        or export_manifest.get("answer_coverage") != len(entries)
+        or export_manifest.get("runtime_failed_count") != 0
         or export_manifest.get("instance_ids") != expected_ids
     ):
         raise RunnerError(f"{split} does not have complete export coverage")
     files = export_manifest.get("files")
-    expected_files = {"solutions.jsonl", "solutions.md", "submission.jsonl"}
-    if not isinstance(files, dict) or set(files) != expected_files:
+    required_files = {"solutions.jsonl", "solutions.md", "grounded-submission.jsonl"}
+    if (
+        not isinstance(files, dict)
+        or not required_files <= set(files)
+        or set(files) - (required_files | {"submission.jsonl"})
+    ):
         raise RunnerError(f"{split} does not have a complete export file manifest")
-    for name in expected_files:
+    for name in files:
         path = split_dir / name
         metadata = files.get(name)
         if (
@@ -1146,17 +1207,54 @@ def _verify_complete_export(
     records.sort(key=lambda record: record["instance_id"])
     if _read_jsonl(split_dir / "solutions.jsonl", f"{split} solutions export") != records:
         raise RunnerError(f"{split} solutions export does not match frozen records")
-    expected_submission = [
+    grounded_submission = [
         {
             "instance_id": record["instance_id"],
             "answer": record["answer"],
             "evidence": record["evidence"],
         }
         for record in records
+        if record["source_status"] == "fully_grounded"
     ]
-    if _read_jsonl(
-        split_dir / "submission.jsonl", f"{split} submission export"
-    ) != expected_submission:
+    if (
+        _read_jsonl(split_dir / "grounded-submission.jsonl", f"{split} grounded submission export")
+        != grounded_submission
+    ):
+        raise RunnerError(f"{split} grounded submission does not match frozen records")
+    grounded_count = len(grounded_submission)
+    unresolved_ids = [
+        record["instance_id"]
+        for record in records
+        if record["source_status"] == "evidence_unresolved"
+    ]
+    if (
+        export_manifest.get("fully_grounded_count") != grounded_count
+        or export_manifest.get("evidence_unresolved_count") != len(unresolved_ids)
+        or export_manifest.get("grounded_submission_count") != grounded_count
+        or export_manifest.get("submission_exclusions")
+        != [
+            {"instance_id": instance_id, "reason": "evidence_unresolved"}
+            for instance_id in unresolved_ids
+        ]
+    ):
+        raise RunnerError(f"{split} export status counts do not match frozen records")
+    submission_path = split_dir / "submission.jsonl"
+    if unresolved_ids:
+        if (
+            export_manifest.get("submission_ready") is not False
+            or export_manifest.get("submission_mode") != "blocked_unresolved"
+            or export_manifest.get("submission_count") != 0
+            or export_manifest.get("submission_abstention_count") != 0
+            or submission_path.exists()
+        ):
+            raise RunnerError(f"{split} unresolved evidence must block full submission")
+    elif (
+        export_manifest.get("submission_ready") is not True
+        or export_manifest.get("submission_mode") != "fully_grounded"
+        or export_manifest.get("submission_count") != len(records)
+        or export_manifest.get("submission_abstention_count") != 0
+        or _read_jsonl(submission_path, f"{split} submission export") != grounded_submission
+    ):
         raise RunnerError(f"{split} submission export does not match frozen records")
 
 
@@ -1243,21 +1341,21 @@ def _prepare_manifest(
     official_tasks_sha256: str,
     resume: bool,
 ) -> dict[str, Any]:
-    expected = _manifest_payload(
-        split, entries, tasks_path, pdf_root, official_tasks_sha256
-    )
+    expected = _manifest_payload(split, entries, tasks_path, pdf_root, official_tasks_sha256)
     path = split_dir / "run-manifest.json"
     if path.exists():
         if not resume:
             raise RunnerError(f"output already exists for {split}; use --resume")
         actual = _load_json(path, "run manifest")
-        if actual.get("command_config_sha256") != expected["command_config_sha256"] or actual.get(
-            "command_config"
-        ) != expected["command_config"]:
+        if (
+            actual.get("command_config_sha256") != expected["command_config_sha256"]
+            or actual.get("command_config") != expected["command_config"]
+        ):
             raise RunnerError("resume refused: command config hash mismatch")
-        if actual.get("input_manifest_sha256") != expected["input_manifest_sha256"] or actual.get(
-            "tasks"
-        ) != entries:
+        if (
+            actual.get("input_manifest_sha256") != expected["input_manifest_sha256"]
+            or actual.get("tasks") != entries
+        ):
             raise RunnerError("resume refused: input manifest hash mismatch")
         return actual
     if resume:
@@ -1337,7 +1435,7 @@ def _event_summary(events_text: str) -> tuple[bool, dict[str, Any] | None]:
     return completed, usage
 
 
-def _invoke_visual_checker(
+def _invoke_source_checker(
     *,
     prompt: str,
     images: Sequence[Path],
@@ -1376,14 +1474,14 @@ def _invoke_visual_checker(
     _write_private(output_dir / "stderr.txt", stderr)
     turn_completed, _ = _event_summary(events)
     if completed.returncode != 0 or not turn_completed:
-        raise VisualIDCheckError("visual checker did not complete successfully")
+        raise SourceRegionCheckError("source checker did not complete successfully")
     if not response_path.is_file() or not response_path.read_text(encoding="utf-8").strip():
-        raise VisualIDCheckError("visual checker returned an empty response")
+        raise SourceRegionCheckError("source checker returned an empty response")
     response_path.chmod(0o600)
     try:
         response = json.loads(response_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
-        raise VisualIDCheckError("visual checker returned invalid JSON") from error
+        raise SourceRegionCheckError("source checker returned invalid JSON") from error
     artifacts = [
         schema_path,
         output_dir / "prompt.txt",
@@ -1404,16 +1502,137 @@ def _invoke_visual_checker(
 def _classify_exception(error: Exception) -> str:
     if isinstance(error, AttemptFailure):
         return error.error_kind
-    if isinstance(error, VisualIDCheckError):
-        return "needs_visual_review"
-    message = str(error)
-    if "quote does not belong to evidence block" in message:
-        return "needs_visual_review"
+    if isinstance(error, SourceRegionCheckError):
+        return "source_check_runtime_failed"
     if isinstance(error, subprocess.TimeoutExpired):
         return "timeout"
     if isinstance(error, (json.JSONDecodeError, KeyError, SolutionRecordError)):
         return "invalid_response"
     return "runtime_error"
+
+
+def _resume_source_check(
+    *,
+    entry: dict[str, Any],
+    job_dir: Path,
+    manifest: dict[str, Any],
+    previous_error: dict[str, Any],
+    job_input: dict[str, Any],
+    command_runner: CommandRunner,
+    source_checker: SourceChecker,
+) -> bool:
+    attempts = previous_error["attempts"]
+    source_attempt = attempts[-1]
+    attempt_number = source_attempt["attempt"]
+    attempt_dir = job_dir / "attempts" / str(attempt_number)
+    response_path = attempt_dir / "response.json"
+    primary_path = attempt_dir / "primary-record.json"
+    primary_response_path = attempt_dir / "primary-response.json"
+    raw_output_sha256 = _sha256_file(response_path)
+    if (
+        not primary_path.is_file()
+        or not primary_response_path.is_file()
+        or _sha256_file(primary_response_path) != raw_output_sha256
+    ):
+        raise RunnerError("resume refused: frozen primary artifacts are incomplete")
+    task = entry["task"]
+    pages = cast(list[dict[str, Any]], job_input["source_pages"])
+    primary = _load_json(primary_path, f"{task['instance_id']} frozen primary")
+    try:
+        normalized_primary = validate_primary_solution(primary, task, pages)
+        generated = _load_json(response_path, f"{task['instance_id']} primary response")
+    except SolutionRecordError as error:
+        raise RunnerError("resume refused: frozen primary record is invalid") from error
+    if primary != normalized_primary or any(
+        generated.get(field_name) != primary[field_name]
+        for field_name in ("solution", "answer", "evidence_regions", "uncertainties")
+    ):
+        raise RunnerError("resume refused: frozen primary differs from its raw response")
+    provenance = primary["provenance"]
+    if (
+        provenance.get("output_sha256") != raw_output_sha256
+        or provenance.get("pdf_sha256") != entry["pdf_sha256"]
+        or provenance.get("config_sha256") != manifest["command_config_sha256"]
+    ):
+        raise RunnerError("resume refused: frozen primary provenance is invalid")
+
+    runtime_attempt = int(previous_error.get("source_runtime_attempts", 1)) + 1
+    recovery_dir = attempt_dir / "source-checks" / f"runtime-recovery-{runtime_attempt}"
+    if recovery_dir.exists():
+        raise RunnerError("resume refused: source recovery directory already exists")
+    frozen_primary_sha256 = primary_record_digest(primary)
+    try:
+        source_checks = source_checker(
+            frozen_record=primary,
+            pages=pages,
+            ocr_geometry=job_input["ocr_geometry"],
+            source_pdf_path=Path(entry["pdf_path"]),
+            output_dir=recovery_dir,
+            checker_config=manifest["command_config"]["source_checker"],
+            invoke=lambda **kwargs: _invoke_source_checker(**kwargs, command_runner=command_runner),
+        )
+        if primary_record_digest(primary) != frozen_primary_sha256:
+            raise SourceRegionCheckError("source checker mutated the frozen primary record")
+        record = finalize_solution(primary, task, pages, source_checks=source_checks)
+        normalized = validate_solution(record, task, pages, source_checks=source_checks)
+    except Exception as error:  # noqa: BLE001 - preserve bounded recovery evidence
+        error_kind = "source_check_runtime_failed"
+        previous_error["error_kind"] = error_kind
+        previous_error["error"] = str(error)
+        previous_error["source_runtime_attempts"] = runtime_attempt
+        previous_error.setdefault("source_runtime_history", []).append(
+            {
+                "runtime_attempt": runtime_attempt,
+                "status": "failed",
+                "error_kind": error_kind,
+                "error": str(error),
+                "artifacts": _directory_artifacts(recovery_dir),
+            }
+        )
+        source_attempt["source_check_artifacts"] = _directory_artifacts(
+            attempt_dir / "source-checks"
+        )
+        previous_error["timestamp"] = datetime.now(UTC).isoformat()
+        _write_json(job_dir / "error.json", previous_error)
+        return False
+
+    _write_json(job_dir / "record.json", normalized)
+    recovered_attempt = dict(source_attempt)
+    recovered_attempt.pop("error_kind", None)
+    recovered_attempt.pop("error", None)
+    recovered_attempt["status"] = "succeeded"
+    recovered_attempt["source_check_artifacts"] = _directory_artifacts(
+        attempt_dir / "source-checks"
+    )
+    recovered_attempt["source_runtime_history"] = [
+        {
+            "runtime_attempt": 1,
+            "status": "failed",
+            "error_kind": source_attempt["error_kind"],
+            "error": source_attempt["error"],
+        },
+        *previous_error.get("source_runtime_history", []),
+        {
+            "runtime_attempt": runtime_attempt,
+            "status": "succeeded",
+            "artifacts": _directory_artifacts(recovery_dir),
+        },
+    ]
+    state = {
+        "instance_id": task["instance_id"],
+        "status": "succeeded",
+        "manifest_entry_sha256": _sha256_bytes(_canonical_bytes(entry)),
+        "command_config_sha256": manifest["command_config_sha256"],
+        "job_input_sha256": previous_error["job_input_sha256"],
+        "raw_output_sha256": raw_output_sha256,
+        "source_checks_sha256": _sha256_bytes(_canonical_bytes(source_checks)),
+        "record_sha256": _sha256_file(job_dir / "record.json"),
+        "attempts": [*attempts[:-1], recovered_attempt],
+        "timestamp": datetime.now(UTC).isoformat(),
+    }
+    _write_json(job_dir / "job.json", state)
+    (job_dir / "error.json").unlink(missing_ok=True)
+    return True
 
 
 def _run_one(
@@ -1424,6 +1643,7 @@ def _run_one(
     resume: bool,
     page_loader: PageLoader,
     command_runner: CommandRunner,
+    source_checker: SourceChecker,
 ) -> bool:
     task = entry["task"]
     command_config = manifest["command_config"]
@@ -1446,25 +1666,38 @@ def _run_one(
         if error_path.is_file():
             previous_error = _load_json(error_path, f"{instance_id} error")
             previous_attempts = previous_error.get("attempts")
+            verified_input = _verified_job_input(
+                job_dir,
+                entry,
+                manifest["command_config_sha256"],
+                previous_error.get("job_input_sha256"),
+                command_config["ocr"],
+            )
             if (
                 previous_error.get("manifest_entry_sha256") == entry_hash
-                and previous_error.get("command_config_sha256")
-                == manifest["command_config_sha256"]
+                and previous_error.get("command_config_sha256") == manifest["command_config_sha256"]
                 and isinstance(previous_attempts, list)
                 and (
                     len(previous_attempts) >= command_config["maximum_attempts"]
                     or previous_error.get("terminal") is True
                 )
                 and _verify_attempt_artifacts(job_dir, previous_attempts)
-                and _verified_job_input(
-                    job_dir,
-                    entry,
-                    manifest["command_config_sha256"],
-                    previous_error.get("job_input_sha256"),
-                    command_config["ocr"],
-                )
-                is not None
+                and verified_input is not None
             ):
+                if (
+                    previous_error.get("error_kind") == "source_check_runtime_failed"
+                    and previous_error.get("source_runtime_attempts", 1)
+                    < command_config["source_checker"]["maximum_runtime_attempts"]
+                ):
+                    return _resume_source_check(
+                        entry=entry,
+                        job_dir=job_dir,
+                        manifest=manifest,
+                        previous_error=previous_error,
+                        job_input=verified_input,
+                        command_runner=command_runner,
+                        source_checker=source_checker,
+                    )
                 return False
         if record_path.exists() or state_path.exists() or (job_dir / "attempts").exists():
             raise RunnerError(
@@ -1495,6 +1728,7 @@ def _run_one(
         _write_json(job_dir / "source" / "ocr_geometry.json", bundle.geometry)
         job_input = {
             "task": task,
+            "pdf_path": entry["pdf_path"],
             "pdf_sha256": entry["pdf_sha256"],
             "source_pages": bundle.pages,
             "source_pages_sha256": _sha256_bytes(_canonical_bytes(bundle.pages)),
@@ -1567,50 +1801,57 @@ def _run_one(
             raw_response = response_path.read_bytes()
             _write_private(attempt_dir / "primary-response.json", raw_response)
             generated = json.loads(raw_response)
-            record = {
-                "instance_id": instance_id,
-                "split": split,
-                "question": task["user_query"],
-                "solution": generated["solution"],
-                "answer": generated["answer"],
-                "evidence": generated["evidence"],
-                "evidence_details": generated["evidence_details"],
-                "source_pages": bundle.pages,
-                "provenance": {
-                    "pdf_sha256": entry["pdf_sha256"],
-                    "input_sha256": public_input_hash,
-                    "output_sha256": _sha256_bytes(raw_response),
-                    "config_sha256": manifest["command_config_sha256"],
-                    "model": command_config["model"],
-                    "method": "codex-cli-schema-v1",
-                    "ocr": job_input["ocr"],
-                    "attempt": attempt_number,
-                    "timestamp": datetime.now(UTC).isoformat(),
-                    "page_images": image_metadata,
-                    "usage": usage,
+            primary = validate_primary_solution(
+                {
+                    "instance_id": instance_id,
+                    "split": split,
+                    "question": task["user_query"],
+                    "solution": generated["solution"],
+                    "answer": generated["answer"],
+                    "evidence_regions": generated["evidence_regions"],
+                    "source_pages": bundle.pages,
+                    "provenance": {
+                        "pdf_sha256": entry["pdf_sha256"],
+                        "input_sha256": public_input_hash,
+                        "output_sha256": _sha256_bytes(raw_response),
+                        "config_sha256": manifest["command_config_sha256"],
+                        "model": command_config["model"],
+                        "method": "codex-cli-schema-v1",
+                        "ocr": job_input["ocr"],
+                        "attempt": attempt_number,
+                        "timestamp": datetime.now(UTC).isoformat(),
+                        "page_images": image_metadata,
+                        "usage": usage,
+                    },
+                    "uncertainties": generated["uncertainties"],
                 },
-                "uncertainties": generated["uncertainties"],
-            }
-            visual_checks: list[dict[str, Any]] | None = None
-            if visual_evidence_candidates(record, bundle.pages):
-                visual_checks = run_visual_id_checks(
-                    frozen_record=record,
+                task,
+                bundle.pages,
+            )
+            _write_json(attempt_dir / "primary-record.json", primary)
+            frozen_primary_sha256 = primary_record_digest(primary)
+            try:
+                source_checks = source_checker(
+                    frozen_record=primary,
                     pages=bundle.pages,
-                    paddle_geometry=bundle.geometry,
-                    retained_images=image_metadata,
-                    output_dir=attempt_dir / "visual-id-checks",
-                    checker_config=command_config["visual_id_checker"],
-                    invoke=lambda **kwargs: _invoke_visual_checker(
+                    ocr_geometry=bundle.geometry,
+                    source_pdf_path=pdf_path,
+                    output_dir=attempt_dir / "source-checks",
+                    checker_config=command_config["source_checker"],
+                    invoke=lambda **kwargs: _invoke_source_checker(
                         **kwargs, command_runner=command_runner
                     ),
                 )
-                record["provenance"]["visual_id_checks"] = visual_checks
-            normalized = validate_solution(
-                record,
-                task,
-                bundle.pages,
-                visual_id_checks=visual_checks,
-            )
+                if primary_record_digest(primary) != frozen_primary_sha256:
+                    raise SourceRegionCheckError("source checker mutated the frozen primary record")
+                record = finalize_solution(primary, task, bundle.pages, source_checks=source_checks)
+                normalized = validate_solution(
+                    record, task, bundle.pages, source_checks=source_checks
+                )
+            except SourceRegionCheckError:
+                raise
+            except Exception as error:
+                raise SourceRegionCheckError(f"source checker failed: {error}") from error
             _write_json(record_path, normalized)
             state = {
                 "instance_id": instance_id,
@@ -1619,9 +1860,7 @@ def _run_one(
                 "command_config_sha256": manifest["command_config_sha256"],
                 "job_input_sha256": job_input_hash,
                 "raw_output_sha256": _sha256_bytes(raw_response),
-                "visual_id_checks_sha256": _sha256_bytes(
-                    _canonical_bytes(visual_checks or [])
-                ),
+                "source_checks_sha256": _sha256_bytes(_canonical_bytes(source_checks)),
                 "record_sha256": _sha256_file(record_path),
                 "attempts": attempts
                 + [
@@ -1630,8 +1869,8 @@ def _run_one(
                         "status": "succeeded",
                         "usage": usage,
                         "artifacts": _attempt_artifacts(attempt_dir),
-                        "visual_artifacts": _directory_artifacts(
-                            attempt_dir / "visual-id-checks"
+                        "source_check_artifacts": _directory_artifacts(
+                            attempt_dir / "source-checks"
                         ),
                     }
                 ],
@@ -1669,13 +1908,11 @@ def _run_one(
                     "error_kind": error_kind,
                     "error": str(error),
                     "artifacts": _attempt_artifacts(attempt_dir),
-                    "visual_artifacts": _directory_artifacts(
-                        attempt_dir / "visual-id-checks"
-                    ),
+                    "source_check_artifacts": _directory_artifacts(attempt_dir / "source-checks"),
                 }
             )
             last_error = error
-            if isinstance(error, VisualIDCheckError):
+            if isinstance(error, SourceRegionCheckError):
                 break
 
     record_path.unlink(missing_ok=True)
@@ -1688,9 +1925,11 @@ def _run_one(
         "manifest_entry_sha256": entry_hash,
         "command_config_sha256": manifest["command_config_sha256"],
         "job_input_sha256": job_input_hash,
-        "terminal": isinstance(last_error, VisualIDCheckError),
+        "terminal": isinstance(last_error, SourceRegionCheckError),
         "timestamp": datetime.now(UTC).isoformat(),
     }
+    if isinstance(last_error, SourceRegionCheckError):
+        failure["source_runtime_attempts"] = 1
     _write_json(job_dir / "error.json", failure)
     return False
 
@@ -1743,8 +1982,10 @@ def run_pipeline(
     workers: int = 2,
     resume: bool = False,
     smoke: bool = False,
+    smoke_instance_id: str | None = None,
     page_loader: PageLoader = load_pages,
     command_runner: CommandRunner = subprocess.run,
+    source_checker: SourceChecker | None = None,
 ) -> dict[str, Any]:
     if split not in SPLIT_ORDER:
         raise RunnerError(f"unknown split: {split}")
@@ -1754,6 +1995,9 @@ def run_pipeline(
         raise RunnerError("limit must be positive")
     if smoke and (split != "validation" or limit != 1):
         raise RunnerError("smoke runs require --split validation and --limit 1")
+    if smoke_instance_id is not None and not smoke:
+        raise RunnerError("--smoke-instance-id requires --smoke")
+    source_checker = source_checker or check_source_regions
     output_root = output_root.resolve()
     _private_dir(output_root)
     if smoke:
@@ -1779,7 +2023,12 @@ def run_pipeline(
         resume=resume,
     )
     _write_json(split_dir / "schema.json", OUTPUT_SCHEMA)
-    selected = entries[:limit] if limit is not None else entries
+    if smoke_instance_id is not None:
+        selected = [entry for entry in entries if entry["task"]["instance_id"] == smoke_instance_id]
+        if not selected:
+            raise RunnerError("--smoke-instance-id is not present in the official manifest")
+    else:
+        selected = entries[:limit] if limit is not None else entries
     succeeded = 0
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [
@@ -1792,6 +2041,7 @@ def run_pipeline(
                 resume,
                 page_loader,
                 command_runner,
+                source_checker,
             )
             for entry in selected
         ]
@@ -1801,6 +2051,23 @@ def run_pipeline(
     failed = len(selected) - succeeded
     failure_summary = _failure_summary(split_dir, selected)
     _write_json(split_dir / "failures.json", failure_summary)
+    selected_records = [
+        record
+        for entry in selected
+        if (
+            record := _verified_cached_record(
+                split_dir / "jobs" / entry["task"]["instance_id"],
+                entry,
+                manifest["command_config_sha256"],
+                manifest["command_config"],
+            )
+        )
+        is not None
+    ]
+    fully_grounded = sum(record["source_status"] == "fully_grounded" for record in selected_records)
+    evidence_unresolved = sum(
+        record["source_status"] == "evidence_unresolved" for record in selected_records
+    )
 
     records = _all_records(
         split_dir,
@@ -1809,7 +2076,7 @@ def run_pipeline(
         manifest["command_config"],
     )
     if not smoke and records is not None and len(records) == len(entries):
-        export_records(
+        export_manifest = export_records(
             records,
             [entry["task"] for entry in entries],
             split_dir,
@@ -1817,14 +2084,13 @@ def run_pipeline(
                 record["instance_id"]: record["source_pages"] for record in records
             },
             expected_split=split,
-            visual_checks_by_id={
-                record["instance_id"]: record["provenance"]["visual_id_checks"]
-                for record in records
-                if "visual_id_checks" in record["provenance"]
+            source_checks_by_id={
+                record["instance_id"]: record["provenance"]["source_checks"] for record in records
             },
         )
         completion = {
             "status": "generation_complete",
+            "coverage_complete": True,
             "split": split,
             "total": len(entries),
             "input_manifest_sha256": manifest["input_manifest_sha256"],
@@ -1835,6 +2101,18 @@ def run_pipeline(
             "export_manifest_sha256": _sha256_file(split_dir / "manifest.json"),
             "timestamp": datetime.now(UTC).isoformat(),
         }
+        for field in (
+            "answer_coverage",
+            "fully_grounded_count",
+            "evidence_unresolved_count",
+            "runtime_failed_count",
+            "submission_ready",
+            "submission_mode",
+            "submission_count",
+            "grounded_submission_count",
+            "submission_abstention_count",
+        ):
+            completion[field] = export_manifest[field]
         _write_json(split_dir / "complete.json", completion)
     else:
         (split_dir / "complete.json").unlink(missing_ok=True)
@@ -1843,6 +2121,8 @@ def run_pipeline(
         "total": len(selected),
         "succeeded": succeeded,
         "failed": failed,
+        "fully_grounded": fully_grounded,
+        "evidence_unresolved": evidence_unresolved,
         "error_counts": failure_summary["error_counts"],
     }
 
@@ -1857,6 +2137,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--workers", type=int, default=2, choices=range(1, 5))
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--smoke-instance-id")
     return parser
 
 
@@ -1873,6 +2154,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             workers=args.workers,
             resume=args.resume,
             smoke=args.smoke,
+            smoke_instance_id=args.smoke_instance_id,
         )
     except RunnerError as error:
         print(f"error: {error}", file=sys.stderr)

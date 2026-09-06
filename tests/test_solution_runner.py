@@ -28,6 +28,7 @@ def _isolate_official_pins(monkeypatch: pytest.MonkeyPatch) -> None:
         "OFFICIAL_SPLITS",
         {split: dict(pin) for split, pin in _MODULE.OFFICIAL_SPLITS.items()},
     )
+    monkeypatch.setattr(_MODULE, "check_source_regions", _successful_source_checker)
 
 
 def _pin(split: str, tasks_path: Path, count: int) -> None:
@@ -69,7 +70,108 @@ def _pages(_task: dict[str, object], _pdf: Path, cache: Path) -> PageBundle:
         pages=[{"page_number": 1, "text": "E-7: The document states 3 plus 4."}],
         images=[image],
         ocr_provenance=_MODULE._generation_config()["ocr"],
+        geometry=[
+            {
+                "page_number": 1,
+                "width": 100,
+                "height": 100,
+                "ocr_image_sha256": hashlib.sha256(b"png").hexdigest(),
+                "lines": [
+                    {
+                        "line_index": 0,
+                        "text": "E-7: The document states 3 plus 4.",
+                        "bbox": {"left": 1, "top": 1, "width": 90, "height": 10},
+                    }
+                ],
+            }
+        ],
     )
+
+
+def _successful_source_checker(**kwargs) -> list[dict[str, object]]:
+    primary = kwargs["frozen_record"]
+    output_dir = Path(kwargs["output_dir"])
+    checker_config = kwargs["checker_config"]
+    pdf_path = Path(kwargs["source_pdf_path"])
+    geometry = kwargs["ocr_geometry"]
+    output_dir.mkdir(parents=True, exist_ok=True)
+    artifacts = []
+
+    def artifact(kind: str, path: Path, content: bytes | None = None) -> dict[str, str]:
+        if content is not None:
+            path.write_bytes(content)
+        item = {
+            "kind": kind,
+            "path": str(path.resolve()),
+            "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        }
+        artifacts.append(item)
+        return item
+
+    pdf_artifact = artifact("source_pdf", pdf_path)
+    renderer_artifact = artifact("renderer_executable", Path(checker_config["renderer_path"]))
+    checker_artifact = artifact(
+        "checker_executable", Path(checker_config["codex_executable_path"])
+    )
+    page_artifact = artifact("page_image", output_dir / "page.png", b"png")
+    context_artifact = artifact("context_crop", output_dir / "context.png", b"context")
+    anchor_artifact = artifact("anchor_crop", output_dir / "anchor.png", b"anchor")
+    raw_artifact = artifact("checker_response", output_dir / "response.json", b"{}")
+    checks = []
+    for index, region in enumerate(primary["evidence_regions"]):
+        quote = "The document states 3 plus 4."
+        checks.append(
+            {
+                "region_index": index,
+                "page": region["page"],
+                "ocr_anchor": region["ocr_anchor"],
+                "ocr_anchor_sha256": hashlib.sha256(region["ocr_anchor"].encode()).hexdigest(),
+                "primary_record_sha256": _MODULE.primary_record_digest(primary),
+                "primary_response_sha256": primary["provenance"]["output_sha256"],
+                "status": "fully_grounded",
+                "evidence": {"id": "E-7", "page": 1, "quote": quote},
+                "observed_candidates": [
+                    {
+                        "heading_line": "E-7:",
+                        "body_text": quote,
+                        "heading_legibility": "clear",
+                        "body_legibility": "clear",
+                        "contains_anchor_region": True,
+                    }
+                ],
+                "source_uncertainties": [],
+                "pdf_sha256": pdf_artifact["sha256"],
+                "renderer_sha256": renderer_artifact["sha256"],
+                "checker_executable_sha256": checker_artifact["sha256"],
+                "selector_sha256": "1" * 64,
+                "prompt_sha256": "2" * 64,
+                "output_schema_sha256": "3" * 64,
+                "checker_config_sha256": hashlib.sha256(
+                    json.dumps(
+                        checker_config, sort_keys=True, separators=(",", ":")
+                    ).encode()
+                ).hexdigest(),
+                "page_image_sha256": page_artifact["sha256"],
+                "ocr_image_sha256": geometry[0]["ocr_image_sha256"],
+                "context_crop_sha256": context_artifact["sha256"],
+                "anchor_crop_sha256": anchor_artifact["sha256"],
+                "raw_response_sha256": raw_artifact["sha256"],
+                "model": checker_config["model"],
+                "method": checker_config["method"],
+                "anchor_bbox": {"left": 1, "top": 1, "right": 91, "bottom": 11},
+                "context_bbox": {"left": 0, "top": 0, "right": 100, "bottom": 100},
+                "anchor_crop_bbox": {"left": 0, "top": 0, "right": 100, "bottom": 23},
+                "pdf_artifact": pdf_artifact,
+                "renderer_artifact": renderer_artifact,
+                "page_image_artifact": page_artifact,
+                "context_crop_artifact": context_artifact,
+                "anchor_crop_artifact": anchor_artifact,
+                "checker_executable_artifact": checker_artifact,
+                "raw_response_artifact": raw_artifact,
+                "artifacts": artifacts,
+            }
+        )
+    return checks
 
 
 def _record_heldout_evaluation(split_dir: Path) -> None:
@@ -92,9 +194,8 @@ def _successful_codex(calls: list[dict[str, object]]):
                         "summary": "The cited values add to the requested total.",
                         "calculations": [{"expression": "3 + 4", "result": "7"}],
                     },
-                    "evidence": ["E-7"],
-                    "evidence_details": [
-                        {"id": "E-7", "page": 1, "quote": "The document states 3 plus 4."}
+                    "evidence_regions": [
+                        {"page": 1, "ocr_anchor": "The document states 3 plus 4."}
                     ],
                     "uncertainties": [],
                 }
@@ -111,86 +212,6 @@ def _successful_codex(calls: list[dict[str, object]]):
                 '"cached_input_tokens":0,"output_tokens":20}}\n'
             ),
             stderr="warning retained",
-        )
-
-    return run
-
-
-def _visual_pages(_task: dict[str, object], _pdf: Path, cache: Path) -> PageBundle:
-    image = cache / "page-1.jpg"
-    image.parent.mkdir(parents=True, exist_ok=True)
-    _MODULE.Image.new("RGB", (200, 100), "white").save(image, format="JPEG", quality=65)
-    text = "E-7: The document states 3 plus 4."
-    return PageBundle(
-        pages=[{"page_number": 1, "text": text}],
-        images=[image],
-        ocr_provenance=_MODULE._generation_config()["ocr"],
-        geometry=[
-            {
-                "page_number": 1,
-                "width": 200,
-                "height": 100,
-                "lines": [
-                    {
-                        "line_index": 0,
-                        "text": text,
-                        "bbox": {"left": 10, "top": 10, "width": 100, "height": 20},
-                    }
-                ],
-            }
-        ],
-    )
-
-
-def _visual_candidate_codex(calls: list[dict[str, object]], visible_id: str):
-    def run(argv, **kwargs):
-        response_path = Path(argv[argv.index("--output-last-message") + 1])
-        is_checker = "visual-id-checks" in str(response_path)
-        if is_checker:
-            response = {
-                "visible_headings": [
-                    {
-                        "id": visible_id,
-                        "bbox": {"left": 10, "top": 10, "right": 60, "bottom": 30},
-                        "legibility": "clear",
-                    }
-                ]
-            }
-        else:
-            response = {
-                "answer": "7",
-                "solution": {
-                    "summary": "The cited block states the two values to add.",
-                    "calculations": [{"expression": "3 + 4", "result": "7"}],
-                },
-                "evidence": ["E-7!"],
-                "evidence_details": [
-                    {
-                        "id": "E-7!",
-                        "page": 1,
-                        "quote": "The document states 3 plus 4.",
-                    }
-                ],
-                "uncertainties": ["OCR omitted punctuation from the evidence ID."],
-            }
-        response_path.write_text(json.dumps(response), encoding="utf-8")
-        calls.append(
-            {
-                "argv": list(argv),
-                "prompt": kwargs["input"],
-                "checker": is_checker,
-                "primary_frozen": (
-                    response_path.parents[3] / "primary-response.json"
-                ).is_file()
-                if is_checker
-                else None,
-            }
-        )
-        return subprocess.CompletedProcess(
-            argv,
-            0,
-            stdout='{"type":"turn.completed","usage":{"input_tokens":10}}\n',
-            stderr="",
         )
 
     return run
@@ -538,6 +559,33 @@ def test_smoke_requires_exactly_one_validation_task_and_never_completes(
         command_runner=_successful_codex([]),
     )
     assert not (output / "smoke" / "validation" / "complete.json").exists()
+
+
+def test_smoke_instance_selector_uses_named_official_task(tmp_path: Path) -> None:
+    tasks, pdf_root = _public_inputs(
+        tmp_path, [_task("v1", "First question"), _task("v2", "Named question")]
+    )
+    _pin("validation", tasks, 2)
+    calls: list[dict[str, object]] = []
+    output = tmp_path / "private"
+
+    result = run_pipeline(
+        split="validation",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=output,
+        smoke=True,
+        smoke_instance_id="v2",
+        limit=1,
+        page_loader=_pages,
+        command_runner=_successful_codex(calls),
+    )
+
+    assert result["total"] == 1
+    assert "Named question" in str(calls[0]["prompt"])
+    assert "First question" not in str(calls[0]["prompt"])
+    assert (output / "smoke" / "validation" / "jobs" / "v2" / "record.json").is_file()
+    assert not (output / "smoke" / "validation" / "jobs" / "v1").exists()
 
 
 def test_cli_output_must_resolve_inside_gitignored_issue24_artifacts(
@@ -910,7 +958,7 @@ def test_bundle_ocr_provenance_must_equal_frozen_manifest(tmp_path: Path) -> Non
     assert result["error_counts"] == {"runtime_error": 1}
 
 
-def test_unique_missing_ocr_id_uses_one_blind_visual_check_after_primary_freeze(
+def test_source_check_runs_only_after_primary_is_validated_and_frozen(
     tmp_path: Path,
 ) -> None:
     tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
@@ -918,51 +966,122 @@ def test_unique_missing_ocr_id_uses_one_blind_visual_check_after_primary_freeze(
     calls: list[dict[str, object]] = []
     output = tmp_path / "private"
 
+    source_calls: list[dict[str, object]] = []
+
+    def checking_source(**kwargs):
+        primary = kwargs["frozen_record"]
+        attempt_dir = Path(kwargs["output_dir"]).parent
+        source_calls.append(primary)
+        assert (attempt_dir / "primary-response.json").is_file()
+        assert (attempt_dir / "primary-record.json").is_file()
+        assert "evidence" not in primary
+        assert "evidence_details" not in primary
+        return _successful_source_checker(**kwargs)
+
     result = run_pipeline(
         split="heldout",
         tasks_path=tasks,
         pdf_root=pdf_root,
         output_root=output,
-        page_loader=_visual_pages,
-        command_runner=_visual_candidate_codex(calls, "E-7!"),
+        page_loader=_pages,
+        command_runner=_successful_codex(calls),
+        source_checker=checking_source,
     )
 
     assert result["succeeded"] == 1
-    assert len(calls) == 2
-    checker = next(call for call in calls if call["checker"])
-    assert checker["primary_frozen"] is True
-    assert "What is the total?" not in str(checker["prompt"])
-    assert "E-7" not in str(checker["prompt"])
-    assert "3 plus 4" not in str(checker["prompt"])
+    assert len(calls) == 1
+    assert len(source_calls) == 1
     record = json.loads(
         (output / "heldout" / "jobs" / "h1" / "record.json").read_text(encoding="utf-8")
     )
-    proof = record["provenance"]["visual_id_checks"][0]
-    assert proof["visible_id"] == "E-7!"
-    assert proof["ocr_id"] == "E-7"
+    assert record["source_status"] == "fully_grounded"
+    assert record["evidence"] == ["E-7"]
+    assert record["evidence_details"][0]["quote"] == "The document states 3 plus 4."
 
 
-def test_visual_id_failure_is_preserved_without_solver_or_checker_retry(tmp_path: Path) -> None:
+def test_unit_bearing_direct_answer_is_retried_before_source_check(tmp_path: Path) -> None:
+    tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
+    _pin("heldout", tasks, 1)
+    primary_calls = 0
+    source_calls = 0
+
+    def answer_runner(argv, **_kwargs):
+        nonlocal primary_calls
+        primary_calls += 1
+        response_path = Path(argv[argv.index("--output-last-message") + 1])
+        response_path.write_text(
+            json.dumps(
+                {
+                    "answer": "12.5 million" if primary_calls == 1 else "12.5",
+                    "solution": {
+                        "summary": "The source reports 12.5 million units.",
+                        "calculations": [],
+                    },
+                    "evidence_regions": [
+                        {"page": 1, "ocr_anchor": "The document states 3 plus 4."}
+                    ],
+                    "uncertainties": ["The unit is retained in the summary."],
+                }
+            ),
+            encoding="utf-8",
+        )
+        return subprocess.CompletedProcess(
+            argv, 0, stdout='{"type":"turn.completed","usage":{}}\n', stderr=""
+        )
+
+    def counting_source(**kwargs):
+        nonlocal source_calls
+        source_calls += 1
+        return _successful_source_checker(**kwargs)
+
+    result = run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=tmp_path / "private",
+        page_loader=_pages,
+        command_runner=answer_runner,
+        source_checker=counting_source,
+    )
+
+    assert result["succeeded"] == 1
+    assert primary_calls == 2
+    assert source_calls == 1
+
+
+def test_source_checker_runtime_failure_resumes_from_frozen_primary_without_primary_retry(
+    tmp_path: Path,
+) -> None:
     tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
     _pin("heldout", tasks, 1)
     calls: list[dict[str, object]] = []
     output = tmp_path / "private"
 
+    source_calls = 0
+
+    def transient_source(**kwargs):
+        nonlocal source_calls
+        source_calls += 1
+        if source_calls == 1:
+            raise _MODULE.SourceRegionCheckError("checker unavailable")
+        return _successful_source_checker(**kwargs)
+
     result = run_pipeline(
         split="heldout",
         tasks_path=tasks,
         pdf_root=pdf_root,
         output_root=output,
-        page_loader=_visual_pages,
-        command_runner=_visual_candidate_codex(calls, "DIFFERENT"),
+        page_loader=_pages,
+        command_runner=_successful_codex(calls),
+        source_checker=transient_source,
     )
 
     assert result["succeeded"] == 0
-    assert result["error_counts"] == {"needs_visual_review": 1}
-    assert len(calls) == 2
+    assert result["error_counts"] == {"source_check_runtime_failed": 1}
+    assert len(calls) == 1
+    assert source_calls == 1
     job = output / "heldout" / "jobs" / "h1"
     assert (job / "attempts" / "1" / "primary-response.json").is_file()
-    assert list((job / "attempts" / "1" / "visual-id-checks").rglob("response.json"))
     assert not (job / "attempts" / "2").exists()
     resumed = run_pipeline(
         split="heldout",
@@ -970,14 +1089,105 @@ def test_visual_id_failure_is_preserved_without_solver_or_checker_retry(tmp_path
         pdf_root=pdf_root,
         output_root=output,
         resume=True,
-        page_loader=_visual_pages,
-        command_runner=_visual_candidate_codex(calls, "E-7!"),
+        page_loader=_pages,
+        command_runner=_successful_codex(calls),
+        source_checker=transient_source,
     )
-    assert resumed["succeeded"] == 0
-    assert len(calls) == 2
+    assert resumed["succeeded"] == 1
+    assert len(calls) == 1
+    assert source_calls == 2
+    assert (job / "record.json").is_file()
+    assert not (job / "error.json").exists()
 
 
-def test_resume_rejects_tampered_visual_proof_artifact(tmp_path: Path) -> None:
+def test_source_runtime_resume_rejects_tampered_frozen_primary(tmp_path: Path) -> None:
+    tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
+    _pin("heldout", tasks, 1)
+    calls: list[dict[str, object]] = []
+    output = tmp_path / "private"
+
+    def failing_source(**_kwargs):
+        raise _MODULE.SourceRegionCheckError("checker unavailable")
+
+    run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=output,
+        page_loader=_pages,
+        command_runner=_successful_codex(calls),
+        source_checker=failing_source,
+    )
+    primary_path = output / "heldout" / "jobs" / "h1" / "attempts" / "1" / "primary-record.json"
+    primary = json.loads(primary_path.read_text(encoding="utf-8"))
+    primary["answer"] = "8"
+    primary_path.write_text(json.dumps(primary), encoding="utf-8")
+
+    with pytest.raises(RunnerError, match="invalid or interrupted job artifacts"):
+        run_pipeline(
+            split="heldout",
+            tasks_path=tasks,
+            pdf_root=pdf_root,
+            output_root=output,
+            resume=True,
+            page_loader=_pages,
+            command_runner=_successful_codex(calls),
+            source_checker=_successful_source_checker,
+        )
+    assert len(calls) == 1
+
+
+def test_unresolved_source_check_preserves_answer_and_completes_private_coverage(
+    tmp_path: Path,
+) -> None:
+    tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
+    _pin("heldout", tasks, 1)
+    output = tmp_path / "private"
+
+    def unresolved_source(**kwargs):
+        checks = _successful_source_checker(**kwargs)
+        check = checks[0]
+        check["status"] = "evidence_unresolved"
+        check["evidence"] = {
+            "id": None,
+            "page": 1,
+            "quote": "The document states 3 plus 4.",
+        }
+        observations = check["observed_candidates"]
+        assert isinstance(observations, list) and isinstance(observations[0], dict)
+        observations[0]["heading_legibility"] = "ambiguous"
+        check["source_uncertainties"] = ["The source heading is ambiguous."]
+        return checks
+
+    result = run_pipeline(
+        split="heldout",
+        tasks_path=tasks,
+        pdf_root=pdf_root,
+        output_root=output,
+        page_loader=_pages,
+        command_runner=_successful_codex([]),
+        source_checker=unresolved_source,
+    )
+
+    record = json.loads(
+        (output / "heldout" / "jobs" / "h1" / "record.json").read_text(encoding="utf-8")
+    )
+    manifest = json.loads((output / "heldout" / "manifest.json").read_text(encoding="utf-8"))
+    complete = json.loads((output / "heldout" / "complete.json").read_text(encoding="utf-8"))
+    assert result["succeeded"] == 1
+    assert record["answer"] == "7"
+    assert record["source_status"] == "evidence_unresolved"
+    assert record["evidence"] == []
+    assert record["evidence_details"][0]["id"] is None
+    assert manifest["coverage_complete"] is True
+    assert manifest["submission_ready"] is False
+    assert manifest["submission_mode"] == "blocked_unresolved"
+    assert not (output / "heldout" / "submission.jsonl").exists()
+    assert complete["coverage_complete"] is True
+    assert complete["evidence_unresolved_count"] == 1
+
+
+def test_resume_rejects_tampered_source_check_artifact(tmp_path: Path) -> None:
     tasks, pdf_root = _public_inputs(tmp_path, [_task("h1")])
     _pin("heldout", tasks, 1)
     calls: list[dict[str, object]] = []
@@ -987,13 +1197,11 @@ def test_resume_rejects_tampered_visual_proof_artifact(tmp_path: Path) -> None:
         tasks_path=tasks,
         pdf_root=pdf_root,
         output_root=output,
-        page_loader=_visual_pages,
-        command_runner=_visual_candidate_codex(calls, "E-7!"),
+        page_loader=_pages,
+        command_runner=_successful_codex(calls),
     )
     crop = next(
-        (output / "heldout" / "jobs" / "h1" / "attempts" / "1").rglob(
-            "heading-crop.png"
-        )
+        (output / "heldout" / "jobs" / "h1" / "attempts" / "1").rglob("context.png")
     )
     crop.write_bytes(b"tampered")
 
@@ -1004,10 +1212,10 @@ def test_resume_rejects_tampered_visual_proof_artifact(tmp_path: Path) -> None:
             pdf_root=pdf_root,
             output_root=output,
             resume=True,
-            page_loader=_visual_pages,
-            command_runner=_visual_candidate_codex(calls, "E-7!"),
+            page_loader=_pages,
+            command_runner=_successful_codex(calls),
         )
-    assert len(calls) == 2
+    assert len(calls) == 1
 
 
 @pytest.mark.parametrize("consumer", ["resume", "prior_split"])
