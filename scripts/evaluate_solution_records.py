@@ -16,7 +16,11 @@ from docinsights_analysis.solution_records import (
     write_private_atomic,
 )
 
-_GENERATION_FILES = ("solutions.jsonl", "solutions.md", "submission.jsonl")
+_BASE_GENERATION_FILES = (
+    "solutions.jsonl",
+    "solutions.md",
+    "grounded-submission.jsonl",
+)
 _REFERENCE_KIND = {
     "train": "train-public-labels",
     "validation": "validation-v24-reference",
@@ -138,6 +142,54 @@ def _write_evaluation_once(path: Path, evaluation: dict[str, Any]) -> None:
         raise EvaluationError(str(error)) from error
 
 
+def _verify_source_artifacts(split_dir: Path, records: list[dict[str, Any]]) -> None:
+    for record in records:
+        instance_id = record.get("instance_id")
+        provenance = record.get("provenance")
+        checks = provenance.get("source_checks") if isinstance(provenance, dict) else None
+        if not isinstance(checks, list) or not checks:
+            raise EvaluationError(f"record {instance_id} lacks frozen source checks")
+        for check_index, check in enumerate(checks):
+            artifacts = check.get("artifacts") if isinstance(check, dict) else None
+            if not isinstance(artifacts, list) or not artifacts:
+                raise EvaluationError(
+                    f"record {instance_id} source check {check_index} lacks artifacts"
+                )
+            for artifact_index, artifact in enumerate(artifacts):
+                raw_path = artifact.get("path") if isinstance(artifact, dict) else None
+                expected_hash = artifact.get("sha256") if isinstance(artifact, dict) else None
+                kind = artifact.get("kind") if isinstance(artifact, dict) else None
+                if (
+                    not isinstance(kind, str)
+                    or not kind
+                    or not isinstance(raw_path, str)
+                    or not raw_path
+                    or not isinstance(expected_hash, str)
+                    or len(expected_hash) != _SHA256_HEX_LENGTH
+                ):
+                    raise EvaluationError("frozen source artifact metadata is invalid")
+                path = Path(raw_path)
+                if path.is_symlink():
+                    raise EvaluationError("frozen source artifact is a symbolic link")
+                try:
+                    resolved = path.resolve(strict=True)
+                except OSError as error:
+                    raise EvaluationError(
+                        f"cannot resolve frozen source artifact: {error}"
+                    ) from error
+                external_kinds = {"source_pdf", "renderer_executable", "checker_executable"}
+                if (
+                    not resolved.is_file()
+                    or (kind not in external_kinds and not resolved.is_relative_to(split_dir))
+                ):
+                    raise EvaluationError("frozen source artifact is outside its split directory")
+                if _sha256_file(resolved) != expected_hash:
+                    raise EvaluationError(
+                        "frozen source artifact hash mismatch: "
+                        f"record {instance_id}, check {check_index}, artifact {artifact_index}"
+                    )
+
+
 def _verify_frozen_export(
     split_dir: Path, expected_split: str | None = None
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
@@ -154,7 +206,7 @@ def _verify_frozen_export(
     declared_ids = manifest.get("instance_ids")
     total = manifest.get("total")
     if (
-        manifest.get("schema_version") != 1
+        manifest.get("schema_version") != 2
         or manifest.get("private") is not True
         or not isinstance(total, int)
         or total < 1
@@ -165,11 +217,21 @@ def _verify_frozen_export(
     ):
         raise EvaluationError("frozen export manifest does not prove unique full coverage")
 
+    submission_ready = manifest.get("submission_ready")
+    if not isinstance(submission_ready, bool):
+        raise EvaluationError("frozen export manifest has invalid submission readiness")
+    generation_files = (
+        *_BASE_GENERATION_FILES,
+        *(("submission.jsonl",) if submission_ready else ()),
+    )
+    submission_path = split_dir / "submission.jsonl"
+    if not submission_ready and (submission_path.exists() or submission_path.is_symlink()):
+        raise EvaluationError("non-ready export contains an unbound submission.jsonl")
     file_manifest = manifest.get("files")
-    if not isinstance(file_manifest, dict) or set(file_manifest) != set(_GENERATION_FILES):
+    if not isinstance(file_manifest, dict) or set(file_manifest) != set(generation_files):
         raise EvaluationError("frozen export manifest has incomplete file hashes")
     generation_file_hashes: dict[str, str] = {}
-    for name in _GENERATION_FILES:
+    for name in generation_files:
         declaration = file_manifest[name]
         expected_hash = declaration.get("sha256") if isinstance(declaration, dict) else None
         actual_hash = _sha256_file(split_dir / name)
@@ -179,24 +241,103 @@ def _verify_frozen_export(
 
     try:
         solution_bytes = (split_dir / "solutions.jsonl").read_bytes()
-        submission_bytes = (split_dir / "submission.jsonl").read_bytes()
+        grounded_submission_bytes = (split_dir / "grounded-submission.jsonl").read_bytes()
+        submission_bytes = (
+            (split_dir / "submission.jsonl").read_bytes() if submission_ready else None
+        )
     except OSError as error:
         raise EvaluationError(f"cannot read frozen generation records: {error}") from error
     records = _parse_jsonl(solution_bytes, "solutions.jsonl")
-    submissions = _parse_jsonl(submission_bytes, "submission.jsonl")
+    _verify_source_artifacts(split_dir, records)
+    grounded_submissions = _parse_jsonl(
+        grounded_submission_bytes, "grounded-submission.jsonl"
+    )
+    submissions = (
+        _parse_jsonl(submission_bytes, "submission.jsonl")
+        if submission_bytes is not None
+        else []
+    )
     record_ids = _unique_ids(records, "solutions.jsonl")
+    grounded_submission_ids = _unique_ids(
+        grounded_submissions, "grounded-submission.jsonl"
+    )
     submission_ids = _unique_ids(submissions, "submission.jsonl")
-    if record_ids != declared_ids or submission_ids != declared_ids:
+    grounded_ids = [
+        record["instance_id"]
+        for record in records
+        if record.get("source_status") == "fully_grounded"
+    ]
+    unresolved_ids = [
+        record["instance_id"]
+        for record in records
+        if record.get("source_status") == "evidence_unresolved"
+    ]
+    submission_mode = manifest.get("submission_mode")
+    if submission_mode == "fully_grounded":
+        if unresolved_ids or not submission_ready:
+            raise EvaluationError("fully grounded submission mode has unresolved records")
+        expected_submission_ids = declared_ids
+    elif submission_mode == "heldout_abstentions" and split == "heldout":
+        if not unresolved_ids or not submission_ready:
+            raise EvaluationError("heldout abstention mode has no bound abstentions")
+        expected_submission_ids = declared_ids
+    elif submission_mode == "blocked_unresolved":
+        if not unresolved_ids or submission_ready:
+            raise EvaluationError("blocked submission mode has invalid readiness")
+        expected_submission_ids = []
+    else:
+        raise EvaluationError("frozen export manifest has invalid submission mode")
+    expected_exclusions = [
+        {"instance_id": instance_id, "reason": "evidence_unresolved"}
+        for instance_id in unresolved_ids
+        if submission_mode == "blocked_unresolved"
+    ]
+    if (
+        record_ids != declared_ids
+        or grounded_submission_ids != grounded_ids
+        or submission_ids != expected_submission_ids
+        or len(grounded_ids) + len(unresolved_ids) != total
+        or manifest.get("answer_coverage") != total
+        or manifest.get("coverage_complete") is not True
+        or manifest.get("fully_grounded_count") != len(grounded_ids)
+        or manifest.get("evidence_unresolved_count") != len(unresolved_ids)
+        or manifest.get("runtime_failed_count") != 0
+        or manifest.get("submission_count") != len(submissions)
+        or manifest.get("grounded_submission_count") != len(grounded_submissions)
+        or manifest.get("submission_abstention_count")
+        != (len(unresolved_ids) if submission_mode == "heldout_abstentions" else 0)
+        or manifest.get("submission_exclusions") != expected_exclusions
+    ):
         raise EvaluationError("frozen generation does not have unique full coverage")
-    for record, submission in zip(records, submissions, strict=True):
+    grounded_submission_by_id = {
+        row["instance_id"]: row for row in grounded_submissions
+    }
+    submission_by_id = {row["instance_id"]: row for row in submissions}
+    for record in records:
         if record.get("split") != split:
             raise EvaluationError("frozen generation contains a mismatched split")
+        if record.get("source_status") != "fully_grounded":
+            if submission_mode == "heldout_abstentions" and submission_by_id.get(
+                record["instance_id"]
+            ) != {
+                "instance_id": record["instance_id"],
+                "answer": None,
+                "evidence": [],
+            }:
+                raise EvaluationError(
+                    "heldout unresolved submission is not an explicit abstention"
+                )
+            continue
         projection = {
             "instance_id": record.get("instance_id"),
             "answer": record.get("answer"),
             "evidence": record.get("evidence"),
         }
-        if submission != projection:
+        if grounded_submission_by_id.get(record["instance_id"]) != projection:
+            raise EvaluationError(
+                "grounded-submission.jsonl does not match the frozen solution projection"
+            )
+        if submission_ready and submission_by_id.get(record["instance_id"]) != projection:
             raise EvaluationError("submission.jsonl does not match the frozen solution projection")
 
     run_manifest = _load_json(run_manifest_path, "run manifest")
@@ -226,6 +367,8 @@ def _verify_frozen_export(
     completion = _load_json(completion_path, "completion marker")
     if (
         completion.get("status") != "generation_complete"
+        or completion.get("coverage_complete") is not True
+        or completion.get("answer_coverage") != total
         or completion.get("split") != split
         or completion.get("total") != total
         or completion.get("input_manifest_sha256")
@@ -234,6 +377,15 @@ def _verify_frozen_export(
         != run_manifest["command_config_sha256"]
         or completion.get("record_ids_sha256") != _sha256_bytes(_canonical(task_ids))
         or completion.get("export_manifest_sha256") != _sha256_file(manifest_path)
+        or completion.get("fully_grounded_count") != len(grounded_ids)
+        or completion.get("evidence_unresolved_count") != len(unresolved_ids)
+        or completion.get("runtime_failed_count") != 0
+        or completion.get("submission_count") != len(submissions)
+        or completion.get("grounded_submission_count") != len(grounded_submissions)
+        or completion.get("submission_ready") is not submission_ready
+        or completion.get("submission_mode") != submission_mode
+        or completion.get("submission_abstention_count")
+        != (len(unresolved_ids) if submission_mode == "heldout_abstentions" else 0)
     ):
         raise EvaluationError("completion marker does not bind full frozen coverage")
 
@@ -243,6 +395,14 @@ def _verify_frozen_export(
         "run_manifest_sha256": _sha256_file(run_manifest_path),
         "files": generation_file_hashes,
         "instance_ids_sha256": _sha256_bytes(_canonical(declared_ids)),
+        "fully_grounded_count": len(grounded_ids),
+        "evidence_unresolved_count": len(unresolved_ids),
+        "answer_coverage": total,
+        "submission_abstention_count": (
+            len(unresolved_ids) if submission_mode == "heldout_abstentions" else 0
+        ),
+        "submission_ready": submission_ready,
+        "submission_mode": submission_mode,
     }
     return generation, records, declared_ids
 
@@ -284,7 +444,7 @@ def evaluate_split(
     if generation_after != generation or ids_after != instance_ids:
         raise EvaluationError("frozen generation changed while the reference was being evaluated")
     evaluation = {
-        "schema_version": 1,
+        "schema_version": 2,
         "private": True,
         "status": "evaluated",
         "split": split,
@@ -319,7 +479,7 @@ def record_unavailable_evaluation(split_dir: Path) -> dict[str, Any]:
         raise EvaluationError("frozen generation changed while recording coverage")
     reference_kind = "heldout-labels-unavailable"
     evaluation = {
-        "schema_version": 1,
+        "schema_version": 2,
         "private": True,
         "status": "reference_unavailable",
         "split": "heldout",
@@ -339,6 +499,8 @@ def record_unavailable_evaluation(split_dir: Path) -> dict[str, Any]:
             "reference_coverage": 0,
             "answer_matches": None,
             "evidence_matches": None,
+            "fully_grounded_count": generation["fully_grounded_count"],
+            "evidence_unresolved_count": generation["evidence_unresolved_count"],
         },
     }
     _write_evaluation_once(evaluation_path, evaluation)
@@ -356,7 +518,7 @@ def verify_evaluation_binding(split_dir: Path, expected_split: str) -> dict[str,
     if evaluation_path.stat().st_mode & 0o077:
         raise EvaluationError("evaluation.json is not private")
     if (
-        evaluation.get("schema_version") != 1
+        evaluation.get("schema_version") != 2
         or evaluation.get("private") is not True
         or evaluation.get("split") != expected_split
         or evaluation.get("total") != len(instance_ids)
@@ -379,6 +541,8 @@ def verify_evaluation_binding(split_dir: Path, expected_split: str) -> dict[str,
             "reference_coverage": 0,
             "answer_matches": None,
             "evidence_matches": None,
+            "fully_grounded_count": generation["fully_grounded_count"],
+            "evidence_unresolved_count": generation["evidence_unresolved_count"],
         }
         if (
             evaluation.get("status") != "reference_unavailable"
@@ -423,9 +587,14 @@ def verify_evaluation_binding(split_dir: Path, expected_split: str) -> dict[str,
     ):
         raise EvaluationError("evaluation comparisons do not have unique full coverage")
     if any(
-        set(row) != {"instance_id", "answer_match", "evidence_match"}
+        set(row)
+        != {"instance_id", "answer_match", "evidence_assessable", "evidence_match"}
         or not isinstance(row["answer_match"], bool)
-        or not isinstance(row["evidence_match"], bool)
+        or not isinstance(row["evidence_assessable"], bool)
+        or (
+            row["evidence_match"] is not None
+            and not isinstance(row["evidence_match"], bool)
+        )
         for row in comparisons
     ):
         raise EvaluationError("evaluation comparisons contain invalid match values")

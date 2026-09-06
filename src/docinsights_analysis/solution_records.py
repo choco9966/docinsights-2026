@@ -14,39 +14,93 @@ from collections.abc import Mapping
 from contextlib import suppress
 from copy import deepcopy
 from decimal import Decimal, Inexact, InvalidOperation, localcontext
+from fractions import Fraction
 from pathlib import Path
 from typing import Any
 
 from .blind_review import _normalized_answer
 
-_RECORD_FIELDS = frozenset(
+_PRIMARY_FIELDS = frozenset(
     {
         "instance_id",
         "split",
         "question",
         "solution",
         "answer",
-        "evidence",
-        "evidence_details",
+        "evidence_regions",
         "source_pages",
         "provenance",
         "uncertainties",
     }
 )
+_RECORD_FIELDS = _PRIMARY_FIELDS | frozenset(
+    {"source_status", "evidence", "evidence_details", "source_uncertainties"}
+)
 _TASK_FIELDS = frozenset({"instance_id", "user_query", "document_pdf"})
 _PAGE_FIELDS = frozenset({"page_number", "text"})
 _DETAIL_FIELDS = frozenset({"id", "page", "quote"})
+_REGION_FIELDS = frozenset({"page", "ocr_anchor"})
 _CALCULATION_FIELDS = frozenset({"expression", "result"})
 _SOLUTION_FIELDS = frozenset({"summary", "calculations"})
-_BLOCK_HEADING = re.compile(r"(?m)^[ \t]*(\S+)[ \t]*:")
 _DECIMAL_TEXT = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$")
-_ARITHMETIC_TEXT = re.compile(r"^[0-9eE.+\-*/%() \t]+$")
+_ARITHMETIC_TEXT = re.compile(r"^[0-9eE.+\-*/%(), \tround]+$")
 _SHA256_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
+_SOURCE_CHECK_FIELDS = frozenset(
+    {
+        "region_index",
+        "page",
+        "ocr_anchor",
+        "ocr_anchor_sha256",
+        "primary_record_sha256",
+        "primary_response_sha256",
+        "status",
+        "evidence",
+        "observed_candidates",
+        "source_uncertainties",
+        "pdf_sha256",
+        "renderer_sha256",
+        "checker_executable_sha256",
+        "selector_sha256",
+        "prompt_sha256",
+        "output_schema_sha256",
+        "checker_config_sha256",
+        "page_image_sha256",
+        "ocr_image_sha256",
+        "context_crop_sha256",
+        "anchor_crop_sha256",
+        "raw_response_sha256",
+        "model",
+        "method",
+        "anchor_bbox",
+        "context_bbox",
+        "anchor_crop_bbox",
+        "pdf_artifact",
+        "renderer_artifact",
+        "page_image_artifact",
+        "context_crop_artifact",
+        "anchor_crop_artifact",
+        "checker_executable_artifact",
+        "raw_response_artifact",
+        "artifacts",
+    }
+)
+_OBSERVED_FIELDS = frozenset(
+    {
+        "heading_line",
+        "body_text",
+        "heading_legibility",
+        "body_legibility",
+        "contains_anchor_region",
+    }
+)
+_ARTIFACT_FIELDS = frozenset({"kind", "path", "sha256"})
 _MAX_EXPRESSION_LENGTH = 200
 _MAX_AST_NODES = 64
 _MAX_ABS_VALUE = Decimal("1e100")
 _MAX_SIGNIFICANT_DIGITS = 50
 _MAX_DECIMAL_EXPONENT = 100
+_MAX_RATIONAL_DIGITS = 256
+_MAX_ROUND_PLACES = 12
 
 
 class SolutionRecordError(ValueError):
@@ -271,18 +325,21 @@ def _evaluate_arithmetic(expression: Any) -> Decimal:
         _validate_decimal_bound(value, "arithmetic expression")
         return value
 
+    def decimal_literal(node: ast.Constant) -> Decimal:
+        if isinstance(node.value, bool) or not isinstance(node.value, (int, float)):
+            raise SolutionRecordError("invalid arithmetic expression")
+        if isinstance(node.value, float) and not math.isfinite(node.value):
+            raise SolutionRecordError("invalid arithmetic expression")
+        literal = ast.get_source_segment(expression, node)
+        if literal is None or _DECIMAL_TEXT.fullmatch(literal) is None:
+            raise SolutionRecordError("invalid arithmetic expression")
+        return _decimal_text(literal, "numeric literal")
+
     def evaluate(node: ast.AST) -> Decimal:
         if isinstance(node, ast.Expression):
             return evaluate(node.body)
         if isinstance(node, ast.Constant):
-            if isinstance(node.value, bool) or not isinstance(node.value, (int, float)):
-                raise SolutionRecordError("invalid arithmetic expression")
-            if isinstance(node.value, float) and not math.isfinite(node.value):
-                raise SolutionRecordError("invalid arithmetic expression")
-            literal = ast.get_source_segment(expression, node)
-            if literal is None or _DECIMAL_TEXT.fullmatch(literal) is None:
-                raise SolutionRecordError("invalid arithmetic expression")
-            return checked(_decimal_text(literal, "numeric literal"))
+            return checked(decimal_literal(node))
         if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
             value = evaluate(node.operand)
             return value if isinstance(node.op, ast.UAdd) else checked(value.copy_negate())
@@ -310,183 +367,94 @@ def _evaluate_arithmetic(expression: Any) -> Decimal:
             raise SolutionRecordError("arithmetic expression cannot be evaluated") from error
         raise SolutionRecordError("invalid arithmetic expression")
 
+    def checked_fraction(value: Fraction) -> Fraction:
+        if (
+            len(str(abs(value.numerator))) > _MAX_RATIONAL_DIGITS
+            or len(str(value.denominator)) > _MAX_RATIONAL_DIGITS
+            or abs(value) > Fraction(10**_MAX_DECIMAL_EXPONENT)
+        ):
+            raise SolutionRecordError("arithmetic expression is outside the supported range")
+        return value
+
+    def evaluate_fraction(node: ast.AST) -> Fraction:
+        if isinstance(node, ast.Constant):
+            return checked_fraction(Fraction(decimal_literal(node)))
+        if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+            value = evaluate_fraction(node.operand)
+            return value if isinstance(node.op, ast.UAdd) else checked_fraction(-value)
+        if not isinstance(node, ast.BinOp):
+            raise SolutionRecordError("invalid arithmetic expression")
+        left = evaluate_fraction(node.left)
+        right = evaluate_fraction(node.right)
+        try:
+            if isinstance(node.op, ast.Add):
+                return checked_fraction(left + right)
+            if isinstance(node.op, ast.Sub):
+                return checked_fraction(left - right)
+            if isinstance(node.op, ast.Mult):
+                return checked_fraction(left * right)
+            if isinstance(node.op, ast.Div):
+                return checked_fraction(left / right)
+        except (ArithmeticError, OverflowError) as error:
+            raise SolutionRecordError("arithmetic expression cannot be evaluated") from error
+        raise SolutionRecordError("invalid arithmetic expression")
+
+    def evaluate_round(node: ast.Call) -> Decimal:
+        if (
+            not isinstance(node.func, ast.Name)
+            or node.func.id != "round"
+            or node.keywords
+            or len(node.args) != 2
+        ):
+            raise SolutionRecordError("invalid arithmetic expression")
+        places_node = node.args[1]
+        if (
+            not isinstance(places_node, ast.Constant)
+            or isinstance(places_node.value, bool)
+            or not isinstance(places_node.value, int)
+            or not 0 <= places_node.value <= _MAX_ROUND_PLACES
+        ):
+            raise SolutionRecordError("arithmetic expression has invalid rounding precision")
+        value = evaluate_fraction(node.args[0])
+        scale = 10**places_node.value
+        quotient, remainder = divmod(abs(value.numerator) * scale, value.denominator)
+        if remainder * 2 >= value.denominator:
+            quotient += 1
+        digits = tuple(int(character) for character in str(quotient))
+        rounded = Decimal((int(value < 0), digits, -places_node.value))
+        return checked(rounded)
+
+    if isinstance(tree.body, ast.Call):
+        return evaluate_round(tree.body)
     return evaluate(tree)
 
 
-def _ocr_blocks(page_text: str) -> list[dict[str, Any]]:
-    # A standalone non-whitespace token followed by a colon is a visible block marker.
-    # Body lines with the same shape are conservatively treated as boundaries, which can
-    # produce a false negative but prevents a quote from leaking in from an uncited block.
-    matches = list(_BLOCK_HEADING.finditer(page_text))
-    blocks: list[dict[str, Any]] = []
-    for index, match in enumerate(matches):
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(page_text)
-        blocks.append(
-            {
-                "id": match.group(1),
-                "body": page_text[match.end() : end],
-                "heading_line_index": page_text.count("\n", 0, match.start()),
-            }
+def primary_record_digest(primary: Mapping[str, Any]) -> str:
+    """Hash an already normalized primary record without reference data."""
+    if not isinstance(primary, Mapping) or set(primary) != set(_PRIMARY_FIELDS):
+        raise SolutionRecordError("primary record has invalid fields")
+    try:
+        payload = json.dumps(
+            primary,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+            allow_nan=False,
         )
-    return blocks
+    except (TypeError, ValueError) as error:
+        raise SolutionRecordError("primary record must contain JSON-safe values") from error
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _block_quotes(page_text: str, evidence_id: str) -> list[str]:
-    return [block["body"] for block in _ocr_blocks(page_text) if block["id"] == evidence_id]
-
-
-def visual_evidence_candidates(
-    record: dict[str, Any], pages: list[dict[str, Any]]
-) -> list[dict[str, Any]]:
-    """Find exact quote-bound candidates whose solver ID is absent from OCR headings."""
-    if not isinstance(record, dict):
-        raise SolutionRecordError("record must be an object")
-    normalized_pages = _normalize_pages(pages)
-    evidence = record.get("evidence")
-    details = record.get("evidence_details")
-    if not isinstance(evidence, list) or any(
-        not isinstance(value, str) or not value for value in evidence
-    ):
-        raise SolutionRecordError("evidence IDs must be non-empty strings")
-    if not isinstance(details, list):
-        raise SolutionRecordError("evidence_details must be a list")
-
-    blocks_by_page = {
-        page["page_number"]: _ocr_blocks(page["text"]) for page in normalized_pages
-    }
-    all_ocr_ids = {
-        block["id"] for blocks in blocks_by_page.values() for block in blocks
-    }
-    candidates: list[dict[str, Any]] = []
-    for index, detail in enumerate(details):
-        if not isinstance(detail, dict):
-            raise SolutionRecordError(f"evidence_details[{index}] must be an object")
-        _require_fields(detail, _DETAIL_FIELDS, f"evidence_details[{index}]")
-        evidence_id = _nonempty_string(detail["id"], f"evidence_details[{index}].id")
-        quote = _nonempty_string(detail["quote"], f"evidence_details[{index}].quote")
-        page_number = detail["page"]
-        if not isinstance(page_number, int) or isinstance(page_number, bool):
-            raise SolutionRecordError(f"evidence_details[{index}].page must be an integer")
-        if evidence_id in all_ocr_ids or page_number not in blocks_by_page:
-            continue
-        matching_blocks = [
-            block for block in blocks_by_page[page_number] if quote in block["body"]
-        ]
-        if len(matching_blocks) != 1:
-            continue
-        block = matching_blocks[0]
-        candidates.append(
-            {
-                "id": evidence_id,
-                "ocr_id": block["id"],
-                "page": page_number,
-                "quote": quote,
-                "heading_line_index": block["heading_line_index"],
-            }
-        )
-    return candidates
-
-
-def _validated_visual_checks(
-    record: dict[str, Any],
-    pages: list[dict[str, Any]],
-    provenance: dict[str, Any],
-    supplied: list[dict[str, Any]] | None,
-) -> dict[str, dict[str, Any]]:
-    recorded = provenance.get("visual_id_checks")
-    if recorded is not None and supplied is None:
-        raise SolutionRecordError("visual ID checks must be independently supplied")
-    if supplied is None:
-        return {}
-    if not isinstance(supplied, list) or recorded != supplied:
-        raise SolutionRecordError(
-            "independently supplied visual ID checks must exactly match provenance"
-        )
-
-    candidates_by_id = {
-        candidate["id"]: candidate for candidate in visual_evidence_candidates(record, pages)
-    }
-    by_id: dict[str, dict[str, Any]] = {}
-    required = {
-        "id",
-        "visible_id",
-        "ocr_id",
-        "page",
-        "heading_line_index",
-        "quote_sha256",
-        "page_image_sha256",
-        "crop_sha256",
-        "clear",
-    }
-
-    def validate_hashes(value: Any, field: str) -> None:
-        if isinstance(value, Mapping):
-            for key, item in value.items():
-                child = f"{field}.{key}"
-                if (
-                    isinstance(key, str)
-                    and (key == "sha256" or key.endswith("_sha256"))
-                    and (not isinstance(item, str) or _SHA256_HEX.fullmatch(item) is None)
-                ):
-                    raise SolutionRecordError(
-                        f"{child} must be a 64-character SHA-256"
-                    )
-                validate_hashes(item, child)
-        elif isinstance(value, list):
-            for item_index, item in enumerate(value):
-                validate_hashes(item, f"{field}[{item_index}]")
-
-    for index, proof in enumerate(supplied):
-        if not isinstance(proof, dict) or not required.issubset(proof):
-            raise SolutionRecordError(f"visual ID check {index} is incomplete")
-        try:
-            json.dumps(proof, ensure_ascii=False, allow_nan=False)
-        except (TypeError, ValueError) as error:
-            raise SolutionRecordError(f"visual ID check {index} must be JSON-safe") from error
-        proof_id = proof.get("id")
-        if not isinstance(proof_id, str):
-            raise SolutionRecordError(f"visual ID check {index}.id must be a string")
-        candidate = candidates_by_id.get(proof_id)
-        if candidate is None or proof_id in by_id:
-            raise SolutionRecordError(
-                f"visual ID check {index} has no unique evidence block candidate"
-            )
-        if proof.get("clear") is not True or proof.get("visible_id") != proof_id:
-            raise SolutionRecordError(f"visual ID check {index} is not clear and exact")
-        if (
-            not isinstance(proof.get("ocr_id"), str)
-            or isinstance(proof.get("page"), bool)
-            or not isinstance(proof.get("page"), int)
-            or isinstance(proof.get("heading_line_index"), bool)
-            or not isinstance(proof.get("heading_line_index"), int)
-        ):
-            raise SolutionRecordError(f"visual ID check {index} has invalid binding types")
-        if any(
-            proof.get(field) != candidate[field]
-            for field in ("ocr_id", "page", "heading_line_index")
-        ):
-            raise SolutionRecordError(f"visual ID check {index} does not bind its OCR block")
-        expected_quote_hash = hashlib.sha256(candidate["quote"].encode("utf-8")).hexdigest()
-        if proof.get("quote_sha256") != expected_quote_hash:
-            raise SolutionRecordError(f"visual ID check {index} does not bind its quote")
-        validate_hashes(proof, f"visual ID check {index}")
-        by_id[proof_id] = deepcopy(proof)
-    return by_id
-
-
-def validate_solution(
-    record: dict[str, Any],
-    task: dict[str, Any],
-    pages: list[dict[str, Any]],
-    *,
-    visual_id_checks: list[dict[str, Any]] | None = None,
+def validate_primary_solution(
+    record: dict[str, Any], task: dict[str, Any], pages: list[dict[str, Any]]
 ) -> dict[str, Any]:
-    """Validate one solution solely against its task and extracted public pages."""
+    """Validate the immutable answer/solution and exact OCR region locators."""
     if not isinstance(record, dict):
         raise SolutionRecordError("record must be an object")
     if not isinstance(task, dict):
         raise SolutionRecordError("task must be an object")
-    _require_fields(record, _RECORD_FIELDS, "record")
+    _require_fields(record, _PRIMARY_FIELDS, "primary record")
     missing_task_fields = sorted(_TASK_FIELDS - set(task))
     if missing_task_fields:
         raise SolutionRecordError(f"task missing fields: {', '.join(missing_task_fields)}")
@@ -507,13 +475,6 @@ def validate_solution(
     split = _nonempty_string(record["split"], "split")
     if split not in {"heldout", "train", "validation"}:
         raise SolutionRecordError("split must be heldout, train, or validation")
-
-    provenance = record["provenance"]
-    if not isinstance(provenance, dict):
-        raise SolutionRecordError("provenance must be an object")
-    visual_checks_by_evidence_id = _validated_visual_checks(
-        record, normalized_pages, provenance, visual_id_checks
-    )
 
     solution = record["solution"]
     if not isinstance(solution, dict):
@@ -544,62 +505,48 @@ def validate_solution(
         )
 
     answer = _nonempty_string(record["answer"], "answer")
-    numeric_answer = _DECIMAL_TEXT.fullmatch(answer) is not None
-    answer_value = _decimal_text(answer, "answer") if numeric_answer else None
+    answer_value = _decimal_text(answer, "answer")
     if normalized_calculations:
-        if answer_value is None:
-            raise SolutionRecordError(
-                "answer must be numeric when calculations are present"
-            )
         last_result = _decimal_text(
             normalized_calculations[-1]["result"], "last calculation result"
         )
         if answer_value != last_result:
             raise SolutionRecordError("final answer does not match the last calculation result")
 
-    evidence = record["evidence"]
-    if not isinstance(evidence, list) or not evidence:
-        raise SolutionRecordError("evidence must be a non-empty list")
-    if any(not isinstance(value, str) or not value for value in evidence):
-        raise SolutionRecordError("evidence IDs must be non-empty strings")
-    if len(evidence) != len(set(evidence)):
-        raise SolutionRecordError("duplicate evidence ID")
-
-    details = record["evidence_details"]
-    if not isinstance(details, list):
-        raise SolutionRecordError("evidence_details must be a list")
-    normalized_details: list[dict[str, Any]] = []
-    detail_ids: list[str] = []
+    regions = record["evidence_regions"]
+    if not isinstance(regions, list) or not regions:
+        raise SolutionRecordError("evidence_regions must be a non-empty list")
+    normalized_regions: list[dict[str, Any]] = []
+    seen_regions: set[tuple[int, str]] = set()
     page_index = {page["page_number"]: page["text"] for page in normalized_pages}
-    for index, detail in enumerate(details):
-        if not isinstance(detail, dict):
-            raise SolutionRecordError(f"evidence_details[{index}] must be an object")
-        _require_fields(detail, _DETAIL_FIELDS, f"evidence_details[{index}]")
-        evidence_id = _nonempty_string(detail["id"], f"evidence_details[{index}].id")
-        page_number = detail["page"]
-        quote = _nonempty_string(detail["quote"], f"evidence_details[{index}].quote")
+    for index, region in enumerate(regions):
+        if not isinstance(region, dict):
+            raise SolutionRecordError(f"evidence_regions[{index}] must be an object")
+        _require_fields(region, _REGION_FIELDS, f"evidence_regions[{index}]")
+        page_number = region["page"]
+        anchor = _nonempty_string(region["ocr_anchor"], f"evidence_regions[{index}].ocr_anchor")
         if not isinstance(page_number, int) or isinstance(page_number, bool):
-            raise SolutionRecordError(f"evidence_details[{index}].page must be an integer")
+            raise SolutionRecordError(f"evidence_regions[{index}].page must be an integer")
         if page_number not in page_index:
+            raise SolutionRecordError(f"evidence_regions[{index}].page is not present")
+        if page_index[page_number].count(anchor) != 1:
             raise SolutionRecordError(
-                f"evidence_details[{index}].page is not present in source_pages"
+                f"evidence_regions[{index}].ocr_anchor must occur exactly once on its page"
             )
-        blocks = _block_quotes(page_index[page_number], evidence_id)
-        if not any(quote in block for block in blocks) and (
-            evidence_id not in visual_checks_by_evidence_id
-        ):
-            raise SolutionRecordError(
-                f"quote does not belong to evidence block {evidence_id!r} on page {page_number}"
-            )
-        detail_ids.append(evidence_id)
-        normalized_details.append({"id": evidence_id, "page": page_number, "quote": quote})
-    if len(detail_ids) != len(set(detail_ids)) or detail_ids != evidence:
-        raise SolutionRecordError("evidence_details IDs must uniquely and in order match evidence")
+        region_key = (page_number, anchor)
+        if region_key in seen_regions:
+            raise SolutionRecordError("evidence_regions must not duplicate a locator")
+        seen_regions.add(region_key)
+        normalized_regions.append({"page": page_number, "ocr_anchor": anchor})
 
+    provenance = record["provenance"]
+    if not isinstance(provenance, dict):
+        raise SolutionRecordError("provenance must be an object")
     required_provenance = {
         "pdf_sha256",
         "input_sha256",
         "config_sha256",
+        "output_sha256",
         "model",
         "method",
     }
@@ -609,7 +556,7 @@ def validate_solution(
             f"provenance missing fields: {', '.join(missing_provenance)}"
         )
     normalized_provenance = deepcopy(provenance)
-    for field in ("pdf_sha256", "input_sha256", "config_sha256"):
+    for field in ("pdf_sha256", "input_sha256", "config_sha256", "output_sha256"):
         value = provenance[field]
         if not isinstance(value, str) or _SHA256_HEX.fullmatch(value) is None:
             raise SolutionRecordError(f"provenance.{field} must be a 64-character SHA-256")
@@ -632,23 +579,274 @@ def validate_solution(
     normalized_uncertainties = [value.strip() for value in uncertainties]
     if len(normalized_uncertainties) != len(set(normalized_uncertainties)):
         raise SolutionRecordError("uncertainties must not contain duplicates")
-    if answer_value is None and not normalized_uncertainties:
-        raise SolutionRecordError(
-            "a nonnumeric answer requires an explicit uncertainty"
-        )
-
     return {
         "instance_id": instance_id,
         "split": split,
         "question": question,
         "solution": {"summary": summary, "calculations": normalized_calculations},
         "answer": answer,
-        "evidence": list(evidence),
-        "evidence_details": normalized_details,
+        "evidence_regions": normalized_regions,
         "source_pages": deepcopy(normalized_pages),
         "provenance": normalized_provenance,
         "uncertainties": normalized_uncertainties,
     }
+
+
+def _heading_id(heading_line: str) -> str | None:
+    for index, character in enumerate(heading_line):
+        if character == ":" and index > 0 and (
+            index + 1 == len(heading_line) or heading_line[index + 1].isspace()
+        ):
+            candidate = heading_line[:index]
+            if candidate and not any(character.isspace() for character in candidate):
+                return candidate
+    return None
+
+
+def _validate_artifact(value: Any, field: str) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise SolutionRecordError(f"{field} must be an artifact object")
+    _require_fields(value, _ARTIFACT_FIELDS, field)
+    kind = _nonempty_string(value["kind"], f"{field}.kind")
+    path = _nonempty_string(value["path"], f"{field}.path")
+    digest = value["sha256"]
+    if not isinstance(digest, str) or _SHA256_HEX.fullmatch(digest) is None:
+        raise SolutionRecordError(f"{field}.sha256 must be a 64-character SHA-256")
+    return {"kind": kind, "path": path, "sha256": digest.casefold()}
+
+
+def _validate_bbox(value: Any, field: str) -> None:
+    expected = frozenset({"left", "top", "right", "bottom"})
+    if not isinstance(value, dict):
+        raise SolutionRecordError(f"{field} must be a bbox object")
+    _require_fields(value, expected, field)
+    left, top, right, bottom = (value[key] for key in ("left", "top", "right", "bottom"))
+    if (
+        any(isinstance(item, bool) or not isinstance(item, int) for item in value.values())
+        or left < 0
+        or top < 0
+        or right <= left
+        or bottom <= top
+    ):
+        raise SolutionRecordError(f"{field} has invalid coordinates")
+
+
+def _normalize_source_checks(
+    primary: dict[str, Any], source_checks: Any
+) -> list[dict[str, Any]]:
+    if not isinstance(source_checks, list):
+        raise SolutionRecordError("source_checks must be an independently supplied list")
+    regions = primary["evidence_regions"]
+    if len(source_checks) != len(regions):
+        raise SolutionRecordError("source_checks must cover every evidence region")
+    primary_sha = primary_record_digest(primary)
+    normalized: list[dict[str, Any]] = []
+    hash_fields = [field for field in _SOURCE_CHECK_FIELDS if field.endswith("_sha256")]
+    artifact_fields = [
+        "pdf_artifact",
+        "renderer_artifact",
+        "page_image_artifact",
+        "context_crop_artifact",
+        "anchor_crop_artifact",
+        "checker_executable_artifact",
+        "raw_response_artifact",
+    ]
+    for index, raw in enumerate(source_checks):
+        if not isinstance(raw, dict):
+            raise SolutionRecordError(f"source_checks[{index}] must be an object")
+        _require_fields(raw, _SOURCE_CHECK_FIELDS, f"source_checks[{index}]")
+        region = regions[index]
+        expected_anchor_hash = hashlib.sha256(region["ocr_anchor"].encode("utf-8")).hexdigest()
+        if (
+            raw["region_index"] != index
+            or isinstance(raw["region_index"], bool)
+            or not isinstance(raw["region_index"], int)
+            or raw["page"] != region["page"]
+            or isinstance(raw["page"], bool)
+            or not isinstance(raw["page"], int)
+            or raw["ocr_anchor"] != region["ocr_anchor"]
+            or raw["ocr_anchor_sha256"] != expected_anchor_hash
+            or raw["primary_record_sha256"] != primary_sha
+            or raw["primary_response_sha256"] != primary["provenance"]["output_sha256"]
+            or raw["pdf_sha256"] != primary["provenance"]["pdf_sha256"]
+        ):
+            raise SolutionRecordError(f"source_checks[{index}] does not bind its primary region")
+        for field in hash_fields:
+            value = raw[field]
+            if not isinstance(value, str) or _SHA256_HEX.fullmatch(value) is None:
+                raise SolutionRecordError(
+                    f"source_checks[{index}].{field} must be a 64-character SHA-256"
+                )
+        for field in ("model", "method"):
+            _nonempty_string(raw[field], f"source_checks[{index}].{field}")
+        for field in ("anchor_bbox", "context_bbox", "anchor_crop_bbox"):
+            _validate_bbox(raw[field], f"source_checks[{index}].{field}")
+        normalized_artifacts = {}
+        for field in artifact_fields:
+            normalized_artifacts[field] = _validate_artifact(
+                raw[field], f"source_checks[{index}].{field}"
+            )
+        artifact_hash_bindings = {
+            "pdf_artifact": "pdf_sha256",
+            "renderer_artifact": "renderer_sha256",
+            "page_image_artifact": "page_image_sha256",
+            "context_crop_artifact": "context_crop_sha256",
+            "anchor_crop_artifact": "anchor_crop_sha256",
+            "checker_executable_artifact": "checker_executable_sha256",
+            "raw_response_artifact": "raw_response_sha256",
+        }
+        if any(
+            normalized_artifacts[artifact]["sha256"] != raw[digest]
+            for artifact, digest in artifact_hash_bindings.items()
+        ):
+            raise SolutionRecordError(
+                f"source_checks[{index}] artifact hashes do not match bound hashes"
+            )
+        if not isinstance(raw["artifacts"], list):
+            raise SolutionRecordError(f"source_checks[{index}].artifacts must be a list")
+        for artifact_index, artifact in enumerate(raw["artifacts"]):
+            _validate_artifact(artifact, f"source_checks[{index}].artifacts[{artifact_index}]")
+
+        observations = raw["observed_candidates"]
+        if not isinstance(observations, list):
+            raise SolutionRecordError(f"source_checks[{index}].observed_candidates must be a list")
+        for observation_index, observation in enumerate(observations):
+            if not isinstance(observation, dict):
+                raise SolutionRecordError("observed candidate must be an object")
+            _require_fields(
+                observation,
+                _OBSERVED_FIELDS,
+                f"source_checks[{index}].observed_candidates[{observation_index}]",
+            )
+            for field in ("heading_line", "body_text"):
+                if observation[field] is not None and not isinstance(observation[field], str):
+                    raise SolutionRecordError(f"observed candidate {field} must be text or null")
+            for field in ("heading_legibility", "body_legibility"):
+                if observation[field] not in {"clear", "ambiguous", "unreadable"}:
+                    raise SolutionRecordError(f"observed candidate {field} is invalid")
+            if not isinstance(observation["contains_anchor_region"], bool):
+                raise SolutionRecordError("observed candidate anchor flag must be boolean")
+
+        uncertainty = raw["source_uncertainties"]
+        if not isinstance(uncertainty, list) or any(
+            not isinstance(item, str) or not item.strip() for item in uncertainty
+        ):
+            raise SolutionRecordError(f"source_checks[{index}].source_uncertainties is invalid")
+        evidence = raw["evidence"]
+        if not isinstance(evidence, dict):
+            raise SolutionRecordError(f"source_checks[{index}].evidence must be an object")
+        _require_fields(evidence, _DETAIL_FIELDS, f"source_checks[{index}].evidence")
+        if (
+            evidence["page"] != region["page"]
+            or isinstance(evidence["page"], bool)
+            or not isinstance(evidence["page"], int)
+        ):
+            raise SolutionRecordError(f"source_checks[{index}].evidence has wrong page")
+        status = raw["status"]
+        anchored = [item for item in observations if item["contains_anchor_region"]]
+        if status == "fully_grounded":
+            evidence_id = _nonempty_string(evidence["id"], "grounded evidence.id")
+            quote = _nonempty_string(evidence["quote"], "grounded evidence.quote")
+            if uncertainty or len(anchored) != 1:
+                raise SolutionRecordError("fully grounded source check is not uniquely clear")
+            observed = anchored[0]
+            if (
+                observed["heading_legibility"] != "clear"
+                or observed["body_legibility"] != "clear"
+                or _heading_id(observed["heading_line"] or "") != evidence_id
+                or observed["body_text"] != quote
+            ):
+                raise SolutionRecordError("fully grounded evidence does not match pixels")
+        elif status == "evidence_unresolved":
+            if evidence["id"] is not None or not uncertainty:
+                raise SolutionRecordError("unresolved evidence must keep a null ID and uncertainty")
+            if evidence["quote"] is not None and (
+                not isinstance(evidence["quote"], str)
+                or not evidence["quote"].strip()
+                or evidence["quote"] not in {
+                    item["body_text"] for item in observations if item["body_text"]
+                }
+            ):
+                raise SolutionRecordError("unresolved readable quote is not observed")
+        else:
+            raise SolutionRecordError("source check status must be terminal")
+        normalized.append(deepcopy(raw))
+    return normalized
+
+
+def finalize_solution(
+    primary: dict[str, Any],
+    task: dict[str, Any],
+    pages: list[dict[str, Any]],
+    *,
+    source_checks: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Fill final pixel-derived evidence without changing the primary solution."""
+    normalized_primary = validate_primary_solution(primary, task, pages)
+    checks = _normalize_source_checks(normalized_primary, source_checks)
+    evidence_details: list[dict[str, Any]] = []
+    grounded_by_id: dict[str, dict[str, Any]] = {}
+    for check in checks:
+        detail = deepcopy(check["evidence"])
+        evidence_id = detail["id"]
+        if evidence_id is None:
+            evidence_details.append(detail)
+            continue
+        prior = grounded_by_id.get(evidence_id)
+        if prior is not None:
+            if prior != detail:
+                raise SolutionRecordError(
+                    f"grounded evidence ID {evidence_id!r} has conflicting transcriptions"
+                )
+            continue
+        grounded_by_id[evidence_id] = detail
+        evidence_details.append(detail)
+    source_uncertainties = [
+        {"region_index": index, "message": message.strip()}
+        for index, check in enumerate(checks)
+        for message in check["source_uncertainties"]
+    ]
+    result = deepcopy(normalized_primary)
+    result.update(
+        {
+            "source_status": (
+                "fully_grounded"
+                if all(check["status"] == "fully_grounded" for check in checks)
+                else "evidence_unresolved"
+            ),
+            "evidence": [
+                detail["id"] for detail in evidence_details if detail["id"] is not None
+            ],
+            "evidence_details": evidence_details,
+            "source_uncertainties": source_uncertainties,
+        }
+    )
+    result["provenance"]["source_checks"] = deepcopy(checks)
+    return result
+
+
+def validate_solution(
+    record: dict[str, Any],
+    task: dict[str, Any],
+    pages: list[dict[str, Any]],
+    *,
+    source_checks: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Validate a final record against independently supplied terminal source checks."""
+    if not isinstance(record, dict):
+        raise SolutionRecordError("record must be an object")
+    _require_fields(record, _RECORD_FIELDS, "record")
+    provenance = record.get("provenance")
+    recorded_checks = provenance.get("source_checks") if isinstance(provenance, dict) else None
+    if source_checks is None or source_checks != recorded_checks:
+        raise SolutionRecordError("source_checks must be independently supplied and exact")
+    primary = {field: deepcopy(record[field]) for field in _PRIMARY_FIELDS}
+    assert isinstance(primary["provenance"], dict)
+    primary["provenance"].pop("source_checks", None)
+    expected = finalize_solution(primary, task, pages, source_checks=source_checks)
+    if record != expected:
+        raise SolutionRecordError("final record does not match immutable primary and source checks")
+    return expected
 
 
 def _unique_index(rows: list[dict[str, Any]], kind: str) -> dict[str, dict[str, Any]]:
@@ -692,14 +890,30 @@ def _markdown(records: list[dict[str, Any]]) -> str:
             + ("\n" if calculations else "None.\n")
         )
         sections.extend(
-            ["### 정답 (Answer)\n", f"{record['answer']}\n", "### Evidence\n"]
+            [
+                "### 정답 (Answer)\n",
+                f"{record['answer']}\n",
+                "### 근거 상태 (Source Status)\n",
+                f"{record['source_status']}\n",
+                "### Evidence\n",
+            ]
         )
         for detail in record["evidence_details"]:
-            sections.append(f"- `{detail['id']}` (page {detail['page']}): {detail['quote']}\n")
+            evidence_id = detail["id"] if detail["id"] is not None else "unresolved"
+            quote = detail["quote"] if detail["quote"] is not None else "unreadable"
+            sections.append(f"- `{evidence_id}` (page {detail['page']}): {quote}\n")
         sections.append("### 불확실성 (Uncertainties)\n")
         sections.append(
             "\n".join(f"- {item}" for item in record["uncertainties"])
             + ("\n" if record["uncertainties"] else "None.\n")
+        )
+        sections.append("### 근거 불확실성 (Source Uncertainties)\n")
+        sections.append(
+            "\n".join(
+                f"- region {item['region_index']}: {item['message']}"
+                for item in record["source_uncertainties"]
+            )
+            + ("\n" if record["source_uncertainties"] else "None.\n")
         )
     return "\n".join(sections)
 
@@ -711,16 +925,21 @@ def export_records(
     *,
     source_pages_by_id: Mapping[str, list[dict[str, Any]]],
     expected_split: str,
-    visual_checks_by_id: Mapping[str, list[dict[str, Any]]] | None = None,
+    source_checks_by_id: Mapping[str, list[dict[str, Any]]],
+    submission_mode: str = "require_fully_grounded",
 ) -> dict[str, Any]:
     """Validate complete task coverage and write a private, reviewable export."""
     split = _nonempty_string(expected_split, "expected_split")
     if split not in {"heldout", "train", "validation"}:
         raise SolutionRecordError("expected_split must be heldout, train, or validation")
+    if submission_mode not in {"require_fully_grounded", "abstain_unresolved"}:
+        raise SolutionRecordError("unsupported submission_mode")
+    if submission_mode == "abstain_unresolved" and split != "heldout":
+        raise SolutionRecordError("abstain_unresolved submission mode is heldout-only")
     if not isinstance(source_pages_by_id, Mapping):
         raise SolutionRecordError("source_pages_by_id must be a mapping")
-    if visual_checks_by_id is not None and not isinstance(visual_checks_by_id, Mapping):
-        raise SolutionRecordError("visual_checks_by_id must be a mapping")
+    if not isinstance(source_checks_by_id, Mapping):
+        raise SolutionRecordError("source_checks_by_id must be a mapping")
     record_index = _unique_index(records, "record")
     task_index = _unique_index(tasks, "task")
     record_ids = set(record_index)
@@ -744,13 +963,18 @@ def export_records(
         raise SolutionRecordError(
             f"unknown source pages instance_id: {', '.join(unknown_sources)}"
         )
-    visual_check_ids = set(visual_checks_by_id or {})
-    if any(not isinstance(instance_id, str) for instance_id in visual_check_ids):
-        raise SolutionRecordError("visual check instance IDs must be strings")
-    unknown_visual_checks = sorted(visual_check_ids - task_ids)
-    if unknown_visual_checks:
+    source_check_ids = set(source_checks_by_id)
+    if any(not isinstance(instance_id, str) for instance_id in source_check_ids):
+        raise SolutionRecordError("source check instance IDs must be strings")
+    missing_source_checks = sorted(task_ids - source_check_ids)
+    unknown_source_checks = sorted(source_check_ids - task_ids)
+    if missing_source_checks:
         raise SolutionRecordError(
-            f"unknown visual checks instance_id: {', '.join(unknown_visual_checks)}"
+            f"missing source checks instance_id: {', '.join(missing_source_checks)}"
+        )
+    if unknown_source_checks:
+        raise SolutionRecordError(
+            f"unknown source checks instance_id: {', '.join(unknown_source_checks)}"
         )
     wrong_splits = sorted(
         instance_id
@@ -767,34 +991,83 @@ def export_records(
             record_index[instance_id],
             task_index[instance_id],
             source_pages_by_id[instance_id],
-            visual_id_checks=(visual_checks_by_id or {}).get(instance_id),
+            source_checks=source_checks_by_id[instance_id],
         )
         for instance_id in sorted(task_ids)
     ]
-    submissions = [
+    grounded = [record for record in normalized if record["source_status"] == "fully_grounded"]
+    unresolved = [
+        record for record in normalized if record["source_status"] == "evidence_unresolved"
+    ]
+    grounded_submissions = [
         {
             "instance_id": record["instance_id"],
             "answer": record["answer"],
             "evidence": record["evidence"],
         }
-        for record in normalized
+        for record in grounded
     ]
+    submissions: list[dict[str, Any]] | None
+    if not unresolved:
+        submissions = grounded_submissions
+        effective_submission_mode = "fully_grounded"
+    elif submission_mode == "abstain_unresolved":
+        submissions = [
+            (
+                {
+                    "instance_id": record["instance_id"],
+                    "answer": record["answer"],
+                    "evidence": record["evidence"],
+                }
+                if record["source_status"] == "fully_grounded"
+                else {"instance_id": record["instance_id"], "answer": None, "evidence": []}
+            )
+            for record in normalized
+        ]
+        effective_submission_mode = "heldout_abstentions"
+    else:
+        submissions = None
+        effective_submission_mode = "blocked_unresolved"
     content = {
         "solutions.jsonl": _jsonl(normalized),
         "solutions.md": _markdown(normalized),
-        "submission.jsonl": _jsonl(submissions),
+        "grounded-submission.jsonl": _jsonl(grounded_submissions),
     }
+    if submissions is not None:
+        content["submission.jsonl"] = _jsonl(submissions)
     destination = ensure_private_directory(output_dir)
+    stale_submission = destination / "submission.jsonl"
+    if submissions is None and (stale_submission.exists() or stale_submission.is_symlink()):
+        raise SolutionRecordError(
+            "blocked export refuses to leave a stale submission.jsonl"
+        )
     for name in (*content, "manifest.json"):
         _reject_symlink_components(destination / name)
     for name, text in content.items():
         write_private_atomic(destination / name, text)
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "private": True,
         "split": split,
         "total": len(normalized),
+        "answer_coverage": len(normalized),
+        "coverage_complete": True,
+        "fully_grounded_count": len(grounded),
+        "evidence_unresolved_count": len(unresolved),
+        "runtime_failed_count": 0,
+        "submission_ready": submissions is not None,
+        "submission_mode": effective_submission_mode,
+        "submission_count": len(submissions) if submissions is not None else 0,
+        "grounded_submission_count": len(grounded_submissions),
+        "submission_abstention_count": (
+            len(unresolved) if effective_submission_mode == "heldout_abstentions" else 0
+        ),
+        "submission_exclusions": [
+            {"instance_id": record["instance_id"], "reason": "evidence_unresolved"}
+            for record in unresolved
+            if submissions is None
+        ],
         "instance_ids": [record["instance_id"] for record in normalized],
         "files": {
             name: {"sha256": hashlib.sha256(text.encode("utf-8")).hexdigest()}
@@ -830,16 +1103,27 @@ def evaluate_records(
     for instance_id in sorted(record_ids):
         record = record_index[instance_id]
         reference = reference_index[instance_id]
-        record_answer, record_evidence = _comparison_values(record, "record", instance_id)
-        reference_answer, reference_evidence = _comparison_values(
-            reference, "reference", instance_id
-        )
+        record_answer = _comparison_answer(record, "record", instance_id)
+        reference_answer = _comparison_answer(reference, "reference", instance_id)
+        reference_evidence = _comparison_evidence(reference, "reference", instance_id)
+        source_status = record.get("source_status")
+        if source_status == "fully_grounded":
+            record_evidence = _comparison_evidence(record, "record", instance_id)
+            evidence_match: bool | None = set(record_evidence) == set(reference_evidence)
+            evidence_assessable = True
+        elif source_status == "evidence_unresolved":
+            evidence_match = None
+            evidence_assessable = False
+        else:
+            raise SolutionRecordError(
+                f"record {instance_id} source_status must be terminal"
+            )
         answer_match = _normalized_answer(record_answer) == _normalized_answer(reference_answer)
-        evidence_match = set(record_evidence) == set(reference_evidence)
         comparisons.append(
             {
                 "instance_id": instance_id,
                 "answer_match": answer_match,
+                "evidence_assessable": evidence_assessable,
                 "evidence_match": evidence_match,
             }
         )
@@ -849,17 +1133,25 @@ def evaluate_records(
             "reference_kind": kind,
             "total": len(comparisons),
             "answer_matches": sum(row["answer_match"] for row in comparisons),
-            "evidence_matches": sum(row["evidence_match"] for row in comparisons),
+            "evidence_assessable": sum(row["evidence_assessable"] for row in comparisons),
+            "evidence_matches": sum(row["evidence_match"] is True for row in comparisons),
+            "evidence_unresolved": sum(
+                not row["evidence_assessable"] for row in comparisons
+            ),
         },
     }
 
 
-def _comparison_values(
-    row: dict[str, Any], kind: str, instance_id: str
-) -> tuple[str, list[str]]:
+def _comparison_answer(row: dict[str, Any], kind: str, instance_id: str) -> str:
     answer = row.get("answer")
     if not isinstance(answer, str) or not answer.strip():
         raise SolutionRecordError(f"{kind} {instance_id} answer must be a non-empty string")
+    return answer
+
+
+def _comparison_evidence(
+    row: dict[str, Any], kind: str, instance_id: str
+) -> list[str]:
     evidence = row.get("evidence")
     if (
         not isinstance(evidence, list)
@@ -870,4 +1162,4 @@ def _comparison_values(
         raise SolutionRecordError(
             f"{kind} {instance_id} evidence must contain unique non-empty strings"
         )
-    return answer, evidence
+    return evidence

@@ -1,5 +1,6 @@
 import hashlib
 import json
+from copy import deepcopy
 from pathlib import Path
 
 import pytest
@@ -8,682 +9,383 @@ from docinsights_analysis.solution_records import (
     SolutionRecordError,
     evaluate_records,
     export_records,
+    finalize_solution,
     input_digest,
+    primary_record_digest,
+    validate_primary_solution,
     validate_solution,
-    visual_evidence_candidates,
 )
 
 
-def task(instance_id: str = "task_000001") -> dict[str, str]:
+def task(instance_id: str = "task_1") -> dict[str, str]:
     return {
         "instance_id": instance_id,
-        "user_query": "What is total revenue?",
+        "user_query": "What is revenue?",
         "document_pdf": f"documents/{instance_id}.pdf",
     }
 
 
 def pages() -> list[dict[str, object]]:
-    return [
-        {
-            "page_number": 1,
-            "text": "A-1!: Revenue was 12.5 million.\nContinued evidence text.\n\n"
-            "table.total/2024: Costs were 2.5 million.",
-        },
-        {"page_number": 2, "text": "note#3: The report uses USD millions."},
-    ]
+    return [{"page_number": 1, "text": "Revenue anchor 12.5 million"}]
 
 
-def record(instance_id: str = "task_000001") -> dict[str, object]:
+def primary(instance_id: str = "task_1") -> dict[str, object]:
+    public_pages = pages()
     return {
         "instance_id": instance_id,
         "split": "heldout",
-        "question": "What is total revenue?",
+        "question": "What is revenue?",
         "solution": {
-            "summary": "The revenue block reports the requested total.",
+            "summary": "The source reports revenue in millions.",
             "calculations": [{"expression": "10 + 2.5", "result": "12.5"}],
         },
         "answer": "12.5",
-        "evidence": ["A-1!", "note#3"],
-        "evidence_details": [
-            {"id": "A-1!", "page": 1, "quote": "Revenue was 12.5 million."},
-            {"id": "note#3", "page": 2, "quote": "The report uses USD millions."},
-        ],
-        "source_pages": pages(),
+        "evidence_regions": [{"page": 1, "ocr_anchor": "anchor 12.5"}],
+        "source_pages": public_pages,
         "provenance": {
             "pdf_sha256": "a" * 64,
-            "input_sha256": input_digest(task(instance_id), pages()),
+            "input_sha256": input_digest(task(instance_id), public_pages),
             "config_sha256": "b" * 64,
-            "model": "fixture-model",
-            "method": "unit-test",
+            "output_sha256": "c" * 64,
+            "model": "primary-model",
+            "method": "primary-solver",
         },
         "uncertainties": [],
     }
 
 
-def replace_pages(raw: dict[str, object], replacement: list[dict[str, object]]) -> None:
-    raw["source_pages"] = replacement
-    provenance = raw["provenance"]
-    assert isinstance(provenance, dict)
-    provenance["input_sha256"] = input_digest(task(str(raw["instance_id"])), replacement)
+def artifact(kind: str, digest: str = "d" * 64) -> dict[str, str]:
+    return {"kind": kind, "path": f"private/{kind}", "sha256": digest}
 
 
-def visual_alias_fixture() -> tuple[dict[str, object], list[dict[str, object]]]:
-    raw = record()
-    alias_pages = [{"page_number": 1, "text": "RO5: The exact amount is 7."}]
-    raw["answer"] = "7"
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": "3 + 4", "result": "7"}
-    ]
-    raw["evidence"] = ["R05"]
-    raw["evidence_details"] = [
-        {"id": "R05", "page": 1, "quote": "The exact amount is 7."}
-    ]
-    replace_pages(raw, alias_pages)
-    return raw, alias_pages
-
-
-def visual_proof(candidate: dict[str, object]) -> dict[str, object]:
-    quote = str(candidate["quote"])
-    return {
-        "id": candidate["id"],
-        "visible_id": candidate["id"],
-        "ocr_id": candidate["ocr_id"],
-        "page": candidate["page"],
-        "heading_line_index": candidate["heading_line_index"],
-        "quote_sha256": hashlib.sha256(quote.encode("utf-8")).hexdigest(),
-        "page_image_sha256": "c" * 64,
-        "crop_sha256": "d" * 64,
-        "clear": True,
+def source_check(
+    normalized_primary: dict[str, object], *, unresolved: bool = False
+) -> dict[str, object]:
+    region = normalized_primary["evidence_regions"][0]  # type: ignore[index]
+    observation = {
+        "heading_line": None if unresolved else "section:1: Revenue",
+        "body_text": "Revenue was 12.5 million.",
+        "heading_legibility": "ambiguous" if unresolved else "clear",
+        "body_legibility": "clear",
+        "contains_anchor_region": True,
     }
+    evidence = {
+        "id": None if unresolved else "section:1",
+        "page": 1,
+        "quote": "Revenue was 12.5 million.",
+    }
+    result: dict[str, object] = {
+        "region_index": 0,
+        "page": 1,
+        "ocr_anchor": region["ocr_anchor"],  # type: ignore[index]
+        "ocr_anchor_sha256": hashlib.sha256(
+            str(region["ocr_anchor"]).encode()  # type: ignore[index]
+        ).hexdigest(),
+        "primary_record_sha256": primary_record_digest(normalized_primary),
+        "primary_response_sha256": normalized_primary["provenance"]["output_sha256"],  # type: ignore[index]
+        "status": "evidence_unresolved" if unresolved else "fully_grounded",
+        "evidence": evidence,
+        "observed_candidates": [observation],
+        "source_uncertainties": ["Heading ID is ambiguous."] if unresolved else [],
+        "model": "checker-model",
+        "method": "blind-pixel-transcription",
+        "anchor_bbox": {"left": 1, "top": 2, "right": 3, "bottom": 4},
+        "context_bbox": {"left": 0, "top": 0, "right": 10, "bottom": 10},
+        "anchor_crop_bbox": {"left": 1, "top": 2, "right": 3, "bottom": 4},
+        "artifacts": [artifact("invocation")],
+    }
+    for field in (
+        "pdf_sha256",
+        "renderer_sha256",
+        "checker_executable_sha256",
+        "selector_sha256",
+        "prompt_sha256",
+        "output_schema_sha256",
+        "checker_config_sha256",
+        "page_image_sha256",
+        "ocr_image_sha256",
+        "context_crop_sha256",
+        "anchor_crop_sha256",
+        "raw_response_sha256",
+    ):
+        result[field] = (
+            normalized_primary["provenance"]["pdf_sha256"]  # type: ignore[index]
+            if field == "pdf_sha256"
+            else "e" * 64
+        )
+    artifact_hashes = {
+        "pdf_artifact": "pdf_sha256",
+        "renderer_artifact": "renderer_sha256",
+        "page_image_artifact": "page_image_sha256",
+        "context_crop_artifact": "context_crop_sha256",
+        "anchor_crop_artifact": "anchor_crop_sha256",
+        "checker_executable_artifact": "checker_executable_sha256",
+        "raw_response_artifact": "raw_response_sha256",
+    }
+    for field, hash_field in artifact_hashes.items():
+        result[field] = artifact(field, str(result[hash_field]))
+    return result
 
 
-def test_validate_solution_normalizes_arbitrary_multiple_evidence_ids() -> None:
-    raw = record()
-    raw["solution"]["summary"] = "  The revenue block reports the requested total.  "  # type: ignore[index]
+def finalized(*, unresolved: bool = False) -> tuple[dict[str, object], list[dict[str, object]]]:
+    normalized = validate_primary_solution(primary(), task(), pages())
+    checks = [source_check(normalized, unresolved=unresolved)]
+    return finalize_solution(normalized, task(), pages(), source_checks=checks), checks
 
-    normalized = validate_solution(raw, task(), pages())
 
-    assert normalized["question"] == "What is total revenue?"
-    assert normalized["solution"]["summary"] == (
-        "The revenue block reports the requested total."
-    )
-    assert normalized["evidence"] == ["A-1!", "note#3"]
-    assert normalized["source_pages"] == pages()
+def test_primary_requires_unique_exact_ocr_anchor_and_output_hash() -> None:
+    normalized = validate_primary_solution(primary(), task(), pages())
+    assert normalized["evidence_regions"] == [{"page": 1, "ocr_anchor": "anchor 12.5"}]
+
+    duplicate = primary()
+    duplicate_pages = [{"page_number": 1, "text": "anchor 12.5 then anchor 12.5"}]
+    duplicate["source_pages"] = duplicate_pages
+    duplicate["provenance"]["input_sha256"] = input_digest(task(), duplicate_pages)  # type: ignore[index]
+    with pytest.raises(SolutionRecordError, match="exactly once"):
+        validate_primary_solution(duplicate, task(), duplicate_pages)
+
+
+def test_primary_direct_read_requires_unitless_numeric_answer() -> None:
+    direct = primary()
+    direct["solution"]["calculations"] = []  # type: ignore[index]
+    direct["answer"] = "12.5"
+    assert validate_primary_solution(direct, task(), pages())["answer"] == "12.5"
+
+    direct["answer"] = "12.5 million"
+    direct["uncertainties"] = ["The source displays the value in millions."]
+    with pytest.raises(SolutionRecordError, match="answer must be a numeric string"):
+        validate_primary_solution(direct, task(), pages())
 
 
 @pytest.mark.parametrize(
-    ("mutate", "message"),
+    ("expression", "result"),
     [
-        (lambda value: value.update(instance_id="task_999999"), "instance_id"),
-        (lambda value: value.update(question="A different question"), "question"),
-        (
-            lambda value: value["evidence_details"][0].update(page=2),
-            "evidence block",
-        ),
-        (
-            lambda value: value["evidence_details"][0].update(
-                quote="Costs were 2.5 million."
-            ),
-            "evidence block",
-        ),
-        (
-            lambda value: value["solution"]["calculations"][0].update(result="13"),
-            "calculation result",
-        ),
-        (
-            lambda value: value["solution"]["calculations"][0].update(
-                expression="__import__('os').getcwd()"
-            ),
-            "arithmetic expression",
-        ),
-        (lambda value: value.update(answer="99"), "final answer"),
+        ("round(1 / 3 * 100, 2)", "33.33"),
+        ("round(2.345, 2)", "2.35"),
+        ("round(-2.345, 2)", "-2.35"),
     ],
 )
-def test_validate_solution_rejects_mismatches(mutate, message: str) -> None:
-    raw = record()
-    mutate(raw)
-
-    with pytest.raises(SolutionRecordError, match=message):
-        validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_requires_matching_unique_evidence_details() -> None:
-    raw = record()
-    raw["evidence"] = ["A-1!", "A-1!"]
-    with pytest.raises(SolutionRecordError, match="duplicate evidence"):
-        validate_solution(raw, task(), pages())
-
-    raw = record()
-    raw["evidence_details"] = raw["evidence_details"][:1]  # type: ignore[index]
-    with pytest.raises(SolutionRecordError, match="evidence_details.*match evidence"):
-        validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_rejects_fabricated_source_pages() -> None:
-    raw = record()
-    raw["source_pages"] = [{"page_number": 1, "text": "fabricated"}]
-
-    with pytest.raises(SolutionRecordError, match="source_pages"):
-        validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_supports_internal_colons_in_evidence_id() -> None:
-    raw = record()
-    colon_pages = [{"page_number": 1, "text": "section:1: Exact cited sentence."}]
-    raw["evidence"] = ["section:1"]
-    raw["evidence_details"] = [
-        {"id": "section:1", "page": 1, "quote": "Exact cited sentence."}
+def test_primary_supports_explicit_half_up_rounding(expression: str, result: str) -> None:
+    rounded = primary()
+    rounded["solution"]["calculations"] = [  # type: ignore[index]
+        {"expression": expression, "result": result}
     ]
-    replace_pages(raw, colon_pages)
+    rounded["answer"] = result
 
-    normalized = validate_solution(raw, task(), colon_pages)
+    normalized = validate_primary_solution(rounded, task(), pages())
 
-    assert normalized["evidence"] == ["section:1"]
-
-
-def test_validate_solution_does_not_leak_quote_from_following_uncited_block() -> None:
-    raw = record()
-    block_pages = [
-        {
-            "page_number": 1,
-            "text": "cited: Cited sentence.\nuncited: Secret sentence from another block.",
-        }
+    assert normalized["solution"]["calculations"] == [  # type: ignore[index]
+        {"expression": expression, "result": result}
     ]
-    raw["evidence"] = ["cited"]
-    raw["evidence_details"] = [
-        {"id": "cited", "page": 1, "quote": "Secret sentence from another block."}
+    assert normalized["answer"] == result
+
+
+def test_explicit_rounding_requires_exact_declared_result_and_answer() -> None:
+    rounded = primary()
+    rounded["solution"]["calculations"] = [  # type: ignore[index]
+        {"expression": "round(1 / 3 * 100, 2)", "result": "33.34"}
     ]
-    replace_pages(raw, block_pages)
+    rounded["answer"] = "33.34"
 
-    with pytest.raises(SolutionRecordError, match="evidence block"):
-        validate_solution(raw, task(), block_pages)
+    with pytest.raises(SolutionRecordError, match="calculation result mismatch"):
+        validate_primary_solution(rounded, task(), pages())
+
+    rounded["solution"]["calculations"][0]["result"] = "33.33"  # type: ignore[index]
+    with pytest.raises(SolutionRecordError, match="answer does not match"):
+        validate_primary_solution(rounded, task(), pages())
 
 
-def test_visual_evidence_candidates_returns_unique_heading_only_alias() -> None:
-    raw, alias_pages = visual_alias_fixture()
-
-    assert visual_evidence_candidates(raw, alias_pages) == [
-        {
-            "id": "R05",
-            "ocr_id": "RO5",
-            "page": 1,
-            "quote": "The exact amount is 7.",
-            "heading_line_index": 0,
-        }
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "round(1 / 3, 13)",
+        "round(1 / 3, 1.5)",
+        "round(1 / 0, 2)",
+        "round(round(1 / 3, 3), 2)",
+        "abs(1)",
+        "__import__('os').system('true')",
+    ],
+)
+def test_explicit_rounding_rejects_invalid_precision_and_hostile_calls(
+    expression: str,
+) -> None:
+    rounded = primary()
+    rounded["solution"]["calculations"] = [  # type: ignore[index]
+        {"expression": expression, "result": "0"}
     ]
-
-
-def test_visual_evidence_candidates_rejects_ambiguous_or_existing_solver_id() -> None:
-    raw, _ = visual_alias_fixture()
-    ambiguous_pages = [
-        {
-            "page_number": 1,
-            "text": "RO5: The exact amount is 7.\nX-2: The exact amount is 7.",
-        }
-    ]
-    replace_pages(raw, ambiguous_pages)
-    assert visual_evidence_candidates(raw, ambiguous_pages) == []
-
-    existing_pages = [
-        {"page_number": 1, "text": "RO5: The exact amount is 7."},
-        {"page_number": 2, "text": "R05: A different block."},
-    ]
-    replace_pages(raw, existing_pages)
-    assert visual_evidence_candidates(raw, existing_pages) == []
-
-
-def test_validate_solution_requires_independent_exact_clear_visual_alias_proof() -> None:
-    raw, alias_pages = visual_alias_fixture()
-    candidate = visual_evidence_candidates(raw, alias_pages)[0]
-    proof = visual_proof(candidate)
-    raw["provenance"]["visual_id_checks"] = [proof]  # type: ignore[index]
-
-    with pytest.raises(SolutionRecordError, match="independently supplied"):
-        validate_solution(raw, task(), alias_pages)
-
-    for field, value in (("visible_id", "R0S"), ("clear", False), ("page", True)):
-        invalid = dict(proof)
-        invalid[field] = value
-        raw["provenance"]["visual_id_checks"] = [invalid]  # type: ignore[index]
-        with pytest.raises(SolutionRecordError, match="visual ID check"):
-            validate_solution(raw, task(), alias_pages, visual_id_checks=[invalid])
-
-    invalid_hash = {**proof, "artifact": {"sha256": "not-a-hash"}}
-    raw["provenance"]["visual_id_checks"] = [invalid_hash]  # type: ignore[index]
-    with pytest.raises(SolutionRecordError, match="SHA-256"):
-        validate_solution(raw, task(), alias_pages, visual_id_checks=[invalid_hash])
-
-
-def test_validate_solution_accepts_visual_heading_alias_without_repairing_body() -> None:
-    raw, alias_pages = visual_alias_fixture()
-    candidate = visual_evidence_candidates(raw, alias_pages)[0]
-    proof = visual_proof(candidate)
-    raw["provenance"]["visual_id_checks"] = [proof]  # type: ignore[index]
-
-    normalized = validate_solution(
-        raw,
-        task(),
-        alias_pages,
-        visual_id_checks=[proof],
-    )
-
-    assert normalized["evidence"] == ["R05"]
-    assert normalized["source_pages"] == alias_pages
-    assert normalized["evidence_details"][0]["quote"] == "The exact amount is 7."
-    assert normalized["provenance"]["visual_id_checks"] == [proof]
-
-    raw["evidence_details"][0]["quote"] = "The exact amount is seven."  # type: ignore[index]
-    bad_proof = visual_proof(
-        {
-            **candidate,
-            "quote": "The exact amount is seven.",
-        }
-    )
-    raw["provenance"]["visual_id_checks"] = [bad_proof]  # type: ignore[index]
-    with pytest.raises(SolutionRecordError, match="evidence block"):
-        validate_solution(raw, task(), alias_pages, visual_id_checks=[bad_proof])
-
-
-def test_validate_solution_preserves_large_decimal_literal_precision() -> None:
-    raw = record()
-    value = "0.123456789012345678901234567890"
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": f"{value} + 0", "result": value}
-    ]
-    raw["answer"] = value
-
-    validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_rejects_more_than_50_significant_digits() -> None:
-    raw = record()
-    literal = "1." + "1" * 50
-    rounded = "1." + "1" * 49
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": f"{literal} + 0", "result": rounded}
-    ]
-    raw["answer"] = rounded
-
-    with pytest.raises(SolutionRecordError, match="50 significant digits"):
-        validate_solution(raw, task(), pages())
-
-    raw = record()
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": "1 + 0", "result": "1." + "0" * 50}
-    ]
-    raw["answer"] = "1"
-    with pytest.raises(SolutionRecordError, match="50 significant digits"):
-        validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_accepts_exact_30_digit_unary_negative() -> None:
-    raw = record()
-    value = "123456789012345678901234567890"
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": f"-{value}", "result": f"-{value}"}
-    ]
-    raw["answer"] = f"-{value}"
-
-    validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_rejects_inexact_repeating_division() -> None:
-    raw = record()
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": "1 / 3", "result": "0.333333333333333333333333333333"}
-    ]
-    raw["answer"] = "0.333333333333333333333333333333"
-
-    with pytest.raises(SolutionRecordError, match="unsupported precision"):
-        validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_rejects_decimal_exponent_outside_bound() -> None:
-    raw = record()
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": "1e-101 + 0", "result": "1e-101"}
-    ]
-    raw["answer"] = "1e-101"
-
-    with pytest.raises(SolutionRecordError, match="exponent outside"):
-        validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_rejects_nonnumeric_answer_with_calculations() -> None:
-    raw = record()
-    raw["answer"] = "seven"
-
-    with pytest.raises(SolutionRecordError, match="numeric.*calculations"):
-        validate_solution(raw, task(), pages())
-
-
-def test_validate_solution_preserves_supported_indeterminate_answer() -> None:
-    raw = record()
-    raw["solution"]["calculations"] = []  # type: ignore[index]
-    raw["answer"] = "not uniquely determined"
-    raw["uncertainties"] = ["The cited pages do not identify a unique total."]
-
-    normalized = validate_solution(raw, task(), pages())
-
-    assert normalized["answer"] == "not uniquely determined"
-    assert normalized["solution"]["calculations"] == []
-    assert normalized["uncertainties"] == [
-        "The cited pages do not identify a unique total."
-    ]
-
-
-def test_validate_solution_requires_uncertainty_for_nonnumeric_answer() -> None:
-    raw = record()
-    raw["solution"]["calculations"] = []  # type: ignore[index]
-    raw["answer"] = "not uniquely determined"
-
-    with pytest.raises(SolutionRecordError, match="explicit uncertainty"):
-        validate_solution(raw, task(), pages())
-
-
-@pytest.mark.parametrize("operator", ["//", "%", "**"])
-def test_validate_solution_rejects_unsupported_arithmetic_operators(operator: str) -> None:
-    raw = record()
-    raw["solution"]["calculations"] = [  # type: ignore[index]
-        {"expression": f"5 {operator} 2", "result": "1"}
-    ]
-    raw["answer"] = "1"
+    rounded["answer"] = "0"
 
     with pytest.raises(SolutionRecordError, match="arithmetic expression"):
-        validate_solution(raw, task(), pages())
+        validate_primary_solution(rounded, task(), pages())
 
 
-def test_export_records_writes_private_complete_outputs(tmp_path: Path) -> None:
-    second = record("task_000002")
-    tasks = [task(), task("task_000002")]
-    manifest = export_records(
-        [second, record()],
-        tasks,
-        tmp_path / "private",
-        source_pages_by_id={item["instance_id"]: pages() for item in tasks},
-        expected_split="heldout",
-    )
-
-    output_dir = tmp_path / "private"
-    assert manifest["total"] == 2
-    assert manifest["private"] is True
-    assert set(manifest["files"]) == {
-        "solutions.jsonl",
-        "solutions.md",
-        "submission.jsonl",
-    }
-    rows = [
-        json.loads(line)
-        for line in (output_dir / "solutions.jsonl").read_text(encoding="utf-8").splitlines()
+def test_unrounded_arithmetic_remains_strict() -> None:
+    unrounded = primary()
+    unrounded["solution"]["calculations"] = [  # type: ignore[index]
+        {"expression": "1 / 3", "result": "0.3333333333333333333333333333"}
     ]
-    assert [row["instance_id"] for row in rows] == ["task_000001", "task_000002"]
-    submission = [
-        json.loads(line)
-        for line in (output_dir / "submission.jsonl").read_text(encoding="utf-8").splitlines()
+    unrounded["answer"] = "0.3333333333333333333333333333"
+    with pytest.raises(SolutionRecordError, match="unsupported precision"):
+        validate_primary_solution(unrounded, task(), pages())
+
+    for expression in ("5 // 2", "5 % 2"):
+        unrounded["solution"]["calculations"] = [  # type: ignore[index]
+            {"expression": expression, "result": "2"}
+        ]
+        unrounded["answer"] = "2"
+        with pytest.raises(SolutionRecordError, match="invalid arithmetic expression"):
+            validate_primary_solution(unrounded, task(), pages())
+
+
+def test_grounded_source_check_derives_final_id_and_quote_from_pixels() -> None:
+    record, checks = finalized()
+    assert record["source_status"] == "fully_grounded"
+    assert record["evidence"] == ["section:1"]
+    assert record["evidence_details"] == [
+        {"id": "section:1", "page": 1, "quote": "Revenue was 12.5 million."}
     ]
-    assert set(submission[0]) == {"instance_id", "answer", "evidence"}
-    markdown = (output_dir / "solutions.md").read_text(encoding="utf-8")
-    assert "## task_000001" in markdown
-    assert all(
-        heading in markdown
-        for heading in (
-            "질문 (Question)",
-            "풀이 (Solution)",
-            "계산식 (Calculations)",
-            "정답 (Answer)",
-            "Evidence",
-            "불확실성 (Uncertainties)",
-        )
-    )
-    assert (output_dir.stat().st_mode & 0o077) == 0
-    assert all((output_dir / name).stat().st_mode & 0o077 == 0 for name in manifest["files"])
-    assert not list(output_dir.glob(".*.tmp-*"))
+    assert validate_solution(record, task(), pages(), source_checks=checks) == record
 
 
-def test_export_records_requires_independent_visual_checks_by_instance(
-    tmp_path: Path,
-) -> None:
-    raw, alias_pages = visual_alias_fixture()
-    candidate = visual_evidence_candidates(raw, alias_pages)[0]
-    proof = visual_proof(candidate)
-    raw["provenance"]["visual_id_checks"] = [proof]  # type: ignore[index]
-
+def test_source_checks_are_independent_and_bind_immutable_primary() -> None:
+    record, checks = finalized()
     with pytest.raises(SolutionRecordError, match="independently supplied"):
-        export_records(
-            [raw],
-            [task()],
-            tmp_path / "missing-check",
-            source_pages_by_id={"task_000001": alias_pages},
-            expected_split="heldout",
-        )
+        validate_solution(record, task(), pages())
 
-    export_records(
-        [raw],
-        [task()],
-        tmp_path / "verified",
-        source_pages_by_id={"task_000001": alias_pages},
+    changed = deepcopy(record)
+    changed["solution"]["summary"] = "A changed post-check explanation."  # type: ignore[index]
+    with pytest.raises(SolutionRecordError, match="primary region"):
+        validate_solution(changed, task(), pages(), source_checks=checks)
+
+    fabricated = deepcopy(record)
+    fabricated["provenance"]["source_checks"] = []  # type: ignore[index]
+    with pytest.raises(SolutionRecordError, match="independently supplied"):
+        validate_solution(fabricated, task(), pages(), source_checks=checks)
+
+
+def test_unresolved_source_keeps_readable_quote_null_id_and_separate_uncertainty() -> None:
+    record, checks = finalized(unresolved=True)
+    assert record["source_status"] == "evidence_unresolved"
+    assert record["evidence"] == []
+    assert record["evidence_details"][0]["quote"] == "Revenue was 12.5 million."  # type: ignore[index]
+    assert record["source_uncertainties"] == [
+        {"region_index": 0, "message": "Heading ID is ambiguous."}
+    ]
+    assert record["answer"] == "12.5"
+    assert validate_solution(record, task(), pages(), source_checks=checks) == record
+
+
+def test_runtime_failure_is_not_a_terminal_source_check() -> None:
+    normalized = validate_primary_solution(primary(), task(), pages())
+    failed = source_check(normalized)
+    failed["status"] = "runtime_failed"
+    with pytest.raises(SolutionRecordError, match="terminal"):
+        finalize_solution(normalized, task(), pages(), source_checks=[failed])
+
+
+def test_export_keeps_all_solutions_but_submits_only_grounded(tmp_path: Path) -> None:
+    grounded, grounded_checks = finalized()
+    unresolved_primary = primary("task_2")
+    unresolved_primary["question"] = task("task_2")["user_query"]
+    normalized = validate_primary_solution(unresolved_primary, task("task_2"), pages())
+    unresolved_checks = [source_check(normalized, unresolved=True)]
+    unresolved = finalize_solution(
+        normalized, task("task_2"), pages(), source_checks=unresolved_checks
+    )
+
+    manifest = export_records(
+        [unresolved, grounded],
+        [task(), task("task_2")],
+        tmp_path / "private",
+        source_pages_by_id={"task_1": pages(), "task_2": pages()},
         expected_split="heldout",
-        visual_checks_by_id={"task_000001": [proof]},
+        source_checks_by_id={"task_1": grounded_checks, "task_2": unresolved_checks},
     )
-
-    with pytest.raises(SolutionRecordError, match="unknown visual checks"):
-        export_records(
-            [raw],
-            [task()],
-            tmp_path / "unknown-check",
-            source_pages_by_id={"task_000001": alias_pages},
-            expected_split="heldout",
-            visual_checks_by_id={
-                "task_000001": [proof],
-                "task_999999": [proof],
-            },
-        )
-
-
-def test_export_records_rejects_file_symlink_without_touching_outside_target(
-    tmp_path: Path,
-) -> None:
-    outside = tmp_path / "outside.jsonl"
-    outside.write_text("sentinel\n", encoding="utf-8")
-    output_dir = tmp_path / "private"
-    output_dir.mkdir()
-    (output_dir / "solutions.jsonl").symlink_to(outside)
-
-    with pytest.raises(SolutionRecordError, match="symbolic link"):
-        export_records(
-            [record()],
-            [task()],
-            output_dir,
-            source_pages_by_id={"task_000001": pages()},
-            expected_split="heldout",
-        )
-
-    assert outside.read_text(encoding="utf-8") == "sentinel\n"
+    assert manifest["coverage_complete"] is True
+    assert manifest["answer_coverage"] == 2
+    assert manifest["fully_grounded_count"] == 1
+    assert manifest["evidence_unresolved_count"] == 1
+    assert manifest["runtime_failed_count"] == 0
+    assert manifest["submission_ready"] is False
+    assert manifest["submission_mode"] == "blocked_unresolved"
+    assert manifest["submission_count"] == 0
+    assert manifest["grounded_submission_count"] == 1
+    assert manifest["submission_abstention_count"] == 0
+    assert manifest["submission_exclusions"] == [
+        {"instance_id": "task_2", "reason": "evidence_unresolved"}
+    ]
+    solution_rows = (tmp_path / "private" / "solutions.jsonl").read_text().splitlines()
+    submission_rows = (
+        tmp_path / "private" / "grounded-submission.jsonl"
+    ).read_text().splitlines()
+    assert len(solution_rows) == 2
+    assert [json.loads(row) for row in submission_rows] == [
+        {"instance_id": "task_1", "answer": "12.5", "evidence": ["section:1"]}
+    ]
+    assert not (tmp_path / "private" / "submission.jsonl").exists()
+    markdown = (tmp_path / "private" / "solutions.md").read_text()
+    assert "evidence_unresolved" in markdown
+    assert "Heading ID is ambiguous." in markdown
 
 
-def test_export_records_rejects_output_under_symlinked_ancestor(tmp_path: Path) -> None:
-    outside = tmp_path / "outside"
-    outside.mkdir()
-    linked = tmp_path / "linked"
-    linked.symlink_to(outside, target_is_directory=True)
-
-    with pytest.raises(SolutionRecordError, match="symbolic link"):
-        export_records(
-            [record()],
-            [task()],
-            linked / "private",
-            source_pages_by_id={"task_000001": pages()},
-            expected_split="heldout",
-        )
-
-    assert not (outside / "private").exists()
-
-
-@pytest.mark.parametrize(
-    ("records", "tasks", "message"),
-    [
-        ([record(), record()], [task()], "duplicate record"),
-        ([record()], [task(), task("task_000002")], "missing record"),
-        ([record(), record("task_999999")], [task()], "unknown record"),
-        ([record()], [task(), task()], "duplicate task"),
-    ],
-)
-def test_export_records_rejects_duplicate_missing_and_unknown_ids(
-    tmp_path: Path,
-    records: list[dict[str, object]],
-    tasks: list[dict[str, str]],
-    message: str,
-) -> None:
-    source_pages_by_id = {item["instance_id"]: pages() for item in tasks}
-    with pytest.raises(SolutionRecordError, match=message):
-        export_records(
-            records,
-            tasks,
-            tmp_path / "output",
-            source_pages_by_id=source_pages_by_id,
-            expected_split="heldout",
-        )
-
-
-def test_export_records_requires_independent_source_coverage_and_expected_split(
-    tmp_path: Path,
-) -> None:
-    with pytest.raises(SolutionRecordError, match="missing source pages"):
-        export_records(
-            [record()],
-            [task()],
-            tmp_path / "missing-source",
-            source_pages_by_id={},
-            expected_split="heldout",
-        )
-
-    raw = record()
-    raw["split"] = "train"
-    with pytest.raises(SolutionRecordError, match="expected split"):
-        export_records(
-            [raw],
-            [task()],
-            tmp_path / "wrong-split",
-            source_pages_by_id={"task_000001": pages()},
-            expected_split="heldout",
-        )
-
-
-def test_validate_solution_requires_verifiable_provenance() -> None:
-    raw = record()
-    raw["provenance"] = {
-        "pdf_sha256": "a" * 64,
-        "input_sha256": "0" * 64,
-        "config_sha256": "b" * 64,
-        "model": "fixture-model",
-        "method": "unit-test",
-    }
-    with pytest.raises(SolutionRecordError, match="input_sha256"):
-        validate_solution(raw, task(), pages())
-
-    for missing in ("pdf_sha256", "input_sha256", "config_sha256", "model", "method"):
-        raw = record()
-        del raw["provenance"][missing]  # type: ignore[index]
-        with pytest.raises(SolutionRecordError, match=missing):
-            validate_solution(raw, task(), pages())
-
-
-def test_input_digest_uses_only_official_task_fields() -> None:
-    enriched_task = {**task(), "answer": "must-not-affect-input", "other": 1}
-
-    assert input_digest(enriched_task, pages()) == input_digest(task(), pages())
-
-
-def test_evaluate_records_returns_only_comparisons_and_aggregate() -> None:
-    evaluation = evaluate_records(
-        [record()],
-        [{"instance_id": "task_000001", "answer": "12.5", "evidence": ["A-1!"]}],
-        "prior-validation-submission",
+def test_heldout_abstention_projection_requires_explicit_mode(tmp_path: Path) -> None:
+    record, checks = finalized(unresolved=True)
+    manifest = export_records(
+        [record],
+        [task()],
+        tmp_path / "private",
+        source_pages_by_id={"task_1": pages()},
+        expected_split="heldout",
+        source_checks_by_id={"task_1": checks},
+        submission_mode="abstain_unresolved",
     )
-
-    assert set(evaluation) == {"comparisons", "aggregate"}
-    assert evaluation["aggregate"] == {
-        "reference_kind": "prior-validation-submission",
-        "total": 1,
-        "answer_matches": 1,
-        "evidence_matches": 0,
+    assert manifest["submission_ready"] is True
+    assert manifest["submission_mode"] == "heldout_abstentions"
+    assert manifest["submission_abstention_count"] == 1
+    assert json.loads((tmp_path / "private" / "submission.jsonl").read_text()) == {
+        "instance_id": "task_1",
+        "answer": None,
+        "evidence": [],
     }
-    assert set(evaluation["comparisons"][0]) == {
-        "instance_id",
-        "answer_match",
-        "evidence_match",
-    }
-    serialized = json.dumps(evaluation)
-    assert "question" not in serialized
-    assert "solution" not in serialized
-    assert "source_pages" not in serialized
 
-
-def test_evaluate_records_requires_exact_unique_coverage() -> None:
-    with pytest.raises(SolutionRecordError, match="missing reference"):
-        evaluate_records([record()], [], "reference")
-
-    with pytest.raises(SolutionRecordError, match="duplicate reference"):
-        evaluate_records(
-            [record()],
-            [
-                {"instance_id": "task_000001", "answer": "12.5", "evidence": []},
-                {"instance_id": "task_000001", "answer": "12.5", "evidence": []},
-            ],
-            "reference",
+    frozen_submission = (tmp_path / "private" / "submission.jsonl").read_bytes()
+    frozen_manifest = (tmp_path / "private" / "manifest.json").read_bytes()
+    with pytest.raises(SolutionRecordError, match="stale submission"):
+        export_records(
+            [record],
+            [task()],
+            tmp_path / "private",
+            source_pages_by_id={"task_1": pages()},
+            expected_split="heldout",
+            source_checks_by_id={"task_1": checks},
         )
+    assert (tmp_path / "private" / "submission.jsonl").read_bytes() == frozen_submission
+    assert (tmp_path / "private" / "manifest.json").read_bytes() == frozen_manifest
 
 
-def test_evaluate_records_normalizes_numeric_text_and_evidence_order() -> None:
-    numeric = evaluate_records(
-        [record()],
+def test_evaluation_compares_all_answers_and_marks_unresolved_evidence_unassessable() -> None:
+    grounded, _ = finalized()
+    unresolved, _ = finalized(unresolved=True)
+    unresolved["instance_id"] = "task_2"
+    result = evaluate_records(
+        [grounded, unresolved],
         [
-            {
-                "instance_id": "task_000001",
-                "answer": "12.50",
-                "evidence": ["note#3", "A-1!"],
-            }
+            {"instance_id": "task_1", "answer": "12.50", "evidence": ["section:1"]},
+            {"instance_id": "task_2", "answer": "12.5", "evidence": ["X"]},
         ],
         "reference",
     )
-    assert numeric["comparisons"][0] == {
-        "instance_id": "task_000001",
+    assert result["comparisons"][1] == {
+        "instance_id": "task_2",
         "answer_match": True,
-        "evidence_match": True,
+        "evidence_assessable": False,
+        "evidence_match": None,
     }
-
-    raw = record()
-    raw["answer"] = "  Net Income  "
-    raw["solution"]["calculations"] = []  # type: ignore[index]
-    text = evaluate_records(
-        [raw],
-        [
-            {
-                "instance_id": "task_000001",
-                "answer": "net income",
-                "evidence": ["A-1!", "note#3"],
-            }
-        ],
-        "reference",
-    )
-    assert text["comparisons"][0]["answer_match"] is True
-
-
-@pytest.mark.parametrize(
-    "bad_values",
-    [
-        {"answer": None, "evidence": ["A-1!"]},
-        {"answer": "", "evidence": ["A-1!"]},
-        {"answer": "12.5", "evidence": None},
-        {"answer": "12.5", "evidence": []},
-        {"answer": "12.5", "evidence": ["A-1!", "A-1!"]},
-        {"answer": "12.5", "evidence": [""]},
-    ],
-)
-def test_evaluate_records_rejects_malformed_comparison_values(
-    bad_values: dict[str, object],
-) -> None:
-    reference = {"instance_id": "task_000001", **bad_values}
-
-    with pytest.raises(SolutionRecordError, match="reference.*(answer|evidence)"):
-        evaluate_records([record()], [reference], "reference")
+    assert result["aggregate"] == {
+        "reference_kind": "reference",
+        "total": 2,
+        "answer_matches": 2,
+        "evidence_assessable": 1,
+        "evidence_matches": 1,
+        "evidence_unresolved": 1,
+    }

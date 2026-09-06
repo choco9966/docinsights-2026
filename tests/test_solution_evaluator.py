@@ -54,26 +54,77 @@ def _write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
 def _frozen_split(tmp_path: Path, split: str = "train") -> tuple[Path, Path]:
     split_dir = tmp_path / split
     split_dir.mkdir(parents=True)
+    source_artifact = split_dir / "jobs" / "source-proof.json"
+    source_artifact.parent.mkdir()
+    source_artifact.write_text("frozen source proof\n", encoding="utf-8")
+    source_checks = [
+        {
+            "artifacts": [
+                {
+                    "kind": "source-proof",
+                    "path": str(source_artifact),
+                    "sha256": _sha(source_artifact),
+                }
+            ]
+        }
+    ]
     records = [
-        {"instance_id": "a", "split": split, "answer": "12.5", "evidence": ["E:1", "B"]},
-        {"instance_id": "b", "split": split, "answer": "text", "evidence": ["C"]},
+        {
+            "instance_id": "a",
+            "split": split,
+            "answer": "12.5",
+            "evidence": ["E:1", "B"],
+            "source_status": "fully_grounded",
+            "provenance": {"source_checks": source_checks},
+        },
+        {
+            "instance_id": "b",
+            "split": split,
+            "answer": "text",
+            "evidence": [None],
+            "source_status": "evidence_unresolved",
+            "provenance": {"source_checks": source_checks},
+        },
     ]
-    submissions = [
-        {"instance_id": row["instance_id"], "answer": row["answer"], "evidence": row["evidence"]}
-        for row in records
-    ]
+    submissions = [{"instance_id": "a", "answer": "12.5", "evidence": ["E:1", "B"]}]
+    _write_jsonl(split_dir / "grounded-submission.jsonl", submissions)
+    if split == "heldout":
+        submissions.append({"instance_id": "b", "answer": None, "evidence": []})
     _write_jsonl(split_dir / "solutions.jsonl", records)
     (split_dir / "solutions.md").write_text("# frozen solutions\n", encoding="utf-8")
-    _write_jsonl(split_dir / "submission.jsonl", submissions)
-    generation_files = ("solutions.jsonl", "solutions.md", "submission.jsonl")
+    if split == "heldout":
+        _write_jsonl(split_dir / "submission.jsonl", submissions)
+    generation_files = (
+        "solutions.jsonl",
+        "solutions.md",
+        "grounded-submission.jsonl",
+        *(("submission.jsonl",) if split == "heldout" else ()),
+    )
     _write_json(
         split_dir / "manifest.json",
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "private": True,
             "split": split,
             "total": 2,
             "instance_ids": ["a", "b"],
+            "coverage_complete": True,
+            "answer_coverage": 2,
+            "fully_grounded_count": 1,
+            "evidence_unresolved_count": 1,
+            "runtime_failed_count": 0,
+            "submission_ready": split == "heldout",
+            "submission_mode": (
+                "heldout_abstentions" if split == "heldout" else "blocked_unresolved"
+            ),
+            "submission_count": len(submissions) if split == "heldout" else 0,
+            "grounded_submission_count": 1,
+            "submission_abstention_count": 1 if split == "heldout" else 0,
+            "submission_exclusions": (
+                []
+                if split == "heldout"
+                else [{"instance_id": "b", "reason": "evidence_unresolved"}]
+            ),
             "files": {name: {"sha256": _sha(split_dir / name)} for name in generation_files},
         },
     )
@@ -94,12 +145,24 @@ def _frozen_split(tmp_path: Path, split: str = "train") -> tuple[Path, Path]:
         split_dir / "complete.json",
         {
             "status": "generation_complete",
+            "coverage_complete": True,
+            "answer_coverage": 2,
             "split": split,
             "total": 2,
             "input_manifest_sha256": hashlib.sha256(_canonical(tasks)).hexdigest(),
             "command_config_sha256": hashlib.sha256(_canonical(config)).hexdigest(),
             "record_ids_sha256": hashlib.sha256(_canonical(["a", "b"])).hexdigest(),
             "export_manifest_sha256": _sha(split_dir / "manifest.json"),
+            "fully_grounded_count": 1,
+            "evidence_unresolved_count": 1,
+            "runtime_failed_count": 0,
+            "submission_ready": split == "heldout",
+            "submission_mode": (
+                "heldout_abstentions" if split == "heldout" else "blocked_unresolved"
+            ),
+            "submission_count": len(submissions) if split == "heldout" else 0,
+            "grounded_submission_count": 1,
+            "submission_abstention_count": 1 if split == "heldout" else 0,
         },
     )
     reference = tmp_path / f"{split}-reference.jsonl"
@@ -127,6 +190,17 @@ def test_evaluate_split_freezes_before_reading_reference(tmp_path: Path) -> None
     reference.unlink()
 
     with pytest.raises(EvaluationError, match="frozen generation.*hash"):
+        evaluate_split(split_dir, reference, "train-public-labels")
+
+    assert not (split_dir / "evaluation.json").exists()
+
+
+def test_evaluate_split_verifies_source_artifacts_before_reference(tmp_path: Path) -> None:
+    split_dir, reference = _frozen_split(tmp_path)
+    (split_dir / "jobs" / "source-proof.json").write_text("tampered\n", encoding="utf-8")
+    reference.unlink()
+
+    with pytest.raises(EvaluationError, match="source artifact hash mismatch"):
         evaluate_split(split_dir, reference, "train-public-labels")
 
     assert not (split_dir / "evaluation.json").exists()
@@ -185,7 +259,7 @@ def test_evaluate_split_writes_private_bound_evaluation_without_mutating_generat
         "complete.json",
         "solutions.jsonl",
         "solutions.md",
-        "submission.jsonl",
+        "grounded-submission.jsonl",
     )
     before = {name: (split_dir / name).read_bytes() for name in generated_names}
 
@@ -195,7 +269,9 @@ def test_evaluate_split_writes_private_bound_evaluation_without_mutating_generat
         "reference_kind": "train-public-labels",
         "total": 2,
         "answer_matches": 1,
-        "evidence_matches": 2,
+        "evidence_assessable": 1,
+        "evidence_matches": 1,
+        "evidence_unresolved": 1,
     }
     assert evaluation["generation"]["manifest_sha256"] == _sha(split_dir / "manifest.json")
     assert evaluation["reference"] == {
@@ -299,6 +375,7 @@ def test_heldout_writes_no_reference_evaluation_without_opening_labels(
             "complete.json",
             "solutions.jsonl",
             "solutions.md",
+            "grounded-submission.jsonl",
             "submission.jsonl",
         )
     }
@@ -320,6 +397,8 @@ def test_heldout_writes_no_reference_evaluation_without_opening_labels(
         "reference_coverage": 0,
         "answer_matches": None,
         "evidence_matches": None,
+        "fully_grounded_count": 1,
+        "evidence_unresolved_count": 1,
     }
     assert {
         name: (split_dir / name).read_bytes() for name in generated
