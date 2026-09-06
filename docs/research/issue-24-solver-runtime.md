@@ -29,3 +29,14 @@ macOS arm64에서 관측한 wrapper SHA-256은 `61b0194f3bb6534439c8d26a3ed57d08
 - JSON event stream은 backend model 식별자를 제공하지 않았다. 관측 가능한 사실은 `gpt-6-astra`를 요청했고 서버가 unknown-model/fallback 경고 없이 수락했다는 것이다.
 
 문항별 입력·답·인용과 원시 실행 기록은 private `artifacts/solution-records/issue24/diagnostics/` 아래에 보존한다.
+
+
+## Selected production validation and held-out pilot
+
+The selected same-weight ORT CPU OCR plus Astra/high pipeline completed the authorized validation smoke in 64.68 seconds. The question/solution/calculation/answer/Evidence exports were frozen at 2026-09-06 18:17:58 UTC before comparison with the one authorized v24 row; answer and Evidence both matched. This known-item format check is not an estimate of validation or test accuracy.
+
+The selected held-out pilot produced two valid answer/solution records in 240.85 seconds: one fully grounded and one with unresolved Evidence. The latter source check transcribed the same four headings and bodies as the earlier public-input diagnostic but assigned ambiguous heading legibility. The full-page pixels, prompt, schema and invocation settings were identical; locator crops differed by only 1–3 border pixels. These observations cannot distinguish inference variability from a crop-border effect. The prior diagnostic is not gold, and the ambiguity was not overridden or retried to obtain a preferred ID.
+
+The pilot process subsequently reported a shutdown error because its worker-survivor snapshot preceded the executor manager's bounded join. Recomputing liveness afterward fixes the false failure while retaining hard failure for a surviving worker. The runner suite passed 60 tests; an independent reviewer reproduced both reaped-worker success and unreaped-worker failure. Independent architecture review accepted the original validation/pilot as algorithm evidence and the regression as lifecycle evidence, with no repeated model gate required. Full held-out generation began in a fresh private run root after the lifecycle fix.
+
+Terminal source ambiguity remains distinct from runtime failure. Valid answer/solution records are retained for review, with no automatic null replacement. Full submission readiness is not claimed while Evidence remains unresolved.
