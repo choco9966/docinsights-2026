@@ -1,6 +1,6 @@
 # Held-out 119건 심층 판정 및 1,730건 전수 재검토 계획
 
-> **For agentic workers:** 실행 시 `superpowers:subagent-driven-development` 또는 `superpowers:executing-plans`를 적용한다. 현재 요청은 Intent·계획 작성과 5건 실제 측정이다. 이후 대량 실행과 완료 상태를 혼동하지 않는다.
+> **For agentic workers:** 실행 시 `superpowers:subagent-driven-development` 또는 `superpowers:executing-plans`를 적용한다. 사용자는 이 계획의 실행과 100건 시점 사용량 산정을 승인했다. 100건은 먼저 119건 Ultra 단계의 독립 재검증 수락 기록으로 집계한다.
 
 **Goal:** 원문에 근거해 119건의 조건부·미확정 판정을 개선한 다음, 전체 1,730건의 답·풀이·Evidence를 독립 검토하고 비용·시간·변경 근거를 기록한다.
 
@@ -10,9 +10,11 @@
 
 **Spec:** [Intent.md](/Users/choco/Documents/project/docinsights-2026/Intent.md).
 
-**현재 상태:** Intent·계획 작성과 5건 진단 측정은 수행했다. 실행 수락 0/5·형식 통과 0/5이므로 유효 검토 처리량 검증은 미완료다. 다음 실행은 아래 단계 1a의 전송·형식 복구부터 시작한다. 119건 심층 판정과 전수 검토는 아직 시작하지 않았다. [실측 상세](/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-rereview-v2/pilot-5/report.md)
+**첫 진단 당시 상태:** Intent·계획 작성과 5건 진단 측정은 수행했다. 그 실행은 수락 0/5·형식 통과 0/5로 보존한다. 후속 실행 상태는 아래 실행 갱신과 로컬 ledger를 따른다. [실측 상세](/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-rereview-v2/pilot-5/report.md)
 
 ## 공통 제약
+
+**실행 갱신:** 119건·973페이지의 source-only 입력을 고정했다. 기존 OCR이 일부 페이지만 포함한 9건은 누락을 표시하고 전체 PDF 이미지를 제공한다. 구조·수락·runner 회귀 검사 45개가 통과했고 별도 재검토 중이다. CLI Astra 경로는 호환 오류로 실패를 보존했다. 네이티브 Astra/ultra 합성 검사 통과 후 실제 첫 문항을 검토 중이며, 독립 수락 전에는 병렬 대량 검토를 시작하지 않는다. 진행의 최신 근거는 로컬 execution ledger와 문제별 수락 receipt다.
 
 - 정확도 우선, 비용 선측정, 고정 8시간 제한 없음.
 - 이번 전체 범위는 held-out 1,730건. 심층 대상 119건 + 나머지 1,611건.
@@ -166,6 +168,10 @@
 - [ ] 최종 파일을 다시 읽어 CSV/JSONL 대응, 전수 schema, manifest 해시를 검증한다. 과거 기준본은 보존한다.
 
 ## 비용 보고 계약
+
+최신 사용자 지시에 따라 **계정 잔여 사용량 감소**를 주 비용 지표로 사용한다. 실행 시작 잔여량 57%에서 첫 100개 고유 Ultra 판정의 독립 수락 시점 잔여량을 빼 퍼센트포인트로 보고한다. 준비·실패·재검증을 포함한 전체 구간과 관측 가능한 단계별 토큰을 함께 남긴다. 계정 공유 사용량과 정수 단위 표시의 한계를 밝히고, 리셋 전후를 단순 차감하지 않는다. 아래 API 단가는 이전 진단의 참고 자료이며 이번 비용 보고의 주 지표가 아니다.
+
+네이티브 경로에서는 `turn_context`의 설정 모델·effort, source-only 접근 범위, 모든 페이지 확인, 출력·입력 해시, 구조 검사와 독립 비교를 확인한다. 세션의 누적 사용량 이벤트는 마지막 스냅샷만 취하며 합산하지 않는다. 네이티브 검사를 CLI strict 이벤트 완료로 표기하거나 실제 서버 모델 신원 증명으로 해석하지 않는다. 실제 1건 수락 후 제한된 병렬 묶음, 이후 최대 5개 동시 요청으로 확장한다.
 
 5건별 `requested_model`, `requested_effort`, `runtime_version`, `started_at`, `elapsed_seconds`, `input_tokens`, `cached_input_tokens`, `output_tokens`, 관측 가능한 `reasoning_output_tokens`, `status`, 실패 원인, `attempt_count`를 기록한다. 의미 검토 실패도 비용 분모에서 빼지 않는다.
 
