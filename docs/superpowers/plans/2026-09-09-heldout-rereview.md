@@ -1,5 +1,7 @@
 # Held-out 119건 심층 판정 및 1,730건 전수 재검토 계획
 
+> **2026-09-09 비용 재계획으로 전수 Sol 실행 중단:** 사용자는 전체 자동점검과 위험 문항 집중 개선을 선택했다. 이후 실행은 [새 예산 계획](/Users/choco/Documents/project/docinsights-2026/docs/superpowers/plans/2026-09-09-heldout-budget-review.md)을 따른다. 이 문서는 초기 계획과 이미 수행한 검토의 역사 기록으로 보존한다.
+
 > **For agentic workers:** 실행 시 `superpowers:subagent-driven-development` 또는 `superpowers:executing-plans`를 적용한다. 사용자는 이 계획의 실행과 100건 시점 사용량 산정을 승인했다. 100건은 먼저 119건 Ultra 단계의 독립 재검증 수락 기록으로 집계한다.
 
 **Goal:** 원문에 근거해 119건의 조건부·미확정 판정을 개선한 다음, 전체 1,730건의 답·풀이·Evidence를 독립 검토하고 비용·시간·변경 근거를 기록한다.
