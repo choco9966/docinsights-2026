@@ -1,0 +1,529 @@
+{
+  "backend_model_event_field": null,
+  "base_prompt_template_sha256": "a6769d3cd7dec7eb4fa94f2aec6ab01f70926d5ffc4053eea39d1110808fcfa0",
+  "codex_cli_version": "0.153.4",
+  "codex_executable": "data/issue24/codex-0.153.4/node_modules/.bin/codex",
+  "codex_executable_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/codex-0.153.4/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex",
+  "codex_executable_sha256": "b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3",
+  "codex_native_sha256": "b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3",
+  "codex_observed_version": "codex-cli 0.153.4",
+  "codex_resolution_method": "openai-node-wrapper-vendor-layout-v1",
+  "codex_wrapper_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/codex-0.153.4/node_modules/@openai/codex/bin/codex.js",
+  "codex_wrapper_sha256": "61b0194f3bb6534439c8d26a3ed57d0805f84b884588b761795323eeb92fcf70",
+  "disabled_features": [
+    "shell_tool",
+    "unified_exec",
+    "apps",
+    "plugins",
+    "remote_plugin",
+    "browser_use",
+    "browser_use_external",
+    "browser_use_full_cdp_access",
+    "computer_use",
+    "in_app_browser",
+    "code_mode_host",
+    "hooks",
+    "skill_mcp_dependency_install",
+    "multi_agent",
+    "image_generation",
+    "memories",
+    "goals"
+  ],
+  "maximum_attempts": 2,
+  "model": "gpt-6-astra",
+  "model_identity_evidence": "requested-model-plus-completed-turn-without-fallback-warning",
+  "model_reasoning_effort": "high",
+  "ocr": {
+    "adapter_reference_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/ocr-benchmark-v2/acceleration-probe/probe_paddlex_ort.py",
+    "adapter_reference_sha256": "3f6d644acd02040bf107413569522c134e0f33b013a2ea21cd2d17a9b8de647d",
+    "conversion_enable_onnx_checker": true,
+    "conversion_opset_version": 11,
+    "conversion_optimize_tool": "None",
+    "conversion_requirements_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/requirements/solution-paddle-onnx-export.txt",
+    "conversion_requirements_sha256": "37e194e4021d421c325577c0768d6c04177888032e9c5728979cba171bc10c42",
+    "conversion_setup_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/scripts/setup_solution_paddle_onnx.py",
+    "conversion_setup_sha256": "78fa67ed47971e4d6507fd252b76003d98214bef043d5ba53ee5b3312707f6ff",
+    "converter_version": "2.1.0",
+    "cpu_threads": 2,
+    "detector_effective_limit_side_len": 64,
+    "detector_effective_limit_type": "min",
+    "detector_effective_max_side_limit": 4000,
+    "detector_onnx_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-onnx-models/detector/inference.onnx",
+    "detector_onnx_sha256": "d4aa24d408cd70b8b9f66cc758e20f397fc31a9c69d8477cf8887fc53bd5fceb",
+    "detector_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-models/detector",
+    "detector_repository": "PaddlePaddle/PP-OCRv5_mobile_det",
+    "detector_revision": "0d63e78e2b680928f6b1747d76a08db6e645efb7",
+    "detector_source_files": {
+      "inference.json": "05feef1acb00aa4cd7362b15f7f501fc4f99d7b1fa73c1c871e0c7b1504b0f5c",
+      "inference.pdiparams": "afa1820cb16c1fd0dad589d0f8b389139061c1ef6d68019685fd07be997dda5b"
+    },
+    "detector_tree_sha256": "b3ca5a167f80b79e8433df9cb931c578f384f7f8867b960748022ee1b1826916",
+    "device": "cpu",
+    "dpi": 175,
+    "enable_mkldnn": false,
+    "engine_init_config_sha256": "739e2c8ae966bfe4fb137542188bd7dc9ed8164b46f88b2babf920b4e6990b5e",
+    "environment_root": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env",
+    "equivalence_artifacts": [
+      {
+        "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/ocr-benchmark-v2/acceleration-probe/shard-0-of-2.json",
+        "sha256": "121b49c2c5ac2d2992a802d4e25eba4c607af8318e0cbe75449c79d05a44f6a3"
+      },
+      {
+        "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/ocr-benchmark-v2/acceleration-probe/shard-1-of-2.json",
+        "sha256": "ae4c5d2e53e76e6924cdb088fe2e49e2b07e1f15d426377878e8c3f6bf029db4"
+      },
+      {
+        "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/ocr-benchmark-v2/acceleration-probe/cpu-thread-and-pool-tuning.json",
+        "sha256": "99d94144bffd8e2123443f14ff29317253a4716116e138375e9da859cc9981af"
+      }
+    ],
+    "equivalence_confidence_max_abs": 1.7524e-05,
+    "equivalence_page_count": 60,
+    "equivalence_text_boxes_polygons": "exact",
+    "image_cache_helper_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/scripts/solution_image_cache.py",
+    "image_cache_helper_sha256": "3e8cb67868d0198caca4cb1316dfbed67771d30f40d5a30f2c7515b321971053",
+    "minimum_free_bytes": 1073741824,
+    "ocr_backend": "paddlex-ppocrv5-onnxruntime-cpu",
+    "ocr_capacity_reference_rss_bytes": 1805910016,
+    "ocr_capacity_selection": "pool1-ort-intra4-memory-bounded",
+    "ocr_document_base_timeout_seconds": 180,
+    "ocr_input_format": "png",
+    "ocr_page_timeout_seconds": 120,
+    "ocr_processes": 1,
+    "ocr_shutdown_grace_seconds": 10,
+    "onnxruntime_execution_mode": "ORT_SEQUENTIAL",
+    "onnxruntime_graph_optimization_level": "ORT_ENABLE_ALL",
+    "onnxruntime_inter_op_num_threads": 1,
+    "onnxruntime_intra_op_num_threads": 4,
+    "onnxruntime_module_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/rapidocr-env/lib/python3.11/site-packages/onnxruntime/__init__.py",
+    "onnxruntime_module_sha256": "1ca44e862e236031dde5dfb8a4d217e3770fa43201dadcf0b947fd43ed16d20e",
+    "onnxruntime_provider": "CPUExecutionProvider",
+    "onnxruntime_record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/rapidocr-env/lib/python3.11/site-packages/onnxruntime-1.23.2.dist-info/RECORD",
+    "onnxruntime_record_sha256": "e35600cfddbd37c7e0e85394a631480dd6f742c475daf5f6db8f8388637dc968",
+    "onnxruntime_site_packages": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/rapidocr-env/lib/python3.11/site-packages",
+    "onnxruntime_version": "1.23.2",
+    "operating_system": "macOS-14.6-arm64-arm-64bit",
+    "page_jpeg_recipe": "pdftoppm-png-pillow-rgb-jpeg-v1",
+    "pillow_version": "12.3.0",
+    "python_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/bin/python",
+    "python_sha256": "3cd9c793e46d0df807a7318decd886b28211f02647d3d25a2a337d73fea1e303",
+    "recognizer_onnx_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-onnx-models/recognizer/inference.onnx",
+    "recognizer_onnx_sha256": "4212d483f00f1c8617ba143ba36731e361d8307f49b5fae830d828f64b2162a2",
+    "recognizer_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-models/recognizer",
+    "recognizer_repository": "PaddlePaddle/en_PP-OCRv5_mobile_rec",
+    "recognizer_revision": "267c36e24c331595590fe7bd72bde2436fd286f2",
+    "recognizer_source_files": {
+      "inference.json": "fd1b6ec722ea841a72d3ba43e527df1d1066d5d7808e0503ee3eec7265188753",
+      "inference.pdiparams": "3ec8a97ed6cefe8568d3e2ee90bb193299b566a7661aa4fd52d224b96b59f66b"
+    },
+    "recognizer_tree_sha256": "2a3324a89b92f446da343999c922d0fa7a0fa3b0e0a3bbb7034d654c588f1e16",
+    "renderer": "pdftoppm",
+    "renderer_parallelism": 2,
+    "renderer_path": "/Users/choco/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+    "renderer_sha256": "de772e88ab9977ccde25def9b403bf42675d75f5dd82b19fbd7d8123ad183159",
+    "renderer_version": "pdftoppm version 26.05.0",
+    "retained_image_extension": "jpg",
+    "retained_image_format": "jpeg",
+    "retained_jpeg_quality": 65,
+    "runtime_distributions": [
+      {
+        "name": "aistudio-sdk",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/aistudio_sdk-0.3.9.dist-info/RECORD",
+        "record_sha256": "d4a7469fffadcf75d541efc64304b8aba4d89dd81fa6a387889380bf63082cb9",
+        "version": "0.3.9"
+      },
+      {
+        "name": "annotated-types",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/annotated_types-0.8.0.dist-info/RECORD",
+        "record_sha256": "8191d3aa1ac93480688819b4db2385606219a3f7a453b85e086646134ded4f96",
+        "version": "0.8.0"
+      },
+      {
+        "name": "anyio",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/anyio-4.15.1.dist-info/RECORD",
+        "record_sha256": "61566393fe741ef449f387182a94956cc11dda629cdea4a5823b89f6eb9dc6b3",
+        "version": "4.15.1"
+      },
+      {
+        "name": "bce-python-sdk",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/bce_python_sdk-0.9.79.dist-info/RECORD",
+        "record_sha256": "f2d9c881dc51e6707e671a538f67bf49a53b7c2b1d54c275a138f165af2759c9",
+        "version": "0.9.79"
+      },
+      {
+        "name": "certifi",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/certifi-2026.7.22.dist-info/RECORD",
+        "record_sha256": "cff9d243744c96445494c29abee3d592d0a6955d5504f4fbe034dce7aaf38490",
+        "version": "2026.7.22"
+      },
+      {
+        "name": "cffi",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/cffi-2.1.1.dist-info/RECORD",
+        "record_sha256": "050fe5e37bb673f0f7aeb4ac8074a1cf46500b99611839356d241a098f952149",
+        "version": "2.1.1"
+      },
+      {
+        "name": "chardet",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/chardet-7.6.0.dist-info/RECORD",
+        "record_sha256": "4f2e8efd4def56721c1fdbe66cc1bd7f5a9bacc8762dc2a687b89381c5481c49",
+        "version": "7.6.0"
+      },
+      {
+        "name": "charset-normalizer",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/charset_normalizer-3.5.1.dist-info/RECORD",
+        "record_sha256": "1c19681b87b5ba1bf83c072c4b8df750fbcb1c0d1c8955028ff80f77088072f8",
+        "version": "3.5.1"
+      },
+      {
+        "name": "click",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/click-8.5.0.dist-info/RECORD",
+        "record_sha256": "924078ec3a47b97192425dbc0c3693085af7a7b863afcf6b4e110cf0bd97dea4",
+        "version": "8.5.0"
+      },
+      {
+        "name": "colorlog",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/colorlog-6.12.0.dist-info/RECORD",
+        "record_sha256": "46ad9c4c831147111796fb866792863461d57600b1f524e7948f4aa58e38ae7a",
+        "version": "6.12.0"
+      },
+      {
+        "name": "crc32c",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/crc32c-2.9.dist-info/RECORD",
+        "record_sha256": "4de890755a5f9160f3de8e228a390938cb3d9e852a45712cabcb2d7b424204fb",
+        "version": "2.9"
+      },
+      {
+        "name": "cryptography",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/cryptography-50.0.1.dist-info/RECORD",
+        "record_sha256": "c7999396b380e7c2945b24fb03ad9c28af17709138fbdbabab6ecea8c35db1f5",
+        "version": "50.0.1"
+      },
+      {
+        "name": "filelock",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/filelock-3.32.5.dist-info/RECORD",
+        "record_sha256": "6469d5867d6fb6705c4a34536b4684e1008206a9822cdff920b126030c9eabd3",
+        "version": "3.32.5"
+      },
+      {
+        "name": "fsspec",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/fsspec-2026.7.0.dist-info/RECORD",
+        "record_sha256": "bf8970ef32f4fa1da4c23e55e648fbcd3980d3d67f14268a514a5973514fd2a0",
+        "version": "2026.7.0"
+      },
+      {
+        "name": "future",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/future-1.0.0.dist-info/RECORD",
+        "record_sha256": "0293900c15d9e322347b964f43ec877419c95de91e2147cc1afca8381693dde9",
+        "version": "1.0.0"
+      },
+      {
+        "name": "h11",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/h11-0.16.0.dist-info/RECORD",
+        "record_sha256": "3779e13c17d8e21c769ed9ee8780af123cc3f8656185f5f8d3af258ff5639b3e",
+        "version": "0.16.0"
+      },
+      {
+        "name": "hf-xet",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/hf_xet-1.6.0.dist-info/RECORD",
+        "record_sha256": "bd94c1b2ef995d14c7f9c72f42af4ee0f22379123eb89093754d1be16f323df4",
+        "version": "1.6.0"
+      },
+      {
+        "name": "httpcore",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/httpcore-1.0.9.dist-info/RECORD",
+        "record_sha256": "67cb4644d84fef1df8c5a0862c57c3380eff058a153bac7a4ba2722779982554",
+        "version": "1.0.9"
+      },
+      {
+        "name": "httpx",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/httpx-0.28.1.dist-info/RECORD",
+        "record_sha256": "0b6e0407bccd32b74b7a25bd2575563407d6cb8d7599a770e675d879b40e33a2",
+        "version": "0.28.1"
+      },
+      {
+        "name": "huggingface-hub",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/huggingface_hub-0.34.4.dist-info/RECORD",
+        "record_sha256": "2ede9eab419e7cbeaea58f8396c09a354456cbef161a868b1f7e7aa24565ea0f",
+        "version": "0.34.4"
+      },
+      {
+        "name": "idna",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/idna-3.19.dist-info/RECORD",
+        "record_sha256": "fcbd9ba6d706b14a1815e272621cfce1540cdc2946b39bc2b9c5282c5746ba78",
+        "version": "3.19"
+      },
+      {
+        "name": "imagesize",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/imagesize-2.0.1.dist-info/RECORD",
+        "record_sha256": "0824e4de8ce11fe42248294c830ab8621a3ca4ed4be680ffa02e98746f43fd5f",
+        "version": "2.0.1"
+      },
+      {
+        "name": "modelscope",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/modelscope-1.39.1.dist-info/RECORD",
+        "record_sha256": "89ba371af417578135d9d2661957e9d2cbb8cc3212fe5ae7df6d481c1eba70b7",
+        "version": "1.39.1"
+      },
+      {
+        "name": "modelscope-hub",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/modelscope_hub-0.4.0.dist-info/RECORD",
+        "record_sha256": "6d0557b6b860a2df6d4c2f16eaf3e5a8c643df98919ab767284d24274021f2f4",
+        "version": "0.4.0"
+      },
+      {
+        "name": "networkx",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/networkx-3.6.1.dist-info/RECORD",
+        "record_sha256": "f6833bb525b720a7809dd6280817601af3dbd78efef02d9e55d4b887ec1f52da",
+        "version": "3.6.1"
+      },
+      {
+        "name": "numpy",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/numpy-2.4.6.dist-info/RECORD",
+        "record_sha256": "03bb5ff20d5af5144478c25639b2c61fea303ec1b0cffe55657a6f9868dd7576",
+        "version": "2.4.6"
+      },
+      {
+        "name": "opencv-contrib-python",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/opencv_contrib_python-4.10.0.84.dist-info/RECORD",
+        "record_sha256": "67cf05ea26dca853af5cecbbb5eceac5da00c7fefc34d8af8f5cb5710bc01294",
+        "version": "4.10.0.84"
+      },
+      {
+        "name": "opt-einsum",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/opt_einsum-3.3.0.dist-info/RECORD",
+        "record_sha256": "0be8862d7bc6537843cce18f142617788f4b18ce77e21ec97fad2881ac75fe7b",
+        "version": "3.3.0"
+      },
+      {
+        "name": "packaging",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/packaging-26.3.dist-info/RECORD",
+        "record_sha256": "1b8655965b0d83e9a067fd7f84b977bd1e117e0fb9f2874b2572781bdc9e2147",
+        "version": "26.3"
+      },
+      {
+        "name": "paddleocr",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/paddleocr-3.3.2.dist-info/RECORD",
+        "record_sha256": "f5ced7b21d41174983356cb2501d373dcda6871aa041d070cdbd7c26c829c96b",
+        "version": "3.3.2"
+      },
+      {
+        "name": "paddlepaddle",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/paddlepaddle-3.2.0.dist-info/RECORD",
+        "record_sha256": "ea83e3021b7ac395ae2be4eb95fe9b98d29a33f3070b3e116bac6b6ab4d887e3",
+        "version": "3.2.0"
+      },
+      {
+        "name": "paddlex",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/paddlex-3.3.13.dist-info/RECORD",
+        "record_sha256": "957c38a5f895514b3806938dc6d50e8bb7c0b535357dbf102b39549a0b6fd8f7",
+        "version": "3.3.13"
+      },
+      {
+        "name": "pandas",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pandas-3.0.5.dist-info/RECORD",
+        "record_sha256": "eeaa1e39f9c97a580882e70614fdeea8dfadf19ff805d73f3f81992bcf216fdd",
+        "version": "3.0.5"
+      },
+      {
+        "name": "pillow",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pillow-12.3.0.dist-info/RECORD",
+        "record_sha256": "3214629461ef56093a0cc534563182bb03f120f7d1a3f3ff142f3bc4092542f4",
+        "version": "12.3.0"
+      },
+      {
+        "name": "prettytable",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/prettytable-3.18.0.dist-info/RECORD",
+        "record_sha256": "9e51e62cb4cb1642be005ad88f5e16eb1a1a748cfb4def7382335fbce7979872",
+        "version": "3.18.0"
+      },
+      {
+        "name": "protobuf",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/protobuf-7.36.1.dist-info/RECORD",
+        "record_sha256": "bb6509cecca0a7f715990d43c00e50f59e70406385ec7cb4d6447198c82eb4db",
+        "version": "7.36.1"
+      },
+      {
+        "name": "psutil",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/psutil-7.2.2.dist-info/RECORD",
+        "record_sha256": "82a0585abe618fd6b841c095e45a9970cb4c8ace9aab3209d3602a8a1233ed49",
+        "version": "7.2.2"
+      },
+      {
+        "name": "py-cpuinfo",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/py_cpuinfo-9.0.0.dist-info/RECORD",
+        "record_sha256": "7b81a4c8aa24ed9fd2169370dabc2d6951de223afa58c4aa97fce6b7b28246a6",
+        "version": "9.0.0"
+      },
+      {
+        "name": "pyclipper",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pyclipper-1.4.0.dist-info/RECORD",
+        "record_sha256": "01f90f5932dd1b8e2feab79cddcf46b443409095a0a59482969fc9c5f0da42d5",
+        "version": "1.4.0"
+      },
+      {
+        "name": "pycparser",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pycparser-3.0.dist-info/RECORD",
+        "record_sha256": "e752c5c64ce06f508a80e0edeef0c165df849587b829cb9a7b7bb22ac43b0c7e",
+        "version": "3.0"
+      },
+      {
+        "name": "pycryptodome",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pycryptodome-3.23.0.dist-info/RECORD",
+        "record_sha256": "5a24d45881aa64b4e353ec67be325c0a90024e4c1e005592f31bdce8099c97ef",
+        "version": "3.23.0"
+      },
+      {
+        "name": "pydantic",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pydantic-2.13.5.dist-info/RECORD",
+        "record_sha256": "93253f807bd8a0440d58d159ffeef610528e8a687b948095955114275c16881f",
+        "version": "2.13.5"
+      },
+      {
+        "name": "pydantic-core",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pydantic_core-2.46.5.dist-info/RECORD",
+        "record_sha256": "6648b95fc939d30baafd816682c157249f0f49069bfe24e327a05f590aff9620",
+        "version": "2.46.5"
+      },
+      {
+        "name": "pypdfium2",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/pypdfium2-5.13.0.dist-info/RECORD",
+        "record_sha256": "2ea97cb2380564290e4b1dbd3ea1cc8b791be79dfce33de56231738fcd52496d",
+        "version": "5.13.0"
+      },
+      {
+        "name": "python-bidi",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/python_bidi-0.6.11.dist-info/RECORD",
+        "record_sha256": "cf1dd68b67b57a7f7b4c8f57a7fad17998252f2f585bfcb65fb9685cce622085",
+        "version": "0.6.11"
+      },
+      {
+        "name": "python-dateutil",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/python_dateutil-2.9.0.post0.dist-info/RECORD",
+        "record_sha256": "e15e868a50b9c4e71df17b31369843617780146ac5adb1bbfdcced0ebe501824",
+        "version": "2.9.0.post0"
+      },
+      {
+        "name": "pyyaml",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/PyYAML-6.0.2.dist-info/RECORD",
+        "record_sha256": "78d5724116f8fbf95c9ec740c3c9cb6ada6e4093633c0948b7c2d28ca4b7f96e",
+        "version": "6.0.2"
+      },
+      {
+        "name": "requests",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/requests-2.34.2.dist-info/RECORD",
+        "record_sha256": "fc8c5216d0e865d815bd04cc240b5adc5d56f6c3dbe9aef3b4ea3b83d735bdfe",
+        "version": "2.34.2"
+      },
+      {
+        "name": "ruamel-yaml",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/ruamel_yaml-0.19.1.dist-info/RECORD",
+        "record_sha256": "a6c5029dfc9e421e9c078c8ca35f1f89fb71a3eef3dbcebbd1c5b2eb6a7ef616",
+        "version": "0.19.1"
+      },
+      {
+        "name": "safetensors",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/safetensors-0.8.0.dist-info/RECORD",
+        "record_sha256": "4e91dff79920a802e426762fc63266bfb5687612a27a6b9ee0c7d3774b65cd7b",
+        "version": "0.8.0"
+      },
+      {
+        "name": "setuptools",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/setuptools-84.0.0.dist-info/RECORD",
+        "record_sha256": "26b6656e2a9d04f4c1cc1e8580636454733af03d8dc2dac4b2d4636ff1ed6da8",
+        "version": "84.0.0"
+      },
+      {
+        "name": "shapely",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/shapely-2.1.2.dist-info/RECORD",
+        "record_sha256": "7f63565675f4bd1fa55ea8ddb8408e70d9ebb93b5fa647ff8bfe134a2e2dc3b0",
+        "version": "2.1.2"
+      },
+      {
+        "name": "six",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/six-1.17.0.dist-info/RECORD",
+        "record_sha256": "d16e50f347969b1e1919fb0c88bac4b9c644f5305bcfcfb00f72b646dbd4065d",
+        "version": "1.17.0"
+      },
+      {
+        "name": "tqdm",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/tqdm-4.70.0.dist-info/RECORD",
+        "record_sha256": "0fd77806962cb8ea3409a3cd739a82ba3073fe6eb685d05462f1881900135d06",
+        "version": "4.70.0"
+      },
+      {
+        "name": "typing-extensions",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/typing_extensions-4.16.0.dist-info/RECORD",
+        "record_sha256": "9e07fea845cac76293d927afa7157a14ecba39b318bc8af236b8de530b7656c1",
+        "version": "4.16.0"
+      },
+      {
+        "name": "typing-inspection",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/typing_inspection-0.4.4.dist-info/RECORD",
+        "record_sha256": "83fc23669db31500d06056b13ecebe4f088f56a81c1ea86e3b68f1de3b8c7d95",
+        "version": "0.4.4"
+      },
+      {
+        "name": "ujson",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/ujson-6.0.0.dist-info/RECORD",
+        "record_sha256": "fa0d5a9297945a84f4a1a2ee7bbcdda56986d6ae6c6450491f100d5358485640",
+        "version": "6.0.0"
+      },
+      {
+        "name": "urllib3",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/urllib3-2.7.0.dist-info/RECORD",
+        "record_sha256": "4869c7ca2082c964b4e2bb8244deda15cfa069d93e4543d3a16eca6a63cbb81f",
+        "version": "2.7.0"
+      },
+      {
+        "name": "wcwidth",
+        "record_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/ppocr-env/lib/python3.11/site-packages/wcwidth-0.8.3.dist-info/RECORD",
+        "record_sha256": "f3172528836883d84055fea5cd9edd2dbac7221a9b15ca36f689f0b7a88ffddf",
+        "version": "0.8.3"
+      }
+    ],
+    "runtime_lock_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/requirements/solution-paddle-ocr.txt",
+    "runtime_lock_sha256": "3f244116ce191e0e18cce68f9fe1e9d3e8f530bb108f855b9d7558138187322c",
+    "successful_page_jpegs": "exact_regenerable_cache_v1",
+    "text_detection_model_name": "PP-OCRv5_mobile_det",
+    "text_recognition_batch_size": 6,
+    "text_recognition_model_name": "en_PP-OCRv5_mobile_rec",
+    "use_doc_orientation_classify": false,
+    "use_doc_unwarping": false,
+    "use_textline_orientation": false,
+    "worker_init_config_sha256": "9384862e6562b82df9d4687546a11d5e11b0da73cfedb79fecf2e2ae38d70281",
+    "worker_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/scripts/solution_paddle_worker.py",
+    "worker_sha256": "02d870aef090554b78072f49166ac95a8e486266fd99aa83101f969d60a6e651"
+  },
+  "output_schema_sha256": "72e7da0fb8230ddfe24f70bb4870107e68a8698c696536c7ba0b3a2b31941a7e",
+  "prompt_instructions_sha256": "a22625ebdd17bedd5c737c673b3048dff0323989940ae8dc003ca1c4f6d4a26f",
+  "retry_prompt_template_sha256": "c34ce33d8bd6086b24f05e960587bfdf5ded07f2dc4b4bb57fa00ca91fb5a45d",
+  "sandbox": "read-only",
+  "source_checker": {
+    "anchor_padding_pixels": 12,
+    "backend_model_event_field": null,
+    "codex_executable_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/codex-0.153.4/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex",
+    "codex_executable_sha256": "b973d440acac501fd2594a43e7ca9ce41e0a65b9dfb28d0d7a7837c99e1261e3",
+    "codex_observed_version": "codex-cli 0.153.4",
+    "codex_resolution_method": "openai-node-wrapper-vendor-layout-v1",
+    "codex_wrapper_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/data/issue24/codex-0.153.4/node_modules/@openai/codex/bin/codex.js",
+    "codex_wrapper_sha256": "61b0194f3bb6534439c8d26a3ed57d0805f84b884588b761795323eeb92fcf70",
+    "context_vertical_padding_pixels": 200,
+    "dpi": 175,
+    "maximum_attempts": 1,
+    "maximum_runtime_attempts": 2,
+    "method": "codex-cli-blind-source-region-v1",
+    "model": "gpt-6-astra",
+    "model_identity_evidence": "requested-model-plus-completed-turn-without-fallback-warning",
+    "model_reasoning_effort": "high",
+    "module_path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/src/docinsights_analysis/visual_id_checks.py",
+    "module_sha256": "70f135fdaabeac6ea698d890a1b0eab6dcb07599f5dba99bca4c730df278d049",
+    "ocr_input_format": "png",
+    "output_schema_sha256": "e2ad3d7015d2774dfdad668a8b4806dbd8919d906b1311176048b12c49de6374",
+    "renderer_path": "/Users/choco/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/pdftoppm",
+    "renderer_sha256": "de772e88ab9977ccde25def9b403bf42675d75f5dd82b19fbd7d8123ad183159",
+    "renderer_version": "pdftoppm version 26.05.0",
+    "timeout_seconds": 300
+  },
+  "timeout_seconds": 300,
+  "web_search": "disabled"
+}

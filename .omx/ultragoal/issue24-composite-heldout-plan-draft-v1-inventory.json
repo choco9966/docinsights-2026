@@ -1,0 +1,260 @@
+{
+  "base_config_extraction": {
+    "canonical_value_sha256": "be3365f2b40f5432974df38af4441a5595bc278da04bfc12d56db061763b653e",
+    "cross_check_json_pointer": "/command_config",
+    "cross_check_source": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/runs-v5/heldout/run-manifest.json",
+      "sha256": "2ad1ae1612d4167fb81f7291485a50d5b9acf707b54bbf8960bd0361303f3bb1"
+    },
+    "exact_values_equal": true,
+    "extracted_file": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-composite-base-command-config-v1.json",
+      "sha256": "05815f88f96eb98d14d5db860b82b0a2e0e79758c148a83dd5be32bb21341ecf"
+    },
+    "json_pointer": "/command_config",
+    "source": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/prepared-resolution-runtime-v1.json",
+      "sha256": "5970b6baa61aaa092d1733c2ed4d05b4dfae6ec95b0f0ca7294d6426d95d30dc"
+    }
+  },
+  "canonical": false,
+  "counts": {
+    "completed_replacement": 4,
+    "current_pdf": 3,
+    "geometry": 20,
+    "historical": 4,
+    "legacy": 48,
+    "official": 1730,
+    "ordinary_prepared": 515,
+    "pending_replacement": 586,
+    "replacement": 590,
+    "retained": 1140,
+    "retained_batch": 1018,
+    "retained_historical": 6,
+    "retained_legacy_completed": 104,
+    "retained_legacy_replay": 12
+  },
+  "draft": {
+    "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-composite-heldout-plan-draft-v1.json",
+    "sha256": "cc83336e1607be73a55a22ffd171edf9170045953eefdf6e935b3134aea47b24"
+  },
+  "format": "composite-heldout-plan-draft-inventory-v1",
+  "missing_inputs": [
+    {
+      "count": 509,
+      "kind": "prepared-resolution-v1",
+      "required_inputs": [
+        "one or more completed prepared-resolution output roots",
+        "exact original verifier script and Python pins",
+        "preparation_manifest and runtime_config pins",
+        "source_resolution_v1 records for every selected ID"
+      ],
+      "route": "ordinary_prepared",
+      "selected_ids_sha256": "84a4b07c97910b83a5b1eeab45bf14f9f407f91e54ad117aa28f2a708671832a"
+    },
+    {
+      "count": 2,
+      "kind": "prepared-retained-response-recovery-v1",
+      "required_inputs": [
+        "completed retained-response recovery output root(s) for task_010180 and task_010183",
+        "exact original recovery verifier script and Python pins",
+        "failed_run_manifest and failed_progress pins",
+        "source_resolution_v1 records for both selected IDs"
+      ],
+      "route": "ordinary_prepared",
+      "selected_ids_sha256": "2cf910fb2bfbee25d4c3268b2072bfd77cd2cfb671b84fb2fce4cca1661729e7"
+    },
+    {
+      "count": 20,
+      "kind": "prepared-resolution-v1",
+      "required_inputs": [
+        "completed prepared-resolution output root(s) consuming the 20 verified geometry sources",
+        "exact original verifier script and Python pins",
+        "preparation_manifest and runtime_config pins",
+        "source_resolution_v1 records for every selected ID"
+      ],
+      "route": "geometry",
+      "selected_ids_sha256": "24825edcb05cb62430104467656eeea75688bff237ad530e743f33618ea1370a"
+    },
+    {
+      "count": 48,
+      "kind": "prepared-resolution-v1",
+      "required_inputs": [
+        "completed prepared-resolution output root(s) consuming the 48 legacy source bundles",
+        "exact original verifier script and Python pins",
+        "preparation_manifest and runtime_config pins",
+        "source_resolution_v1 records for every selected ID"
+      ],
+      "route": "legacy",
+      "selected_ids_sha256": "233e0f5227664b7c67612479077ec254224115e5a69105344dfcd27f7cbf4160"
+    },
+    {
+      "count": 4,
+      "kind": "prepared-resolution-v1",
+      "required_inputs": [
+        "completed prepared-resolution output root(s) consuming the four unresolved historical source bundles",
+        "exact original verifier script and Python pins",
+        "preparation_manifest and runtime_config pins",
+        "source_resolution_v1 records for every selected ID"
+      ],
+      "route": "historical",
+      "selected_ids_sha256": "a8e1ae15bef7668b673ebc7ec8856b38d86280dfd593a142d73737512f244182"
+    },
+    {
+      "count": 3,
+      "kind": "prepared-resolution-v1",
+      "required_inputs": [
+        "completed prepared-resolution output root(s) consuming the three current-PDF source bundles",
+        "exact original verifier script and Python pins",
+        "preparation_manifest and runtime_config pins",
+        "source_resolution_v1 records for every selected ID"
+      ],
+      "route": "current_pdf",
+      "selected_ids_sha256": "d4282711307113b80f0aad18d25f785ae1130ae8773c3c331621c46f993f012b"
+    }
+  ],
+  "private": true,
+  "read_only_component_verification": {
+    "audit_execution": false,
+    "components": [
+      {
+        "name": "retained-batch-1018",
+        "verification_kind": "retained_index_attestation",
+        "verified_records": 1018
+      },
+      {
+        "name": "retained-historical-6",
+        "verification_kind": "retained_index_attestation",
+        "verified_records": 6
+      },
+      {
+        "name": "retained-legacy-116",
+        "verification_kind": "retained_legacy_proof_attestation",
+        "verified_records": 116
+      },
+      {
+        "name": "replacement-ordinary-prepared-completed-3",
+        "verification_kind": "prepared-resolution-v1",
+        "verified_records": 3
+      },
+      {
+        "name": "replacement-ordinary-recovery-010188",
+        "verification_kind": "prepared-retained-response-recovery-v1",
+        "verified_records": 1
+      }
+    ],
+    "index_builder_execution": false,
+    "model_invocations": 0,
+    "ocr_invocations": 0,
+    "producer_execution": false,
+    "verifier_commit": "bdb3f991a6ed4a09baa0bc4efe089962348e7e71"
+  },
+  "schema_version": 1,
+  "set_checks": {
+    "replacement_routes_pairwise_disjoint": true,
+    "replacement_routes_union_equals_replacement": true,
+    "retained_components_pairwise_disjoint": true,
+    "retained_replacement_disjoint": true,
+    "retained_replacement_union_equals_official": true,
+    "retained_union_count": 1140
+  },
+  "set_digests": {
+    "official_ids": "7173d85cdf2464d59e60f34d2159cd58bbf737d4828910a8ed96be525aedc2a3",
+    "replacement_current_pdf_ids": "d4282711307113b80f0aad18d25f785ae1130ae8773c3c331621c46f993f012b",
+    "replacement_geometry_ids": "24825edcb05cb62430104467656eeea75688bff237ad530e743f33618ea1370a",
+    "replacement_historical_ids": "a8e1ae15bef7668b673ebc7ec8856b38d86280dfd593a142d73737512f244182",
+    "replacement_ids": "2be177996c7655fe923d1dc3dab78d6b2ae22c1b590af4955aa09f0feb8cf33e",
+    "replacement_legacy_ids": "233e0f5227664b7c67612479077ec254224115e5a69105344dfcd27f7cbf4160",
+    "replacement_ordinary_prepared_ids": "4464bfec1bafcf4bd3862053bd6eb9352d82aec8fbef8d86807f0e43199f203f",
+    "retained_batch_ids": "bb621749cf50d839a8974644ad8d13378d05a2e2e698f12099110a62681f6b55",
+    "retained_historical_ids": "5ac5435d8b82f6d8e4f870feeae9e0e56ae778f39002133bd402d8006948bf41",
+    "retained_ids": "c07c9fea44955315d186ab8b3bbe87e8f03a146a9ed59f8970d28a1ead853147",
+    "retained_legacy_ids": "8be2a515597f220ab56763cb0a4fb825fcaef4172b0a5c386a0f2a51bf6097fb"
+  },
+  "source_pins": {
+    "approved_composite_verifier": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-composite-terminal/scripts/verify_composite_resolution.py",
+      "sha256": "ee78719b0e78ddfca16fa5b44002167e551d0a05c9c9f1668dba290c22502387"
+    },
+    "batch_index": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/batch-source-index-through156.json",
+      "sha256": "e87b0ecfcc0a2d53983385ffe892e7898e7abf4f5712cb910a0c8f6c611f1f34"
+    },
+    "batch_index_plan": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-batch-source-index-through156-plan.json",
+      "sha256": "533667230ba7cf0077647b0d7c33a6e0699efa2ec7e4bcec8a0812f533c62416"
+    },
+    "completed_prepared3_manifest": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/prepared-mixed-production-v2/heldout-probe-0001/run-manifest.json",
+      "sha256": "d9424ed23f9ac783dd5c50ffeac369adee19cd8e7b669030ce93c58c93f04968"
+    },
+    "completed_recovery_manifest": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/prepared-retained-response-recovery-v2/recovery-manifest.json",
+      "sha256": "a4ebaec05b3b2289f071db8307326e3d1e820da16b152312d672115a758569eb"
+    },
+    "current_pdf_result": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-current-pdf-source-deployment-result.json",
+      "sha256": "d45c61c5cec0f62129cbd0ad8baa5ab3d96d9982e1830cce8ebf37a664c406a6"
+    },
+    "extracted_base_config": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-composite-base-command-config-v1.json",
+      "sha256": "05815f88f96eb98d14d5db860b82b0a2e0e79758c148a83dd5be32bb21341ecf"
+    },
+    "geometry_completion_result": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-native-geometry-completion-result.json",
+      "sha256": "72aabd40e5dc9bebd6095858de4b6e75f5af4bffc6430d21982c0672483fa85a"
+    },
+    "historical_index": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-derived-artifacts/historical10-source-index-v1.json",
+      "sha256": "a66d76d35867bd1cda5c7e702db7412b3ed42f855e85adcb74c8a26935e97738"
+    },
+    "historical_index_plan": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-historical10-index-plan.json",
+      "sha256": "b34ca6a64d861b53b6d306c239c54e8dee41ea25f098033bc68d8cc62c16f3b6"
+    },
+    "legacy48_inventory": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-legacy-resolution-48-input-inventory.json",
+      "sha256": "45d0b4d752b1d81135c8d9aebd51247c433df0e47c734ef56959f7fdb88b6bc0"
+    },
+    "legacy_completed_proof": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-legacy-completed-record-verification.json",
+      "sha256": "67a024aa6b8036ff3a18906ef010dd20fdbe4f1d20b77cefc9c0401959b0990a"
+    },
+    "legacy_deployment_plan": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-legacy-public-source-deployment-plan.json",
+      "sha256": "13871b4678819676dece615d0cad48a0ae76d43402d5ed83979ec6ec6410d903"
+    },
+    "legacy_replay_proof": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-legacy-retained-replay-summary.json",
+      "sha256": "61dad3c63b58b280abb744f26e7d47d432d96de79407189288c6ed02ad8f7c7e"
+    },
+    "official_tasks": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/inputs/heldout/tasks.jsonl",
+      "sha256": "5fe8fbb8169b0c2b396fe155d263db36f4fa34b02a0cedd9075423b0bd3fc40d"
+    },
+    "prepared_runtime": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/prepared-resolution-runtime-v1.json",
+      "sha256": "5970b6baa61aaa092d1733c2ed4d05b4dfae6ec95b0f0ca7294d6426d95d30dc"
+    },
+    "route_contract": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/.omx/ultragoal/issue24-composite-production-route-contract-v2.json",
+      "sha256": "80a5563b5d516ccaa58e9ec27f82f76f9b7756e30c23791e2deae370a3b5ff24"
+    },
+    "runs_v5_manifest": {
+      "path": "/Users/choco/Documents/project/docinsights-2026/.worktrees/issue24-solutions/artifacts/solution-records/issue24/runs-v5/heldout/run-manifest.json",
+      "sha256": "2ad1ae1612d4167fb81f7291485a50d5b9acf707b54bbf8960bd0361303f3bb1"
+    }
+  },
+  "status": "draft_inventory_verified_replacements_incomplete",
+  "submission_ready": false,
+  "verification_boundary": {
+    "completed_replacement_descriptors_frozen": true,
+    "composition_executed": false,
+    "index_audits_rerun": 0,
+    "model_invocations": 0,
+    "ocr_invocations": 0,
+    "pending_descriptors_are_evidence": false,
+    "production_plan_ready": false,
+    "retained_descriptors_frozen": true
+  }
+}
