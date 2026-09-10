@@ -1,0 +1,24 @@
+{
+  "audit_version": "heldout-calculation-v2",
+  "source_records": "artifacts/heldout-review18-execution-20260909/snapshots/final-budget-20260910/records.jsonl",
+  "source_sha256": "a75c597e0c7016a648de669b1feb44d9e39092b3e9bc8d41da06b9a272cf7518",
+  "stats": {
+    "records": 1730,
+    "calc_checked": 3975,
+    "records_all_calcs_exact": 1730,
+    "answer_selected_checked": 140,
+    "answer_selected_match": 140,
+    "nonnumeric_expression": 1
+  },
+  "mismatch_total": 0,
+  "nonnumeric_total": 1,
+  "mismatches_sample": [],
+  "nonnumeric_sample": [
+    {
+      "instance_id": "task_011590",
+      "expression": "additional purchase when held amount exceeds requirement",
+      "result": "0"
+    }
+  ],
+  "scope": "read-only arithmetic consistency; no prediction mutation"
+}
