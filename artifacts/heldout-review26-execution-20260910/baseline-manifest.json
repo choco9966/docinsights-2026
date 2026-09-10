@@ -1,0 +1,47 @@
+{
+  "issue": 26,
+  "created_at_utc": "2026-09-10T00:21:32.232356+00:00",
+  "baseline": {
+    "submission_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-submission-v1-0910.jsonl",
+    "submission_sha256": "222d1a5f3e0e09c15f04d5ecfd52c4d3675e7dcf55c0ac97c0473905a28cd024",
+    "rows": 1730,
+    "unique_instance_ids": 1730,
+    "answer_null": 0,
+    "evidence_empty": 0,
+    "field_sets": [
+      "answer,evidence,instance_id"
+    ]
+  },
+  "prior_review18": {
+    "assignments_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-review18-execution-20260909/assignments.jsonl",
+    "assignment_rows_with_instance_id": 1730,
+    "assignment_unique_ids": 1730,
+    "assignment_status_counts": {
+      "complete": 90,
+      "needs_source_repair": 10,
+      "in_progress": 25,
+      "running": 85,
+      "reserved": 75,
+      "v3_primary_dispatched": 18,
+      "dispatched": 22,
+      "primary_and_independent_complete_root_adjudicated": 40,
+      "pending": 1365
+    },
+    "assignment_outcome_counts": {
+      "reviewed_conditional": 20,
+      "retain": 67,
+      "propose_change": 3,
+      "incomplete": 10,
+      "null": 1630
+    },
+    "records_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-review18-execution-20260909/snapshots/final-budget-20260910/records.jsonl",
+    "records_sha256": "a75c597e0c7016a648de669b1feb44d9e39092b3e9bc8d41da06b9a272cf7518"
+  },
+  "scope_guard": {
+    "target_split": "held-out",
+    "expected_rows": 1730,
+    "train_validation_regeneration": false,
+    "official_portal_submission": false,
+    "baseline_mutation": false
+  }
+}

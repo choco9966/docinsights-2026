@@ -1,0 +1,207 @@
+Warning: truncated output (original token count: 108076)
+Total output lines: 22267
+
+{
+  "issue": 26,
+  "generated_utc": "2026-09-10T00:00:00Z",
+  "purpose": "Prioritized queue for next semantic/visual review; no prediction mutation",
+  "counts": {
+    "P0": 30,
+    "P1": 647,
+    "P2": 986
+  },
+  "rows": [
+    {
+      "instance_id": "task_010001",
+      "priority": "P0",
+      "status": "complete",
+      "outcome": "reviewed_conditional",
+      "answer": "161",
+      "evidence": [
+        "R&25"
+      ],
+      "reasons": [
+        "prior_uncertain"
+      ]
+    },
+    {
+      "instance_id": "task_010002",
+      "priority": "P0",
+      "status": "complete",
+      "outcome": "reviewed_conditional",
+      "answer": "149.25",
+      "evidence": [
+        "U&64"
+      ],
+      "reasons": [
+        "prior_uncertain"
+      ]
+    },
+    {
+      "instance_id": "task_010023",
+      "priority": "P0",
+      "status": "complete",
+      "outcome": "reviewed_conditional",
+      "answer": "390",
+      "evidence": [
+        "94/G4"
+      ],
+      "reasons": [
+        "prior_uncertain"
+      ]
+    },
+    {
+      "instance_id": "task_010029",
+      "priority": "P0",
+      "status": "needs_source_repair",
+      "outcome": "incomplete",
+      "answer": "1448",
+      "evidence": [
+        "g-074"
+      ],
+      "reasons": [
+        "prior_uncertain",
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_010031",
+      "priority": "P0",
+      "status": "needs_source_repair",
+      "outcome": "incomplete",
+      "answer": "1176",
+      "evidence": [
+        "4399"
+      ],
+      "reasons": [
+        "prior_uncertain",
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_010032",
+      "priority": "P0",
+      "status": "complete",
+      "outcome": "reviewed_conditional",
+      "answer": "26140",
+      "evidence": [
+        "5092"
+      ],
+      "reasons": [
+        "prior_uncertain"
+      ]
+    },
+    {
+      "instance_id": "task_010037",
+      "priority": "P0",
+      "status": "needs_source_repair",
+      "outcome": "incomplete",
+ …107076 tokens truncated…"review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011746",
+      "priority": "P2",
+      "status": "pending",
+      "outcome": null,
+      "answer": "48",
+      "evidence": [
+        "M14"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011749",
+      "priority": "P2",
+      "status": "pending",
+      "outcome": null,
+      "answer": "21677",
+      "evidence": [
+        "V57"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011750",
+      "priority": "P2",
+      "status": "reserved",
+      "outcome": null,
+      "answer": "560/3",
+      "evidence": [
+        "y-277Z"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011752",
+      "priority": "P2",
+      "status": "reserved",
+      "outcome": null,
+      "answer": "278",
+      "evidence": [
+        "J23"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011753",
+      "priority": "P2",
+      "status": "pending",
+      "outcome": null,
+      "answer": "6627",
+      "evidence": [
+        "5152"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011756",
+      "priority": "P2",
+      "status": "pending",
+      "outcome": null,
+      "answer": "13487",
+      "evidence": [
+        "3i23"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011757",
+      "priority": "P2",
+      "status": "pending",
+      "outcome": null,
+      "answer": "14",
+      "evidence": [
+        "o-377G"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    },
+    {
+      "instance_id": "task_011758",
+      "priority": "P2",
+      "status": "pending",
+      "outcome": null,
+      "answer": "3377",
+      "evidence": [
+        "P&70"
+      ],
+      "reasons": [
+        "review_not_final"
+      ]
+    }
+  ]
+}

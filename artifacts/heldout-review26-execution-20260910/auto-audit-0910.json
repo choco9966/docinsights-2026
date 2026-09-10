@@ -1,0 +1,590 @@
+{
+  "audit_version": "heldout-source-aware-v2",
+  "generated_utc": "2026-09-10T00:00:00Z",
+  "submission": {
+    "path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-submission-v1-0910.jsonl",
+    "sha256": "222d1a5f3e0e09c15f04d5ecfd52c4d3675e7dcf55c0ac97c0473905a28cd024"
+  },
+  "contract": {
+    "split": "heldout",
+    "train_val_bxx_regex_applied": false,
+    "evidence_rule": "non-empty source block IDs; held-out release IDs are arbitrary visible tokens",
+    "semantic_validation": "OCR exact/casefold/fuzzy diagnostics only; visual confirmation remains required for OCR mismatches"
+  },
+  "summary": {
+    "rows": 1730,
+    "unique_ids": 1730,
+    "manifest_rows": 1730,
+    "manifest_id_match": 1730,
+    "ocr_files": 1730,
+    "answer_null": 0,
+    "evidence_empty": 0,
+    "evidence_nonstring": 0,
+    "exact_evidence_match": 1075,
+    "casefold_evidence_match": 1088,
+    "fuzzy_evidence_match": 1488,
+    "source_validation_status": "pending_visual_confirmation"
+  },
+  "issues_sample": [
+    {
+      "id": "task_010015",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "G#26"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "G#26",
+          "best_token": "Ga26",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010016",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "M#16"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "M#16",
+          "best_token": "Me16",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010017",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "B&54"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "B&54",
+          "best_token": "8&54",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010018",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "R#38"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "R#38",
+          "best_token": "Re38",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010021",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "1418"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "1418",
+          "best_token": "A14",
+          "ratio": 0.571
+        }
+      ]
+    },
+    {
+      "id": "task_010024",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "G864"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "G864",
+          "best_token": "G&64",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010030",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "69Z069"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "69Z069",
+          "best_token": "69Zo69",
+          "ratio": 0.833
+        }
+      ]
+    },
+    {
+      "id": "task_010034",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "2b12"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "2b12",
+          "best_token": "Bw16",
+          "ratio": 0.5
+        }
+      ]
+    },
+    {
+      "id": "task_010035",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "j-952Y"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "j-952Y",
+          "best_token": "-952y",
+          "ratio": 0.909
+        }
+      ]
+    },
+    {
+      "id": "task_010040",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "j-758K"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "j-758K",
+          "best_token": "s-758k",
+          "ratio": 0.833
+        }
+      ]
+    },
+    {
+      "id": "task_010041",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "d-752G"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "d-752G",
+          "best_token": "d752G",
+          "ratio": 0.909
+        }
+      ]
+    },
+    {
+      "id": "task_010043",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "9a99"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "9a99",
+          "best_token": "Ba99",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010044",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "a-692J"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "a-692J",
+          "best_token": "w-699C",
+          "ratio": 0.5
+        }
+      ]
+    },
+    {
+      "id": "task_010047",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "j-006L"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "j-006L",
+          "best_token": "-006L",
+          "ratio": 0.909
+        }
+      ]
+    },
+    {
+      "id": "task_010049",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "3J14"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "3J14",
+          "best_token": "3414",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010051",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "M#91"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "M#91",
+          "best_token": "H91",
+          "ratio": 0.571
+        }
+      ]
+    },
+    {
+      "id": "task_010056",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "e-880T"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "e-880T",
+          "best_token": "s-860E",
+          "ratio": 0.5
+        }
+      ]
+    },
+    {
+      "id": "task_010058",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "6g58"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "6g58",
+          "best_token": "8g58",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010062",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "I74"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "I74",
+          "best_token": "174",
+          "ratio": 0.667
+        }
+      ]
+    },
+    {
+      "id": "task_010064",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "N856"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "N856",
+          "best_token": "N&56",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010065",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "M49O"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "M49O",
+          "best_token": "M34",
+          "ratio": 0.571
+        }
+      ]
+    },
+    {
+      "id": "task_010067",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "y-B58B"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "y-B58B",
+          "best_token": "y-858B",
+          "ratio": 0.833
+        }
+      ]
+    },
+    {
+      "id": "task_010068",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "N#91"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "N#91",
+          "best_token": "On90",
+          "ratio": 0.5
+        }
+      ]
+    },
+    {
+      "id": "task_010069",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "11/M1"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "11/M1",
+          "best_token": "11",
+          "ratio": 0.571
+        }
+      ]
+    },
+    {
+      "id": "task_010071",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "I#24"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "I#24",
+          "best_token": "#24",
+          "ratio": 0.857
+        }
+      ]
+    },
+    {
+      "id": "task_010079",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "1951"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "1951",
+          "best_token": "195",
+          "ratio": 0.857
+        }
+      ]
+    },
+    {
+      "id": "task_010080",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "C00"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "C00",
+          "best_token": "CO0",
+          "ratio": 0.667
+        }
+      ]
+    },
+    {
+      "id": "task_010081",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "3c53"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "3c53",
+          "best_token": "13F563",
+          "ratio": 0.6
+        }
+      ]
+    },
+    {
+      "id": "task_010086",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "MM45"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "MM45",
+          "best_token": "M4",
+          "ratio": 0.667
+        }
+      ]
+    },
+    {
+      "id": "task_010090",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "3602"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "3602",
+          "best_token": "3802",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010094",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "292"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "292",
+          "best_token": "2z82",
+          "ratio": 0.571
+        }
+      ]
+    },
+    {
+      "id": "task_010098",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "I#32"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "I#32",
+          "best_token": "w32",
+          "ratio": 0.571
+        }
+      ]
+    },
+    {
+      "id": "task_010101",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "t-B44H"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "t-B44H",
+          "best_token": "t-844H.",
+          "ratio": 0.769
+        }
+      ]
+    },
+    {
+      "id": "task_010103",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "3/23"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "3/23",
+          "best_token": "3123",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010104",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "I77"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "I77",
+          "best_token": "7785",
+          "ratio": 0.571
+        }
+      ]
+    },
+    {
+      "id": "task_010105",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "u-647S"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "u-647S",
+          "best_token": "u6475",
+          "ratio": 0.727
+        }
+      ]
+    },
+    {
+      "id": "task_010106",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "5d5"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "5d5",
+          "best_token": "565",
+          "ratio": 0.667
+        }
+      ]
+    },
+    {
+      "id": "task_010108",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "82JH2"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "82JH2",
+          "best_token": "@2/H2",
+          "ratio": 0.6
+        }
+      ]
+    },
+    {
+      "id": "task_010112",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "U830"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "U830",
+          "best_token": "U&30",
+          "ratio": 0.75
+        }
+      ]
+    },
+    {
+      "id": "task_010114",
+      "issue": "ocr_evidence_not_exact",
+      "evidence": [
+        "O864"
+      ],
+      "fuzzy_candidates": [
+        {
+          "evidence": "O864",
+          "best_token": "Ow64",
+          "ratio": 0.75
+        }
+      ]
+    }
+  ]
+}
