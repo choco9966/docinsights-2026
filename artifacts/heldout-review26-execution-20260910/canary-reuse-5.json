@@ -1,0 +1,69 @@
+{
+  "issue": 26,
+  "stage": "H0.5-canary-reuse",
+  "new_model_calls": 0,
+  "measurement_basis": "existing immutable benchmark-5 artifacts",
+  "records": [
+    {
+      "instance_id": "task_010001",
+      "source_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-rereview-v2/sol-full-20260909/benchmark5-contexts/task_010001.json",
+      "exists": true,
+      "top_keys": [
+        "baseline_decision",
+        "instance_id",
+        "prior_holds"
+      ],
+      "bytes": 657,
+      "sha256": "dac00659e61bbd3966ee17a3d8aacc78799a24f2600830d0f0ca0369c026eee9"
+    },
+    {
+      "instance_id": "task_010059",
+      "source_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-rereview-v2/sol-full-20260909/benchmark5-contexts/task_010059.json",
+      "exists": true,
+      "top_keys": [
+        "baseline_decision",
+        "instance_id",
+        "prior_holds"
+      ],
+      "bytes": 588,
+      "sha256": "871b1038afa969041282367cdf95c20e41f35327a2dd575a7b160d3a71b72309"
+    },
+    {
+      "instance_id": "task_010153",
+      "source_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-rereview-v2/sol-full-20260909/benchmark5-contexts/task_010153.json",
+      "exists": true,
+      "top_keys": [
+        "baseline_decision",
+        "instance_id",
+        "prior_holds"
+      ],
+      "bytes": 791,
+      "sha256": "dab5eeb2518a1b6ea42bf3515156de0e1b4b0fd0657bb59fe30a6ee2e824aba2"
+    },
+    {
+      "instance_id": "task_010229",
+      "source_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-rereview-v2/sol-full-20260909/benchmark5-contexts/task_010229.json",
+      "exists": true,
+      "top_keys": [
+        "baseline_decision",
+        "baseline_source",
+        "instance_id",
+        "prior_holds"
+      ],
+      "bytes": 6438,
+      "sha256": "08f1dbc47d6aa4305a84eceb12e27ccf02587dc123be86023474187297f1498e"
+    },
+    {
+      "instance_id": "task_011414",
+      "source_path": "/Users/choco/Documents/project/docinsights-2026/artifacts/heldout-rereview-v2/sol-full-20260909/accepted/task_011414.json",
+      "exists": true,
+      "top_keys": [
+        "decision",
+        "receipt"
+      ],
+      "bytes": 8548,
+      "sha256": "e2d252402f0a815ff33dd8e602c5c5c736a3c19d0a4682ceb39fa4eafa61e01e"
+    }
+  ],
+  "all_present": true
+}
